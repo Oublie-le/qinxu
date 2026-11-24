@@ -2,16 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "PianoPractice",
+    name: "QinXu",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
-        .library(name: "PianoCore", targets: ["PianoCore"]),
-        .executable(name: "PianoPractice", targets: ["PianoApp"])
+        .library(name: "QinXuCore", targets: ["QinXuCore"]),
+        .executable(name: "QinXu", targets: ["QinXuApp"])
     ],
     targets: [
-        .target(name: "PianoCore"),
-        .executableTarget(name: "PianoApp", dependencies: ["PianoCore"]),
-        .testTarget(name: "PianoCoreTests", dependencies: ["PianoCore"])
+        .target(name: "QinXuCore"),
+        .executableTarget(name: "QinXuApp", dependencies: ["QinXuCore"]),
+        .testTarget(name: "QinXuCoreTests", dependencies: ["QinXuCore"]),
+        .testTarget(name: "QinXuAppTests", dependencies: ["QinXuApp", "QinXuCore"])
     ],
     swiftLanguageModes: [.v5]
 )

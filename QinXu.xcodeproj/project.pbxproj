@@ -1,0 +1,46 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+		169FB46D3E65E11D76F62CAC = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/PracticeViewModel.swift"; sourceTree = SOURCE_ROOT; };
+		A66A0D16D6244B322D08A9D3 = { isa = PBXBuildFile; fileRef = 169FB46D3E65E11D76F62CAC; };
+		3727CB18780B48D2BC85D79E = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/QinXuApp.swift"; sourceTree = SOURCE_ROOT; };
+		0521B72901F23762BDB605D7 = { isa = PBXBuildFile; fileRef = 3727CB18780B48D2BC85D79E; };
+		2365C8F6EAD74A9A928BAB54 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Services/MIDIService.swift"; sourceTree = SOURCE_ROOT; };
+		D1640DC71E0DB134F30882BA = { isa = PBXBuildFile; fileRef = 2365C8F6EAD74A9A928BAB54; };
+		49D08A31259239A9ABB5E5CA = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Services/Metronome.swift"; sourceTree = SOURCE_ROOT; };
+		53F43C5DCF8E5B11D6989737 = { isa = PBXBuildFile; fileRef = 49D08A31259239A9ABB5E5CA; };
+		C1B3BDFD2AE97B63B19C9123 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Services/MicrophoneService.swift"; sourceTree = SOURCE_ROOT; };
+		E09FC873C05ADFBF16696553 = { isa = PBXBuildFile; fileRef = C1B3BDFD2AE97B63B19C9123; };
+		D076AAE09499DA63CF6242F7 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Views/PianoKeyboardView.swift"; sourceTree = SOURCE_ROOT; };
+		A7D4EBE07D693A2F7FE15812 = { isa = PBXBuildFile; fileRef = D076AAE09499DA63CF6242F7; };
+		7C1CA2A2312DBEB5E4D18319 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Views/PracticeHomeView.swift"; sourceTree = SOURCE_ROOT; };
+		AA68FE6BFD663DA412D8CEBB = { isa = PBXBuildFile; fileRef = 7C1CA2A2312DBEB5E4D18319; };
+		0350B99ACE18089125EFA8C9 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Views/PracticeScoreView.swift"; sourceTree = SOURCE_ROOT; };
+		1C5E48F8247C73DD26A7C0CB = { isa = PBXBuildFile; fileRef = 0350B99ACE18089125EFA8C9; };
+		E97B52860592D70160A85EEE = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sources/QinXuApp/Views/QinXuTheme.swift"; sourceTree = SOURCE_ROOT; };
+		6522F1C5AB53D5C9399A96FD = { isa = PBXBuildFile; fileRef = E97B52860592D70160A85EEE; };
+		A8792157CB4F27FB949C035F = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QinXu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CEEC13202AFBF12EE3ABB99 = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Config/Info.plist; sourceTree = SOURCE_ROOT; };
+		1455444174429298B0F374B3 = { isa = PBXGroup; children = (169FB46D3E65E11D76F62CAC,3727CB18780B48D2BC85D79E,2365C8F6EAD74A9A928BAB54,49D08A31259239A9ABB5E5CA,C1B3BDFD2AE97B63B19C9123,D076AAE09499DA63CF6242F7,7C1CA2A2312DBEB5E4D18319,0350B99ACE18089125EFA8C9,E97B52860592D70160A85EEE,); name = App; sourceTree = "<group>"; };
+		B9E7F2871A3402983868AFC8 = { isa = PBXGroup; children = (A8792157CB4F27FB949C035F,); name = Products; sourceTree = "<group>"; };
+		C69913C7EE4DFDD011BE172F = { isa = PBXGroup; children = (1455444174429298B0F374B3,9CEEC13202AFBF12EE3ABB99,B9E7F2871A3402983868AFC8,); sourceTree = "<group>"; };
+		4C62EC40DF63DF0873D128AE = { isa = XCLocalSwiftPackageReference; relativePath = .; };
+		F5AE27228AC34400DE4A3768 = { isa = XCSwiftPackageProductDependency; package = 4C62EC40DF63DF0873D128AE; productName = QinXuCore; };
+		5B2D2E1CD1EA09990CD4EACE = { isa = PBXBuildFile; productRef = F5AE27228AC34400DE4A3768; };
+		DE62F1BD2E122BBF6BD45B9C = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (A66A0D16D6244B322D08A9D3,0521B72901F23762BDB605D7,D1640DC71E0DB134F30882BA,53F43C5DCF8E5B11D6989737,E09FC873C05ADFBF16696553,A7D4EBE07D693A2F7FE15812,AA68FE6BFD663DA412D8CEBB,1C5E48F8247C73DD26A7C0CB,6522F1C5AB53D5C9399A96FD,); runOnlyForDeploymentPostprocessing = 0; };
+		8A7588AD5FA397C62F95C6FE = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (5B2D2E1CD1EA09990CD4EACE,); runOnlyForDeploymentPostprocessing = 0; };
+		CCC8ECE80271796AF54350E8 = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		488864B3D19480A82F7F1786 = { isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = "NO"; CLANG_ENABLE_MODULES = "YES"; CLANG_ENABLE_OBJC_ARC = "YES"; SDKROOT = "iphoneos"; IPHONEOS_DEPLOYMENT_TARGET = "17.0"; SWIFT_VERSION = "5.0"; DEBUG_INFORMATION_FORMAT = "dwarf"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG"; ENABLE_TESTABILITY = "YES"; }; name = Debug; };
+		952548237D7F645F11D1E7B6 = { isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = "Automatic"; CURRENT_PROJECT_VERSION = "1"; MARKETING_VERSION = "0.1.0"; GENERATE_INFOPLIST_FILE = "NO"; INFOPLIST_FILE = "Config/Info.plist"; PRODUCT_BUNDLE_IDENTIFIER = "com.ifeng.QinXu"; PRODUCT_NAME = "$(TARGET_NAME)"; TARGETED_DEVICE_FAMILY = "1,2"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = "NO"; SWIFT_EMIT_LOC_STRINGS = "YES"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; }; name = Debug; };
+		35B1014F135DE9B45529B733 = { isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = "NO"; CLANG_ENABLE_MODULES = "YES"; CLANG_ENABLE_OBJC_ARC = "YES"; SDKROOT = "iphoneos"; IPHONEOS_DEPLOYMENT_TARGET = "17.0"; SWIFT_VERSION = "5.0"; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = ""; ENABLE_TESTABILITY = "NO"; }; name = Release; };
+		E2D3A31BEAA1368FC62DA77A = { isa = XCBuildConfiguration; buildSettings = { CODE_SIGN_STYLE = "Automatic"; CURRENT_PROJECT_VERSION = "1"; MARKETING_VERSION = "0.1.0"; GENERATE_INFOPLIST_FILE = "NO"; INFOPLIST_FILE = "Config/Info.plist"; PRODUCT_BUNDLE_IDENTIFIER = "com.ifeng.QinXu"; PRODUCT_NAME = "$(TARGET_NAME)"; TARGETED_DEVICE_FAMILY = "1,2"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = "NO"; SWIFT_EMIT_LOC_STRINGS = "YES"; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; }; name = Release; };
+		B4E10CAA9C5E22150B71559C = { isa = XCConfigurationList; buildConfigurations = (488864B3D19480A82F7F1786,35B1014F135DE9B45529B733,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		4A807E8A027297B0B93701FB = { isa = XCConfigurationList; buildConfigurations = (952548237D7F645F11D1E7B6,E2D3A31BEAA1368FC62DA77A,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		34A04005BCAF206EEC990BD9 = { isa = PBXNativeTarget; buildConfigurationList = 4A807E8A027297B0B93701FB; buildPhases = (DE62F1BD2E122BBF6BD45B9C,8A7588AD5FA397C62F95C6FE,CCC8ECE80271796AF54350E8,); buildRules = (); dependencies = (); name = QinXu; packageProductDependencies = (F5AE27228AC34400DE4A3768,); productName = QinXu; productReference = A8792157CB4F27FB949C035F; productType = "com.apple.product-type.application"; };
+		244210E48437B6556980A702 = { isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 1600; TargetAttributes = { 34A04005BCAF206EEC990BD9 = { CreatedOnToolsVersion = 16.0; }; }; }; buildConfigurationList = B4E10CAA9C5E22150B71559C; compatibilityVersion = "Xcode 14.0"; developmentRegion = zh_CN; hasScannedForEncodings = 0; knownRegions = (en,zh_CN,Base,); mainGroup = C69913C7EE4DFDD011BE172F; packageReferences = (4C62EC40DF63DF0873D128AE,); productRefGroup = B9E7F2871A3402983868AFC8; projectDirPath = ""; projectRoot = ""; targets = (34A04005BCAF206EEC990BD9,); };
+	};
+	rootObject = 244210E48437B6556980A702;
+}

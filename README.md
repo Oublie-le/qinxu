@@ -1,4 +1,4 @@
-# 琴伴 · PianoPractice
+# 琴序 · QinXu
 
 面向 iPad / iPhone 的本地钢琴练习应用。当前为首轮开发版本，优先完成 MIDI + MusicXML 的练琴闭环，另带 **实验性麦克风单音识别**。项目内也提供同一份 SwiftUI 界面的 macOS 开发预览，方便没有 Xcode 模拟器时验证交互。
 
@@ -18,14 +18,14 @@
 ## 在 iPad / iPhone 运行
 
 1. 在 Mac 安装完整 **Xcode 16 或更新版本**，打开一次完成平台组件安装。
-2. 打开 `PianoPractice.xcodeproj`，选择 `PianoPractice` scheme。
+2. 打开 `QinXu.xcodeproj`，选择 `QinXu` scheme。
 3. 模拟器可直接构建；真机在 Signing & Capabilities 选择自己的 Development Team，必要时修改 Bundle Identifier。
 4. 连接 iPad / iPhone，选择该设备，点击 Run。真机需要允许开发者模式及信任本机。
 5. 使用支持数据传输的 USB 连接或适配器连接 MIDI 钢琴，在应用选择「MIDI 钢琴」。
 
 第一版以有线 MIDI 为验收路径。设备通过系统暴露的其他 MIDI 来源也会显示，但尚未专门验证蓝牙 MIDI。不要把普通 USB 充电口当作 MIDI 接口。
 
-工程无需第三方 Swift 包或后端服务。`PianoCore` 通过本地 Swift Package 链接进 iOS 应用；增加应用源文件后可执行 `python3 scripts/generate_project.py` 重新生成工程。
+工程无需第三方 Swift 包或后端服务。`QinXuCore` 通过本地 Swift Package 链接进 iOS 应用；增加应用源文件后可执行 `python3 scripts/generate_project.py` 重新生成工程。
 
 ## 在 Mac 运行开发预览
 
@@ -33,7 +33,7 @@
 
 ```sh
 bash scripts/build-macos.sh
-open .local-build/PianoPractice.app
+open .local-build/QinXu.app
 ```
 
 Mac 预览用于本机验证共享界面、MIDI 输入与练琴逻辑，不能代替 iOS SDK 编译、iPad 布局和硬件测试。屏幕琴键发送真实练习输入事件，但当前不合成钢琴音色。
@@ -41,12 +41,17 @@ Mac 预览用于本机验证共享界面、MIDI 输入与练琴逻辑，不能�
 ## 自动化验证
 
 ```sh
+bash scripts/verify.sh
+# 要求 iOS 构建也通过（完整 Xcode 环境 / CI）：
+bash scripts/verify.sh --require-ios
+
+# 单独运行核心与应用层测试：
 swift test
-xcodebuild -project PianoPractice.xcodeproj -scheme PianoPractice \
+xcodebuild -project QinXu.xcodeproj -scheme QinXu \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
 
-如果机器只有 Command Line Tools，第一条仍可执行，第二条需要完整 Xcode。CI 配置在 `.github/workflows/verify.yml`，尚未推送或执行远程 CI。
+只有 Command Line Tools 时，验证脚本会明确标记 iOS 构建为 SKIP；加 `--require-ios` 则缺少 Xcode 也会返回失败。CI 配置在 `.github/workflows/verify.yml`，尚未推送或执行远程 CI。
 
 ## 曲谱支持范围
 
@@ -70,11 +75,12 @@ xcodebuild -project PianoPractice.xcodeproj -scheme PianoPractice \
 
 ## 数据与开发资料
 
-练习记录和导入曲谱保存在应用沙盒的 Application Support/PianoPractice/library.json；macOS 预览对应用户 Library/Application Support/PianoPractice。默认没有账号、服务器、遥测、订阅或云端音频处理。
+练习记录和导入曲谱保存在应用沙盒的 Application Support/QinXu/library.json；macOS 预览对应用户 Library/Application Support/QinXu。同一可访问容器内，旧版 `Application Support/PianoPractice/library.json` 会在首次读取时迁移并保留原文件；已有新目录数据时不会覆盖。iOS 更换 Bundle ID 后属于不同沙盒，不能直接读取旧应用的数据。默认没有账号、服务器、遥测、订阅或云端音频处理。
 
 - [施工计划与验收标准](docs/PLAN.md)
 - [当前进度与验证记录](docs/STATUS.md)
 - [架构与数据流](docs/ARCHITECTURE.md)
+- [开发、命名与 Git 约定](docs/DEVELOPMENT.md)
 - [真机测试清单](docs/DEVICE_TESTS.md)
 
-产品名「琴伴」为开发暂用名。
+产品名：**琴序**；英文工程名：**QinXu**。意为按音符的顺序，逐步练好每一段。

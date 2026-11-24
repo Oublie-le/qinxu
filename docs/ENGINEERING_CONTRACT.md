@@ -1,6 +1,6 @@
 # Parallel implementation contract
 
-Shared types live in Sources/PianoCore/Models.swift. Avoid editing that file without coordinating.
+Shared types live in Sources/QinXuCore/ScoreModels.swift. Avoid editing that file without coordinating.
 
 ## Parser / fixtures
 - `public struct MusicXMLParser { public init(); public func parse(data: Data) throws -> PianoScore }`.
@@ -26,7 +26,7 @@ Shared types live in Sources/PianoCore/Models.swift. Avoid editing that file wit
 - InputMode enum `.midi`, `.touch`, `.microphone` with `title`. Root may initially implement `.microphone` as experimental single-note only but never fake detection.
 - `MIDIService` observable exposes `@Published sources: [MIDISource]`, `selectedSourceID: Int32?`, `status: String`, `connected: Bool`, `func selectSource(_ id: Int32?)`, `func refresh()`; MIDISource `id: Int32`, `name: String`.
 - `MicrophoneService` observable exposes `@Published status: String`, `isActive: Bool`, `detectedPitch: Int?`, `level: Double`.
-- Root app entry creates the model and displays `ContentView(model: model)`.
+- Root app entry creates the model and displays `PracticeHomeView(model: model)`.
 
 ## UI (UI agent owns Views/ only)
-Build reusable SwiftUI views compiling on iOS 17 and macOS 14. Chinese interface, iPad-first with narrow-width fallback. Elegant cream/navy/teal palette, proper grand staff for a declared simplified practice view, left/right keyboard choices, MusicXML import, session controls, clear connection status, visible error alerts, history sheet. All buttons connected to real model methods. Use no external fonts/assets/dependencies. Avoid fake charts, invented accuracy stats, or pretending microphone production readiness. Staff must render actual score notes at correct diatonic positions, selected/current verdict colors, ledger lines; explain display simplification. Use model fields above. Source views can use `#if canImport(PianoCore) import PianoCore #endif`. Never overwrite services or model.
+Build reusable SwiftUI views compiling on iOS 17 and macOS 14. Chinese interface, iPad-first with narrow-width fallback. Elegant cream/navy/teal palette, proper grand staff for a declared simplified practice view, left/right keyboard choices, MusicXML import, session controls, clear connection status, visible error alerts, history sheet. All buttons connected to real model methods. Use no external fonts/assets/dependencies. Avoid fake charts, invented accuracy stats, or pretending microphone production readiness. Staff must render actual score notes at correct diatonic positions, selected/current verdict colors, ledger lines; explain display simplification. Use model fields above. Source views can use `#if canImport(QinXuCore) import QinXuCore #endif`. Never overwrite services or model.

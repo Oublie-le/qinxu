@@ -2,9 +2,9 @@
 
 ## 代码结构
 
-`Sources/PianoCore` 是无 UI、无网络依赖的 Swift 库，包含曲谱模型、MusicXML 解析、练琴状态机、MIDI 字节解码和单音音高检测。`Tests/PianoCoreTests` 用固定时间与已知音符做可重复测试。
+`Sources/QinXuCore` 是无 UI、无网络依赖的 Swift 库，包含曲谱模型、MusicXML 解析、练琴状态机、MIDI 字节解码和单音音高检测。`Tests/QinXuCoreTests` 用固定时间与已知音符做可重复测试。
 
-`Sources/PianoApp` 是 SwiftUI 应用。Views 呈现实际引擎状态；PracticeViewModel 管理会话、计时、输入模式和本地记录。Services 负责 Core MIDI、AVAudioEngine 麦克风采样和节拍声。
+`Sources/QinXuApp` 是 SwiftUI 应用。Views 呈现实际引擎状态；PracticeViewModel 管理会话、计时、输入模式和本地记录。Services 负责 Core MIDI、AVAudioEngine 麦克风采样和节拍声。
 
 ## 数据流
 
