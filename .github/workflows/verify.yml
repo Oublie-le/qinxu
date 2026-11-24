@@ -1,0 +1,11 @@
+name: Verify piano app
+on: [push, pull_request]
+jobs:
+  swift:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test deterministic music engine
+        run: swift test
+      - name: Build iOS app without device signing
+        run: xcodebuild -project PianoPractice.xcodeproj -scheme PianoPractice -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/PianoPracticeDerived CODE_SIGNING_ALLOWED=NO build
