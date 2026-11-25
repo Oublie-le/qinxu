@@ -67,6 +67,9 @@ struct PracticeHomeView: View {
                 ScoreCoverEditor(model: model, score: score)
             }
         }
+        .sheet(isPresented: $model.showingMetronomeSettings) {
+            GlobalMetronomeSettingsView(model: model)
+        }
     }
 
     @ViewBuilder private func content(compact: Bool) -> some View {
@@ -81,13 +84,13 @@ struct PracticeHomeView: View {
                 ScoreLibraryView(model: model, compact: compact, favoritesOnly: section == .favorites,
                     onSelect: { detailScoreID = $0 }, onPractice: practice,
                     onImport: {
-                        model.suspendForBackground()
+                        model.pausePractice()
                         model.isImporting = true
                     }, onCover: editCover)
                     .padding(compact ? 12 : 24)
             case .practice:
                 PracticeSessionView(model: model, compact: compact, onExit: {
-                    model.suspendForBackground()
+                    model.pausePractice()
                     immersivePractice = false
                     section = .library
                     detailScoreID = model.selectedScoreID
@@ -118,11 +121,11 @@ struct PracticeHomeView: View {
     }
 
     private func navigation(labels: Bool) -> some View {
-        VStack(alignment: labels ? .leading : .center, spacing: 8) {
+        VStack(alignment: labels ? .leading : .center, spacing: labels ? 8 : 4) {
             Button { navigate(.library) } label: { QinXuWordmark(compact: !labels) }
                 .buttonStyle(.plain).accessibilityLabel("琴序首页")
-                .padding(.horizontal, labels ? 12 : 0).padding(.top, labels ? 25 : 12)
-                .padding(.bottom, labels ? 23 : 12)
+                .padding(.horizontal, labels ? 12 : 0).padding(.top, labels ? 25 : 8)
+                .padding(.bottom, labels ? 23 : 4)
             ForEach(QinXuSection.allCases) { item in
                 Button { navigate(item) } label: {
                     navigationLabel(item, labels: labels)
@@ -134,7 +137,31 @@ struct PracticeHomeView: View {
                 .accessibilityIdentifier(item.identifier)
                 .accessibilityAddTraits(section == item && detailScoreID == nil ? .isSelected : [])
             }
-            Spacer(minLength: 8)
+            Spacer(minLength: 4)
+            Button { model.openMetronomeSettings() } label: {
+                if labels {
+                    HStack(spacing: 10) {
+                        Image(systemName: "metronome").font(.system(size: 17))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("节拍器").font(.system(size: 12, weight: .medium))
+                            Text("\(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit) · \(model.metronomeSettings.tempoNote.symbol) \(Int(model.metronomeSettings.tempoBPM))")
+                                .font(.system(size: 10)).monospacedDigit().foregroundStyle(QinXuTheme.muted)
+                        }
+                        Spacer(minLength: 0)
+                        if model.metronomeRunning { Circle().fill(QinXuTheme.accent).frame(width: 5, height: 5) }
+                    }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    VStack(spacing: 4) {
+                        Image(systemName: "metronome").font(.system(size: 17))
+                        Text("节拍器").font(.system(size: 9))
+                    }.frame(width: 50, height: 44)
+                }
+            }.buttonStyle(.plain)
+                .foregroundStyle(model.metronomeRunning ? QinXuTheme.accent : QinXuTheme.ink)
+                .background(model.metronomeRunning ? QinXuTheme.softAccent : .clear, in: RoundedRectangle(cornerRadius: 10))
+                .accessibilityLabel("全局节拍器")
+                .accessibilityValue(model.metronomeRunning ? "正在运行" : "已停止")
+                .accessibilityIdentifier("navigation.metronome")
             Button(action: openDevices) {
                 if labels {
                     Label("演奏输入", systemImage: model.inputMode.isMicrophone ? "mic" : "cable.connector")
@@ -146,7 +173,7 @@ struct PracticeHomeView: View {
                 }
             }.buttonStyle(.plain).foregroundStyle(QinXuTheme.teal)
                 .accessibilityLabel("演奏输入与设备").accessibilityIdentifier("navigation.devices")
-                .padding(.bottom, labels ? 18 : 8)
+                .padding(.bottom, labels ? 18 : 4)
         }.padding(.horizontal, labels ? 15 : 5)
             .frame(maxHeight: .infinity).background(QinXuTheme.paper)
     }
@@ -161,12 +188,12 @@ struct PracticeHomeView: View {
             VStack(spacing: 4) {
                 Image(systemName: item.symbol).font(.system(size: 17))
                 Text(item.shortTitle).font(.system(size: 9))
-            }.frame(width: 50, height: 47)
+            }.frame(width: 50, height: 44)
         }
     }
 
     private func navigate(_ next: QinXuSection) {
-        if section == .practice && next != .practice { model.suspendForBackground() }
+        if section == .practice && next != .practice { model.pausePractice() }
         if next != .practice { immersivePractice = false }
         detailScoreID = nil
         section = next
@@ -177,11 +204,11 @@ struct PracticeHomeView: View {
         section = .practice
     }
     private func openDevices() {
-        model.suspendForBackground()
+        model.pausePractice()
         showingDevices = true
     }
     private func editCover(_ id: String) {
-        model.suspendForBackground()
+        model.pausePractice()
         coverSelection = CoverSelection(id: id)
     }
 }

@@ -9,9 +9,14 @@ struct QinXuApp: App {
     init() {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
-            // Each test launch has a new local store and never opens a MIDI/audio device.
+            // Tests never open a MIDI/audio device or touch the user's library.
+            // A validated UUID can opt into the same isolated store across launches.
+            let prefix = "--ui-test-store-id="
+            let requestedID = ProcessInfo.processInfo.arguments.first(where: { $0.hasPrefix(prefix) })
+                .flatMap { UUID(uuidString: String($0.dropFirst(prefix.count))) }
+            let storeID = requestedID ?? UUID()
             let file = FileManager.default.temporaryDirectory
-                .appendingPathComponent("QinXu-UI-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("QinXu-UI-\(storeID.uuidString)", isDirectory: true)
                 .appendingPathComponent("library.json")
             _model = StateObject(wrappedValue: PracticeViewModel(
                 storage: LocalLibraryStore(url: file), deviceAccessEnabled: false))

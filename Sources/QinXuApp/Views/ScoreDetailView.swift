@@ -107,7 +107,7 @@ struct ScoreDetailView: View {
                 Label("上次停在第 \(progress.measure) 小节", systemImage: "bookmark.circle")
                     .font(.system(size: compact ? 12 : 14, weight: .medium))
                     .accessibilityIdentifier("detail.progress")
-                Text("\(progress.hand.title) · \(progress.mode.title) · \(Int(progress.tempoBPM)) BPM")
+                Text("\(progress.hand.title) · \(progress.mode.title) · 上次 ♩\(Int(progress.tempoBPM))")
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
             }
             Spacer(minLength: 4)
@@ -133,7 +133,7 @@ struct ScoreDetailView: View {
                 HStack(spacing: 7) {
                     tag("\(score.measures.count) 小节", symbol: "music.note.list")
                     tag("\(score.beatsPerMeasure)/\(score.beatUnit) 拍", symbol: "timer")
-                    tag("\(Int(score.tempoBPM)) BPM", symbol: "metronome")
+                    tag("原谱 ♩\(Int(score.tempoBPM))", symbol: "metronome")
                 }
                 HStack(spacing: 7) {
                     tag(hands, symbol: "hand.raised")
@@ -146,7 +146,7 @@ struct ScoreDetailView: View {
     @ViewBuilder private var metadataItems: some View {
         tag("\(score.measures.count) 小节", symbol: "music.note.list")
         tag("\(score.beatsPerMeasure)/\(score.beatUnit) 拍", symbol: "timer")
-        tag("\(Int(score.tempoBPM)) BPM", symbol: "metronome")
+        tag("原谱 ♩\(Int(score.tempoBPM))", symbol: "metronome")
         tag(hands, symbol: "hand.raised")
         tag(sourceTitle, symbol: isOriginal ? "music.note" : "doc")
     }

@@ -51,7 +51,8 @@ ui_framework_phase = obj("ui-frameworks", 'isa = PBXFrameworksBuildPhase; buildA
 # iOS uses a flat app bundle. A root directory literally named Resources can
 # make codesign interpret the app as another bundle format. Copy these children.
 resource_builds = []
-for name, file_type in [("BasicPitch.mlpackage", "folder"), ("Books", "folder"), ("Fonts", "folder"),
+for name, file_type in [("Assets.xcassets", "folder.assetcatalog"),
+                        ("BasicPitch.mlpackage", "folder"), ("Books", "folder"), ("Fonts", "folder"),
                         ("BasicPitch-LICENSE.txt", "text"), ("BasicPitch-NOTICE.txt", "text")]:
     relative = "Sources/QinXuApp/Resources/" + name
     resource_ref = obj("resource:" + name, f'isa = PBXFileReference; lastKnownFileType = {file_type}; path = {q(relative)}; sourceTree = SOURCE_ROOT;')
@@ -87,6 +88,7 @@ for name in ("Debug", "Release"):
         "PRODUCT_BUNDLE_IDENTIFIER": "$(QINXU_BUNDLE_IDENTIFIER)", "PRODUCT_NAME": "$(TARGET_NAME)",
         "TARGETED_DEVICE_FAMILY": "1,2", "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator",
         "SUPPORTS_MACCATALYST": "NO", "SWIFT_EMIT_LOC_STRINGS": "YES",
+        "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
         "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks"
     }
     ui_settings = {

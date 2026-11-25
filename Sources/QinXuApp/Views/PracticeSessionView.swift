@@ -11,7 +11,12 @@ struct PracticeSessionView: View {
     var onToggleImmersion: () -> Void = {}
     @State private var showingSettings = false
     @State private var showingModeHelp = false
+    @State private var openMetronomeAfterSettings = false
     private var displayedBeatsPerQuarter: Double { Double(model.selectedScore.beatUnit) / 4 }
+    private var meterDiffers: Bool {
+        model.metronomeSettings.beatsPerMeasure != model.selectedScore.beatsPerMeasure
+            || model.metronomeSettings.beatUnit != model.selectedScore.beatUnit
+    }
 
     private var currentMeasure: Int {
         model.engine.expectedNotes.first?.measure
@@ -51,7 +56,12 @@ struct PracticeSessionView: View {
         }
         .background(QinXuTheme.background)
         .foregroundStyle(QinXuTheme.ink)
-        .sheet(isPresented: $showingSettings) { settings }
+        .sheet(isPresented: $showingSettings, onDismiss: {
+            if openMetronomeAfterSettings {
+                openMetronomeAfterSettings = false
+                model.openMetronomeSettings()
+            }
+        }) { settings }
         .sheet(isPresented: $showingModeHelp) { modeHelp }
         .sheet(isPresented: $model.showingReport) {
             if let report = model.latestReport {
@@ -348,12 +358,12 @@ struct PracticeSessionView: View {
     }
 
     private var tempoButton: some View {
-        Button { showingSettings = true } label: {
+        Button { model.openMetronomeSettings() } label: {
             HStack(spacing: 3) {
-                Text("♩ \(Int(model.tempo))/分").monospacedDigit()
+                Text("\(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit)  \(model.metronomeSettings.tempoNote.symbol) \(Int(model.metronomeSettings.tempoBPM))").monospacedDigit()
                 Image(systemName: "chevron.down").font(.system(size: 7))
             }.font(.system(size: compact ? 10 : 12, weight: .medium)).padding(.vertical, 3)
-        }.buttonStyle(.plain).accessibilityLabel("速度每分钟 \(Int(model.tempo)) 个四分音符，轻点调整")
+        }.buttonStyle(.plain).accessibilityLabel("全局节拍器，\(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit)，\(model.metronomeSettings.tempoNote.title)每分钟 \(Int(model.metronomeSettings.tempoBPM)) 次")
             .accessibilityIdentifier("practice.tempo")
     }
 
@@ -369,25 +379,33 @@ struct PracticeSessionView: View {
                     .accessibilityIdentifier("practice.metronome.toggle")
                 tempoButton
                 Button { model.metronomeEnabled.toggle() } label: {
-                    Image(systemName: model.metronomeEnabled && !model.inputMode.isMicrophone ? "speaker.wave.2" : "speaker.slash")
+                    Image(systemName: model.metronomeEnabled && model.metronomeSoundAvailable ? "speaker.wave.2" : "speaker.slash")
                         .font(.system(size: compact ? 11 : 13)).frame(width: 24, height: 24)
-                }.buttonStyle(.plain).disabled(model.inputMode.isMicrophone)
+                }.buttonStyle(.plain).disabled(!model.metronomeSoundAvailable)
                     .foregroundStyle(QinXuTheme.muted)
-                    .accessibilityLabel(model.inputMode.isMicrophone ? "麦克风输入仅视觉节拍" : model.metronomeEnabled ? "关闭节拍器声音" : "打开节拍器声音")
+                    .accessibilityLabel(!model.metronomeSoundAvailable ? "麦克风录音期间仅视觉节拍" : model.metronomeEnabled ? "关闭节拍器声音" : "打开节拍器声音")
                     .accessibilityIdentifier("practice.metronome.sound")
             }
-            HStack(spacing: 5) {
-                ForEach(1...max(1, min(12, model.selectedScore.beatsPerMeasure)), id: \.self) { beat in
+            HStack(spacing: compact ? 3 : 5) {
+                ForEach(1...model.metronomeSettings.beatsPerMeasure, id: \.self) { beat in
                     Circle().fill(model.metronomeBeat == beat ? QinXuTheme.accent : QinXuTheme.line)
                         .frame(width: beat == 1 ? 7 : 5, height: beat == 1 ? 7 : 5)
                 }
-                if model.inputMode.isMicrophone {
+                if model.metronomeSettings.pulsesPerBeat > 1 {
+                    Text("\(model.metronomeSubdivision ?? 0)/\(model.metronomeSettings.pulsesPerBeat)")
+                        .font(.system(size: 9)).monospacedDigit().foregroundStyle(QinXuTheme.muted)
+                }
+                if meterDiffers {
+                    Text("谱面 \(model.selectedScore.beatsPerMeasure)/\(model.selectedScore.beatUnit)")
+                        .font(.system(size: 9)).foregroundStyle(QinXuTheme.muted)
+                }
+                if !model.metronomeSoundAvailable {
                     Text("仅闪拍").font(.system(size: 9)).foregroundStyle(QinXuTheme.muted)
                 }
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("节拍指示")
-            .accessibilityValue(model.metronomeBeat.map { "第 \($0) 拍" } ?? "未运行")
+            .accessibilityValue(model.metronomeBeat.map { "第 \($0) 拍，第 \(model.metronomeSubdivision ?? 1) 分拍" } ?? "未运行")
             .accessibilityIdentifier("practice.metronome.beat")
         }
     }
@@ -436,22 +454,22 @@ struct PracticeSessionView: View {
                     }
                     handPicker
                 }
-                Section("速度 · 四分音符/分钟") {
-                    HStack {
-                        Image(systemName: "metronome")
-                        Text("\(Int(model.tempo)) BPM").monospacedDigit()
-                    }
-                    Slider(value: Binding(get: { model.tempo }, set: { model.tempo = $0.rounded() }), in: 20...300,
-                           onEditingChanged: { editing in if !editing { model.reconfigure() } })
-                        .accessibilityLabel("速度，四分音符每分钟")
-                        .accessibilityIdentifier("practice.settings.tempo")
-                }
-                Section("节拍器") {
-                    Button(model.metronomeRunning ? "停止节拍器" : "启动节拍器") { model.toggleMetronome() }
-                    Toggle("节拍器声音", isOn: $model.metronomeEnabled)
-                        .disabled(model.inputMode.isMicrophone)
-                    if model.inputMode.isMicrophone {
-                        Text("麦克风模式仅显示视觉拍点，避免节拍器声音进入识音。")
+                Section("全局节拍器") {
+                    Button {
+                        openMetronomeAfterSettings = true
+                        showingSettings = false
+                    } label: {
+                        HStack {
+                            Label("拍号、速度与分拍", systemImage: "metronome")
+                            Spacer()
+                            Text("\(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit) · \(model.metronomeSettings.tempoNote.symbol) \(Int(model.metronomeSettings.tempoBPM))").monospacedDigit()
+                            Image(systemName: "chevron.right").font(.system(size: 10))
+                        }
+                    }.accessibilityIdentifier("practice.settings.metronome")
+                    Text("练习速度跟随全局设置；曲谱的拍号与音符时值保持不变。")
+                        .foregroundStyle(QinXuTheme.muted)
+                    if meterDiffers {
+                        Text("节拍器 \(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit) · 谱面 \(model.selectedScore.beatsPerMeasure)/\(model.selectedScore.beatUnit)")
                             .foregroundStyle(QinXuTheme.muted)
                     }
                 }
@@ -483,7 +501,7 @@ struct PracticeSessionView: View {
         }
         .tint(QinXuTheme.accent)
         .frame(minWidth: 320, minHeight: 280)
-        .onAppear { model.suspendForBackground() }
+        .onAppear { model.pausePractice() }
     }
 
     private var modeHelp: some View {
@@ -493,8 +511,9 @@ struct PracticeSessionView: View {
                     modeExplanation("识谱模式", symbol: "music.note", text: "弹对当前音或和弦后才继续。可以停下来找键，不按固定时间判抢拍、拖拍和漏音。适合先认熟音符。")
                     modeExplanation("节奏模式", symbol: "metronome", text: "预备一小节后，按设定速度持续向前。起音过早算抢拍，过晚算拖拍，错过时间窗算漏音。暂停会停住练习时间线。")
                     modeExplanation("长音提示", symbol: "hourglass", text: "橙色倒计时显示谱面要求还应保持多久，按当前速度换算秒数。它是练习指引；麦克风声音包含余音，不能证明琴键仍按着。")
+                    modeExplanation("全局节拍器", symbol: "metronome", text: "所有曲目跟随全局速度。节拍器拍号决定重拍循环，分拍决定每响一次的时值；这些设置不会改写曲谱的拍号或音符。长音提示中的拍数仍按谱面拍号计算。")
                     if model.inputMode.isMicrophone {
-                        Label("麦克风仅开放识谱模式，并使用视觉节拍，避免节拍器声音干扰识音。", systemImage: "mic")
+                        Label("麦克风仅开放识谱模式；录音期间只闪拍，避免节拍器声音干扰识音。暂停录音后可独立使用有声节拍器。", systemImage: "mic")
                             .font(.system(size: 13)).foregroundStyle(QinXuTheme.muted)
                     }
                 }.padding(24).frame(maxWidth: 620, alignment: .leading)
@@ -502,7 +521,7 @@ struct PracticeSessionView: View {
                 .navigationTitle("练习模式")
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("知道了") { showingModeHelp = false } } }
         }.frame(minWidth: 320, minHeight: 280)
-            .onAppear { model.suspendForBackground() }
+            .onAppear { model.pausePractice() }
     }
 
     private func modeExplanation(_ title: String, symbol: String, text: String) -> some View {

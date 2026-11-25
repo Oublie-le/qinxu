@@ -150,7 +150,7 @@ struct ScoreLibraryView: View {
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.teal).lineLimit(1)
                     .accessibilityIdentifier("library.progress")
             } else if !compact {
-                Text("\(model.selectedScore.measures.count) 小节 · \(Int(model.selectedScore.tempoBPM)) BPM")
+                Text("\(model.selectedScore.measures.count) 小节 · 原谱 ♩\(Int(model.selectedScore.tempoBPM))")
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted).lineLimit(1)
             }
             Spacer(minLength: 4)

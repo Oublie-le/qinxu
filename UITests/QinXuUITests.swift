@@ -202,17 +202,12 @@ final class QinXuUITests: XCTestCase {
         // Use the actual tempo control to make this whole note long enough to inspect.
         // This changes musical duration; there is no test-only clock or fixed sleep.
         element("practice.tempo", in: app).tap()
-        let tempo = app.sliders.matching(identifier: "practice.settings.tempo").firstMatch
-        let settingsForm = element("practice.settings.form", in: app)
-        XCTAssertTrue(settingsForm.waitForExistence(timeout: 8))
-        for _ in 0..<5 {
-            if tempo.exists && tempo.isHittable { break }
-            settingsForm.swipeUp()
-        }
-        XCTAssertTrue(tempo.exists && tempo.isHittable, "设置中的速度滑块应可见")
+        let tempo = app.sliders.matching(identifier: "globalMetronome.tempo").firstMatch
+        XCTAssertTrue(element("globalMetronome.sheet", in: app).waitForExistence(timeout: 8))
+        reveal(tempo, in: app, towardBottom: true, scrollIdentifier: "globalMetronome.scroll")
         tempo.adjust(toNormalizedSliderPosition: 0)
-        element("practice.settings.close", in: app).tap()
-        expect(element("practice.tempo", in: app), "label CONTAINS %@", "20 个四分音符")
+        element("globalMetronome.save", in: app).tap()
+        expect(element("practice.tempo", in: app), "label CONTAINS %@", "四分音符每分钟 20 次")
         element("practice.play", in: app).tap()
         tapKey(72, in: app)
 
@@ -267,6 +262,66 @@ final class QinXuUITests: XCTestCase {
         expect(toggle, "label == %@", "启动节拍器")
         expect(beat, "value == %@", "未运行")
         // --ui-testing disables audio-device access; this validates visual controls, not audible clicks.
+    }
+
+    @MainActor
+    func testGlobalMetronomeSettingsSurviveSongChangesAndRelaunch() {
+        let storeID = UUID()
+        let app = launchFreshApp(storeID: storeID)
+        defer { app.terminate() }
+        element("navigation.metronome", in: app).tap()
+        XCTAssertTrue(element("globalMetronome.sheet", in: app).waitForExistence(timeout: 8))
+
+        let tempo = app.sliders.matching(identifier: "globalMetronome.tempo").firstMatch
+        reveal(tempo, in: app, towardBottom: true, scrollIdentifier: "globalMetronome.scroll")
+        tempo.adjust(toNormalizedSliderPosition: 0.25) // 20...300, quarter position is 90.
+        expect(tempo, "value == %@", "90")
+        chooseGlobalMetronomeOption("tempoNote", value: "quarter", in: app)
+        chooseGlobalMetronomeOption("beatsPerMeasure", value: "3", in: app)
+        chooseGlobalMetronomeOption("beatUnit", value: "4", in: app)
+        chooseGlobalMetronomeOption("clickNote", value: "eighth", in: app)
+        element("globalMetronome.save", in: app).tap()
+        expect(element("globalMetronome.sheet", in: app), "exists == false")
+
+        let summary = "3/4，四分音符每分钟 90 次，每响八分音符"
+        element("navigation.metronome", in: app).tap()
+        expect(element("globalMetronome.summary", in: app), "value == %@", summary)
+        let globalToggle = element("globalMetronome.toggle", in: app)
+        expect(globalToggle, "label == %@", "启动节拍器")
+        globalToggle.tap()
+        expect(globalToggle, "label == %@", "停止节拍器")
+        expectAdvancingMetronomeBeat(element("globalMetronome.beat", in: app))
+        element("globalMetronome.cancel", in: app).tap()
+
+        // These original scores have their own different tempo metadata. Neither
+        // selection nor navigation may replace the saved global settings or stop
+        // the independently started metronome.
+        for scoreID in ["demo-melody", "demo-rhythm"] {
+            enterPractice(scoreID, in: app)
+            expect(element("practice.tempo", in: app), "label CONTAINS %@", "四分音符每分钟 90 次")
+            expect(element("practice.metronome.toggle", in: app), "label == %@", "停止节拍器")
+            expectAdvancingMetronomeBeat(element("practice.metronome.beat", in: app))
+            expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
+
+            element("practice.tempo", in: app).tap()
+            expect(element("globalMetronome.summary", in: app), "value == %@", summary)
+            expect(element("globalMetronome.toggle", in: app), "label == %@", "停止节拍器")
+            element("globalMetronome.cancel", in: app).tap()
+            capture(app, name: "global-metronome-preserved-" + scoreID)
+            element("library.open", in: app).tap()
+        }
+
+        // Reuse only this test's UUID-scoped temporary store. The normal user
+        // library and every other test remain isolated.
+        app.terminate()
+        let relaunched = launchFreshApp(storeID: storeID)
+        defer { relaunched.terminate() }
+        element("navigation.metronome", in: relaunched).tap()
+        expect(element("globalMetronome.summary", in: relaunched), "value == %@", summary)
+        expect(element("globalMetronome.toggle", in: relaunched), "label == %@", "启动节拍器")
+        expect(element("globalMetronome.beat", in: relaunched), "value == %@", "未运行")
+        capture(relaunched, name: "global-metronome-settings-after-relaunch")
+        // --ui-testing disables audio-device access; no audible-click claim is made.
     }
 
     @MainActor
@@ -340,6 +395,30 @@ final class QinXuUITests: XCTestCase {
     }
 
     @MainActor
+    private func chooseGlobalMetronomeOption(_ setting: String, value: String, in app: XCUIApplication,
+                                             file: StaticString = #filePath, line: UInt = #line) {
+        let picker = element("globalMetronome." + setting, in: app)
+        reveal(picker, in: app, towardBottom: true, scrollIdentifier: "globalMetronome.scroll", file: file, line: line)
+        picker.tap()
+        let option = element("globalMetronome." + setting + "." + value, in: app)
+        XCTAssertTrue(option.waitForExistence(timeout: 8), file: file, line: line)
+        option.tap()
+    }
+
+    @MainActor
+    private func expectAdvancingMetronomeBeat(_ beat: XCUIElement,
+                                             file: StaticString = #filePath, line: UInt = #line) {
+        expect(beat, "value BEGINSWITH %@", "第 ", file: file, line: line)
+        let initial = beat.value as? String ?? ""
+        let advancing = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard beat.exists, let value = beat.value as? String else { return false }
+            return value.hasPrefix("第 ") && value != initial
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 5), .completed,
+                       "独立节拍指示应继续按时钟推进", file: file, line: line)
+    }
+
+    @MainActor
     private func enterPractice(_ scoreID: String, in app: XCUIApplication) {
         let shortcut = element("library.practice." + scoreID, in: app)
         XCTAssertTrue(shortcut.waitForExistence(timeout: 10))
@@ -348,13 +427,14 @@ final class QinXuUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchFreshApp() -> XCUIApplication {
+    private func launchFreshApp(storeID: UUID? = nil) -> XCUIApplication {
         let app = XCUIApplication()
         // A manually opened app may still be running before the first test.
         // Rotate after closing it, then wait for the newly launched layout.
         if app.state != .notRunning { app.terminate() }
         XCUIDevice.shared.orientation = .landscapeLeft
         app.launchArguments += ["--ui-testing", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        if let storeID { app.launchArguments.append("--ui-test-store-id=" + storeID.uuidString) }
         app.launch()
         let search = element("library.search", in: app)
         XCTAssertTrue(search.waitForExistence(timeout: 20), "新首页应显示曲库")

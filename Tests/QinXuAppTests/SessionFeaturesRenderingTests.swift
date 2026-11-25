@@ -9,6 +9,36 @@ private final class SessionPreviewClock { var now: TimeInterval = 100 }
 
 extension PracticeRenderingTests {
     @Test(arguments: [667, 1194])
+    func globalMetronomeRendersFromLibraryAndPractice(width: Int) throws {
+        let height = width == 667 ? 375 : 834
+        let compact = width == 667
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let clock = SessionPreviewClock()
+        let model = PracticeViewModel(storage: LocalLibraryStore(url: directory.appendingPathComponent("library.json")),
+                                      clock: { clock.now }, automaticTimer: false, deviceAccessEnabled: false)
+        let settings = GlobalMetronomeSettings(beatsPerMeasure: 3, beatUnit: 4, tempoBPM: 90,
+                                               tempoNote: .quarter, clickNote: .eighth)
+        #expect(model.updateMetronomeSettings(settings))
+        model.toggleMetronome()
+        clock.now += settings.pulseSeconds + 0.01
+        model.tick()
+        #expect(model.metronomeSubdivision == 2)
+        try render(GlobalMetronomeSettingsView(model: model)
+            .frame(width: CGFloat(width), height: CGFloat(height)),
+            name: "global-metronome-sheet-\(width)", width: width, height: height)
+        try render(PracticeHomeView(model: model)
+            .frame(width: CGFloat(width), height: CGFloat(height)),
+            name: "global-metronome-home-\(width)", width: width, height: height)
+        model.selectScore("demo-chords")
+        #expect(model.metronomeRunning)
+        let availableWidth = width - (compact ? 63 : 175)
+        try render(PracticeSessionView(model: model, compact: compact, onExit: {}, onShowDevices: {})
+            .frame(width: CGFloat(availableWidth), height: CGFloat(height)),
+            name: "global-metronome-session-\(width)", width: availableWidth, height: height)
+    }
+
+    @Test(arguments: [667, 1194])
     func sustainImmersionAndReportRenderAtPhoneAndTabletSizes(width: Int) throws {
         let height = width == 667 ? 375 : 834
         let compact = width == 667

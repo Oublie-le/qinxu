@@ -12,6 +12,7 @@ mkdir -p "$app_dir/Contents/MacOS"
 cp "$binary_dir/QinXuPreview" "$app_dir/Contents/MacOS/QinXu"
 # Keep the SwiftPM resource bundle inside the signed app's standard resources folder.
 mkdir -p "$app_dir/Contents/Resources"
+bash scripts/create-macos-icon.sh "$app_dir/Contents/Resources/AppIcon.icns"
 # Remove only the old generated bundle placement, which codesign rejects at the app root.
 if [[ -d "$app_dir/QinXu_QinXuApp.bundle" ]]; then
   rm -rf "$app_dir/QinXu_QinXuApp.bundle"
@@ -29,6 +30,7 @@ cat > "$app_dir/Contents/Info.plist" <<'PLIST'
 <key>CFBundleExecutable</key><string>QinXu</string>
 <key>CFBundleIdentifier</key><string>com.ifeng.QinXu.mac</string>
 <key>CFBundleName</key><string>琴序 · 开发预览</string>
+<key>CFBundleIconFile</key><string>AppIcon</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.1.0</string>
 <key>CFBundleVersion</key><string>1</string>
