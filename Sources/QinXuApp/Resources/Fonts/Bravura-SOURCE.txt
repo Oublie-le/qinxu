@@ -1,0 +1,39 @@
+Bravura music font 1.482
+Copyright 2026 Steinberg Media Technologies GmbH.
+Reserved Font Name: Bravura. License: SIL Open Font License 1.1.
+The complete unmodified license is bundled as Bravura-LICENSE.txt.
+
+Official source: https://github.com/steinbergmedia/bravura
+Pinned revision: 37b194378b710cc40e406ab6c4b07608bb9548ae
+Font path: redist/otf/Bravura.otf
+Font bytes: 889228
+Font SHA256: cdf0f893ee1fdb64b7f6713d71ee0dcfc349c0ac01429a8e451b01a9e79f5f3b
+License path: LICENSE.txt
+License SHA256: bdca252186865f3b2c0e76da4a4e335c14ba1d37f80194fca254ddfa88e84fbf
+
+The font is included without modification. QinXu registers it with CoreText
+at process scope and draws its SMuFL outlines at a 40-point em / 10-point
+staff-space size. Staff lines, stems and ledger lines are drawing primitives.
+The same registration also makes Font.custom("Bravura", fixedSize:) available.
+
+Glyph names, coordinates and stem registration were checked against:
+https://raw.githubusercontent.com/steinbergmedia/bravura/37b194378b710cc40e406ab6c4b07608bb9548ae/redist/Bravura.json
+Metadata SHA256: 489fb4d734fc0b72a3cc601b50ebdf0bf8c57802ab9893e52ce030b86bf2ce11
+Relevant metadata: notehead width 1.18 spaces; stem thickness 0.12 spaces;
+stemUpSE=(1.18,0.168), stemDownNW=(0,-0.168); normal stem length 3.5 spaces.
+
+Primary SMuFL references:
+https://smufl.formats.music/latest/tables/clefs.html
+https://smufl.formats.music/latest/tables/noteheads.html
+https://smufl.formats.music/latest/tables/standard-accidentals-12-edo.html
+https://smufl.formats.music/latest/tables/flags.html
+https://smufl.formats.music/latest/specification/glyphswithanchors.html
+
+Run python3 scripts/fetch-notation-font.py to prepare the build input, or
+add --check to verify local files without networking. The OTF is excluded
+from Git; the fetch script, source notice and license are tracked.
+
+QinXu's notation remains a practice view. PianoScore does not preserve the
+original beaming, voice directions, rests, key signature or tie layout.
+Unequal durations are not merged into one stem. Nonstandard durations keep
+an explicit beat-count annotation; this does not claim full engraving fidelity.

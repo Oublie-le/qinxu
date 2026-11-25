@@ -12,6 +12,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare pinned model and public-domain book
+        run: bash scripts/prepare-resources.sh
       - name: Report toolchain
         run: |
           xcodebuild -version
@@ -29,6 +31,8 @@ jobs:
         device: [iPhone, iPad]
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare pinned model and public-domain book
+        run: bash scripts/prepare-resources.sh
       - name: Test on iOS Simulator
         run: bash scripts/test-ios.sh '${{ matrix.device }}'
       - name: Save UI test results and screenshots

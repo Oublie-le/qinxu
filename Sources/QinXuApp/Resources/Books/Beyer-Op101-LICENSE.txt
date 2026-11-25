@@ -1,0 +1,43 @@
+Beyer Op.101 - public-domain reading edition
+
+Work: Vorschule im Klavierspiel, Op.101
+Composer: Ferdinand Beyer (1803-1863)
+Edition: Edition Peters No.2721, Leipzig, ca.1895, plate 8033
+Revision: Adolf Ruthardt (1849-1934)
+Languages: German, English, French
+File: Beyer-Op101.pdf, 88 pages, 10,301,776 bytes
+SHA256: 369d3800bc8ad42c97fb4312b92060060a6d42aee4e642c35de797fb65ff23c2
+
+Provenance:
+IMSLP work page identifies this as the complete Peters/Ruthardt edition,
+cleaned and deskewed, with missing pages added, from the MIT archive project.
+IMSLP file number: 81208; work number: PMLP31149.
+https://imslp.org/wiki/Vorschule_im_Klavierspiel,_Op.101_(Beyer,_Ferdinand)
+
+Downloaded from Wikimedia Commons, whose file description credits the
+Internet Archive / IMSLP copy. The PDF is bundled without modification.
+https://commons.wikimedia.org/wiki/File:Vorschule_im_Klavierspiel,_Op.101_(IA_imslp-im-klavierspiel-op101-beyer-ferdinand).pdf
+https://archive.org/details/imslp-im-klavierspiel-op101-beyer-ferdinand
+
+Pinned download:
+https://upload.wikimedia.org/wikipedia/commons/a/aa/Vorschule_im_Klavierspiel%2C_Op.101_%28IA_imslp-im-klavierspiel-op101-beyer-ferdinand%29.pdf
+
+Rights status checked 2026-11-25:
+IMSLP marks this edition Public Domain. Wikimedia Commons marks the file
+Public Domain Mark 1.0 / PD-old-100-expired, and states that it is free of
+known restrictions under copyright law, including related and neighboring
+rights. The Public Domain Mark is a status mark, not a new copyright license.
+https://creativecommons.org/publicdomain/mark/1.0/
+
+QinXu displays this as a public-domain PDF reading edition. Its cover is a
+thumbnail of the first page. It is not the Shanghai Music Publishing House
+edition. It contains no Shanghai edition translation, covers or annotations.
+This scanned PDF is not a symbolic score and is not used for automatic note
+evaluation. No claim of completed score transcription or hardware testing
+is made by bundling this resource.
+
+Reproduction:
+Run python3 scripts/fetch-beyer.py. The download must match the byte count
+and SHA256 above; a changed upstream file fails verification. Run with
+--check to verify an existing local file without network access. The binary
+is excluded from Git; this provenance notice and fetch script are tracked.

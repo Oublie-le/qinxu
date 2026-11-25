@@ -8,6 +8,8 @@ struct PianoKeyboardView: View {
     let interactive: Bool
     let press: (Int) -> Void
     let release: (Int) -> Void
+    var compact: Bool = false
+    private var keyHeight: CGFloat { compact ? 58 : 122 }
     private var whites: [Int] { (0...127).filter { !isBlack($0) && $0 >= lower && $0 <= upper } }
     private var lower: Int { max(0, min(hand == .left ? 36 : 48, expectedPitches.union(heldPitches).min() ?? 48) / 12 * 12) }
     private var upper: Int { min(127, max(84, (expectedPitches.union(heldPitches).max() ?? 84) / 12 * 12 + 12)) }
@@ -19,16 +21,16 @@ struct PianoKeyboardView: View {
                 ZStack(alignment: .topLeading) {
                     HStack(spacing: 0) {
                         ForEach(whites, id: \.self) { pitch in
-                            key(pitch, black: false).frame(width: width, height: 122)
+                            key(pitch, black: false).frame(width: width, height: keyHeight)
                         }
                     }
                     ForEach(Array(lower...upper).filter(isBlack), id: \.self) { pitch in
-                        key(pitch, black: true).frame(width: width * 0.59, height: 76)
+                        key(pitch, black: true).frame(width: width * 0.59, height: compact ? 36 : 76)
                             .offset(x: CGFloat(whites.filter { $0 < pitch }.count) * width - width * 0.295)
                     }
-                }.frame(width: CGFloat(whites.count) * width, height: 124)
+                }.frame(width: CGFloat(whites.count) * width, height: keyHeight + 2)
             }.scrollIndicators(.hidden)
-        }.frame(height: 124)
+        }.frame(height: keyHeight + 2)
     }
     private func key(_ pitch: Int, black: Bool) -> some View {
         PianoTouchKey(pitch: pitch, black: black, expected: expectedPitches.contains(pitch), held: heldPitches.contains(pitch), interactive: interactive, press: press, release: release)
@@ -45,7 +47,7 @@ private struct PianoTouchKey: View {
     let release: (Int) -> Void
     @State private var touching = false
     private var color: Color {
-        if held || touching { return QinXuTheme.teal }
+        if held || touching { return QinXuTheme.accent }
         if expected { return black ? QinXuTheme.teal.opacity(0.7) : Color(red: 0.77, green: 0.88, blue: 0.81) }
         return black ? QinXuTheme.navy : .white
     }

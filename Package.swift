@@ -10,7 +10,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "QinXuCore"),
-        .executableTarget(name: "QinXuApp", dependencies: ["QinXuCore"]),
+        .executableTarget(name: "QinXuApp", dependencies: ["QinXuCore"], resources: [.copy("Resources")]),
         .testTarget(name: "QinXuCoreTests", dependencies: ["QinXuCore"]),
         .testTarget(name: "QinXuAppTests", dependencies: ["QinXuApp", "QinXuCore"])
     ],

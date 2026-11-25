@@ -10,3 +10,15 @@ xcuserdata/
 
 __pycache__/
 *.pyc
+Sources/QinXuApp/Resources/Books/*.pdf
+Sources/QinXuApp/Resources/Fonts/*.otf
+
+# Downloaded model, reconstructed and verified by scripts/fetch-basic-pitch.py.
+Sources/QinXuApp/Resources/BasicPitch.mlpackage/
+
+# Local visual verification outputs
+output/ui-concept/*.png
+
+# Machine-local public signing identifiers; never commit account configuration.
+Config/LocalSigning.xcconfig
+Config/.LocalSigning.*.tmp

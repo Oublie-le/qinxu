@@ -5,9 +5,10 @@ import AVFoundation
 import QinXuCore
 
 enum InputMode: String, CaseIterable {
-    case midi, touch, microphone
+    case midi, touch, microphone, microphonePolyphonic
+    var isMicrophone: Bool { self == .microphone || self == .microphonePolyphonic }
     var title: String {
-        switch self { case .midi: return "MIDI 钢琴"; case .touch: return "屏幕琴键"; case .microphone: return "麦克风（实验）" }
+        switch self { case .midi: return "MIDI 钢琴"; case .touch: return "屏幕琴键"; case .microphone: return "单音麦克风（实验）"; case .microphonePolyphonic: return "双手麦克风（实验）" }
     }
 }
 
@@ -15,6 +16,8 @@ enum InputMode: String, CaseIterable {
 final class PracticeViewModel: ObservableObject {
     @Published var scores: [PianoScore]
     @Published var selectedScoreID: String
+    @Published private(set) var favoriteScoreIDs: Set<String> = []
+    @Published private(set) var scoreCoverData: [String: Data] = [:]
     @Published var mode: PracticeMode = .wait
     @Published var hand: PracticeHand = .both
     @Published var tempo: Double
@@ -25,6 +28,7 @@ final class PracticeViewModel: ObservableObject {
     @Published var engine: PracticeEngine
     @Published var midi: MIDIService
     @Published var microphone: MicrophoneService
+    @Published var polyphonicMicrophone: PolyphonicMicrophoneService
     @Published var errorMessage: String?
     @Published var isImporting = false
     @Published var inputMode: InputMode = .touch
@@ -40,12 +44,14 @@ final class PracticeViewModel: ObservableObject {
     private let metronome: Metronome
     private let clock: () -> TimeInterval
     private let storage: LocalLibraryStore
+    private let presentationStore: ScorePresentationStore
     private var transitionID = 0
 
     init(storage: LocalLibraryStore = LocalLibraryStore(),
          clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
          automaticTimer: Bool = true, deviceAccessEnabled: Bool = true) {
         self.storage = storage
+        self.presentationStore = ScorePresentationStore(libraryURL: storage.url)
         self.clock = clock
         self.metronome = Metronome(deviceAccessEnabled: deviceAccessEnabled)
         let library = storage.load()
@@ -58,8 +64,13 @@ final class PracticeViewModel: ObservableObject {
         history = library.history
         midi = MIDIService(deviceAccessEnabled: deviceAccessEnabled)
         microphone = MicrophoneService(deviceAccessEnabled: deviceAccessEnabled)
+        polyphonicMicrophone = PolyphonicMicrophoneService(deviceAccessEnabled: deviceAccessEnabled)
         if midi.connected { inputMode = .midi }
-        if let error = library.error { errorMessage = error }
+        let presentation = presentationStore.load()
+        favoriteScoreIDs = presentation.snapshot.favoriteScoreIDs
+        scoreCoverData = presentation.snapshot.scoreCoverData
+        let loadErrors = [library.error, presentation.error].compactMap { $0 }
+        if !loadErrors.isEmpty { errorMessage = loadErrors.joined(separator: "\n") }
         midi.onEvent = { [weak self] event, time in
             guard let self, self.inputMode == .midi else { return }
             self.receive(event, at: time)
@@ -68,8 +79,17 @@ final class PracticeViewModel: ObservableObject {
             guard let self, self.inputMode == .microphone else { return }
             self.receive(event, at: time)
         }
+        polyphonicMicrophone.onEvent = { [weak self] event, time in
+            guard let self, self.inputMode == .microphonePolyphonic else { return }
+            self.receive(event, at: time)
+        }
+        polyphonicMicrophone.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         midi.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         microphone.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
+        polyphonicMicrophone.$isActive.dropFirst().sink { [weak self] active in
+            guard let self, !active, self.inputMode == .microphonePolyphonic, self.engine.isRunning else { return }
+            self.stopTransport()
+        }.store(in: &cancellables)
         midi.$connected.dropFirst().sink { [weak self] connected in
             guard let self, !connected, self.inputMode == .midi else { return }
             self.stopTransport()
@@ -101,6 +121,7 @@ final class PracticeViewModel: ObservableObject {
         case .midi: return midi.status
         case .touch: return "屏幕琴键用于练习与调试 · 不输出钢琴音色"
         case .microphone: return microphone.status
+        case .microphonePolyphonic: return polyphonicMicrophone.status
         }
     }
 
@@ -120,9 +141,11 @@ final class PracticeViewModel: ObservableObject {
         tempo = tempo.isFinite ? min(300, max(20, tempo)) : 80
         let total = max(1, selectedScore.measures.count)
         loopStart = min(total, max(1, loopStart)); loopEnd = min(total, max(loopStart, loopEnd))
-        if inputMode == .microphone { mode = .wait }
+        if inputMode.isMicrophone { mode = .wait }
         engine = PracticeEngine(score: selectedScore, mode: mode, hand: hand, tempoBPM: tempo,
-                                measureRange: loopEnabled ? loopStart...loopEnd : nil)
+                                measureRange: loopEnabled ? loopStart...loopEnd : nil,
+                                inputLagTolerance: inputMode == .microphonePolyphonic ? 3 : 0.25,
+                                evaluatesNoteDuration: inputMode != .microphonePolyphonic)
         sessionSaved = false; lastMetronomeBeat = nil
     }
 
@@ -138,18 +161,22 @@ final class PracticeViewModel: ObservableObject {
         if inputMode == .midi && !midi.connected {
             errorMessage = "还没有连接 MIDI 钢琴。连接后刷新设备，或切换为屏幕琴键。"; return
         }
-        if inputMode == .microphone {
-            guard validateMicrophoneSubset() else { return }
+        if inputMode.isMicrophone {
+            if inputMode == .microphone, !validateMicrophoneSubset() { return }
+            if inputMode == .microphonePolyphonic, !validatePolyphonicRange() { return }
+            let startingMode = inputMode
             transitionID += 1
             let token = transitionID
             isStartingInput = true
             Task { [weak self] in
                 guard let self, self.transitionID == token,
-                      self.isStartingInput, self.inputMode == .microphone else { return }
-                await self.microphone.start()
+                      self.isStartingInput, self.inputMode == startingMode else { return }
+                if startingMode == .microphonePolyphonic { await self.polyphonicMicrophone.start() }
+                else { await self.microphone.start() }
                 guard self.transitionID == token else { return }
                 self.isStartingInput = false
-                guard self.inputMode == .microphone, self.microphone.isActive else { return }
+                guard self.inputMode == startingMode,
+                      startingMode == .microphonePolyphonic ? self.polyphonicMicrophone.isActive : self.microphone.isActive else { return }
                 self.engine.start(at: self.clock())
             }
         } else if mode == .rhythm {
@@ -177,7 +204,7 @@ final class PracticeViewModel: ObservableObject {
     func setInputMode(_ newMode: InputMode) {
         stopTransport()
         inputMode = newMode
-        if newMode == .microphone { mode = .wait }
+        if newMode.isMicrophone { mode = .wait }
         reconfigure()
     }
 
@@ -205,6 +232,39 @@ final class PracticeViewModel: ObservableObject {
         } catch { errorMessage = error.localizedDescription }
     }
 
+    func toggleFavorite(_ scoreID: String) {
+        guard scores.contains(where: { $0.id == scoreID }) else { return }
+        var next = favoriteScoreIDs
+        if next.contains(scoreID) { next.remove(scoreID) } else { next.insert(scoreID) }
+        savePresentation(favorites: next, covers: scoreCoverData)
+    }
+
+    func importCover(from url: URL, for scoreID: String) {
+        guard scores.contains(where: { $0.id == scoreID }) else { return }
+        do {
+            let data = try ScorePresentationStore.normalizedCover(from: url)
+            var next = scoreCoverData
+            next[scoreID] = data
+            savePresentation(favorites: favoriteScoreIDs, covers: next)
+        } catch { errorMessage = error.localizedDescription }
+    }
+
+    func removeCover(for scoreID: String) {
+        guard scores.contains(where: { $0.id == scoreID }), scoreCoverData[scoreID] != nil else { return }
+        var next = scoreCoverData
+        next.removeValue(forKey: scoreID)
+        savePresentation(favorites: favoriteScoreIDs, covers: next)
+    }
+
+    private func savePresentation(favorites: Set<String>, covers: [String: Data]) {
+        do {
+            try presentationStore.save(.init(favoriteScoreIDs: favorites, scoreCoverData: covers))
+            // Publish only committed state; a failed save keeps the previous cover and favorite.
+            favoriteScoreIDs = favorites
+            scoreCoverData = covers
+        } catch { errorMessage = "保存收藏与封面失败：\(error.localizedDescription)" }
+    }
+
     func suspendForBackground() { stopTransport() }
 
     private func stopTransport() {
@@ -216,6 +276,7 @@ final class PracticeViewModel: ObservableObject {
         // Pausing on the final beat may complete the engine. Save it, but never auto-restart.
         finishIfNeeded(at: now, allowLoopRestart: false)
         microphone.stop()
+        polyphonicMicrophone.stop()
         metronome.stop()
     }
 
@@ -250,7 +311,7 @@ final class PracticeViewModel: ObservableObject {
         }
         if engine.isRunning {
             engine.tick(at: now)
-            if engine.isRunning && mode == .rhythm && inputMode != .microphone {
+            if engine.isRunning && mode == .rhythm && !inputMode.isMicrophone {
                 if let position = PracticeTiming.metronomePosition(atQuarterBeat: engine.currentBeat, score: selectedScore),
                    lastMetronomeBeat != position.id {
                     if metronomeEnabled { metronome.play(accented: position.accented) }
@@ -271,7 +332,18 @@ final class PracticeViewModel: ObservableObject {
         else {
             metronome.stop()
             if inputMode == .microphone { microphone.stop() }
+            if inputMode == .microphonePolyphonic { polyphonicMicrophone.stop() }
         }
+    }
+
+    private func validatePolyphonicRange() -> Bool {
+        let notes = selectedScore.notes.filter {
+            hand.includes(staff: $0.staff) && (!loopEnabled || (loopStart...loopEnd).contains($0.measure))
+        }
+        guard notes.allSatisfy({ (21...108).contains($0.midi) }) else {
+            errorMessage = "双手识音模型覆盖钢琴 A0–C8，请选择此音域内的曲谱。"; return false
+        }
+        return true
     }
 
     private func validateMicrophoneSubset() -> Bool {

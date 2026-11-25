@@ -101,6 +101,39 @@ import QinXuCore
         #expect(!model.microphone.status.contains("已停用"))
     }
 
+    @Test func polyphonicInputKeepsBothHandsButCannotStartAfterCancellation() async throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.mode = .rhythm
+        model.setInputMode(.microphonePolyphonic)
+        #expect(model.mode == .wait && model.hand == .both)
+        model.togglePlayback()
+        #expect(model.isStartingInput)
+        model.suspendForBackground()
+        await Task.yield()
+        #expect(!model.polyphonicMicrophone.isActive && !model.engine.isRunning && !model.isStartingInput)
+        #expect(!model.polyphonicMicrophone.status.contains("已停用"))
+    }
+
+    @Test func polyphonicSourceAcceptsBothHandsChordEventsAndPausesOnFailure() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        var chord = score()
+        chord.id = "both-hand-chord"
+        chord.notes[1].startBeat = 0
+        chord.notes[1].midi = 48
+        chord.notes[1].staff = 2
+        model.scores.append(chord); model.selectScore(chord.id)
+        model.setInputMode(.microphonePolyphonic)
+        model.engine.start(at: 0)
+        model.polyphonicMicrophone.onEvent?(.on(pitch: 48, velocity: 80), 0)
+        model.polyphonicMicrophone.onEvent?(.on(pitch: 60, velocity: 80), 0)
+        #expect(model.engine.correctCount == 2)
+        model.restart(); model.engine.start(at: 1)
+        model.polyphonicMicrophone.stop()
+        #expect(!model.engine.isRunning && !model.isPlaying)
+    }
+
     @Test func microphoneRejectsPolyphonyWithoutOpeningDevice() throws {
         let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
         let clock = Clock(), model = try makeModel(in: folder, clock: clock)

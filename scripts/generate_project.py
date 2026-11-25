@@ -48,17 +48,21 @@ ui_product = obj("ui-product", 'isa = PBXFileReference; explicitFileType = wrapp
 ui_group = obj("ui-group", f'isa = PBXGroup; children = ({",".join(ui_refs)},); name = UITests; sourceTree = "<group>";')
 ui_source_phase = obj("ui-sources", f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(ui_builds)},); runOnlyForDeploymentPostprocessing = 0;')
 ui_framework_phase = obj("ui-frameworks", 'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
+resources = obj("resources", 'isa = PBXFileReference; lastKnownFileType = folder; path = Sources/QinXuApp/Resources; sourceTree = SOURCE_ROOT;')
+resources_build = obj("resources-build", f'isa = PBXBuildFile; fileRef = {resources};')
+refs.append(resources)
 product = obj("product", 'isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QinXu.app; sourceTree = BUILT_PRODUCTS_DIR;')
 plist = obj("plist", 'isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Config/Info.plist; sourceTree = SOURCE_ROOT;')
+signing = obj("signing-config", 'isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Signing.xcconfig; sourceTree = SOURCE_ROOT;')
 source_group = obj("source-group", f"isa = PBXGroup; children = ({','.join(refs)},); name = App; sourceTree = \"<group>\";")
 products_group = obj("products-group", f'isa = PBXGroup; children = ({product},{ui_product},); name = Products; sourceTree = "<group>";')
-root_group = obj("root-group", f'isa = PBXGroup; children = ({source_group},{ui_group},{plist},{products_group},); sourceTree = "<group>";')
+root_group = obj("root-group", f'isa = PBXGroup; children = ({source_group},{ui_group},{plist},{signing},{products_group},); sourceTree = "<group>";')
 local_package = obj("local-package", 'isa = XCLocalSwiftPackageReference; relativePath = .;')
 core_product = obj("core-product", f'isa = XCSwiftPackageProductDependency; package = {local_package}; productName = QinXuCore;')
 core_build = obj("core-build", f'isa = PBXBuildFile; productRef = {core_product};')
 source_phase = obj("source-phase", f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(builds)},); runOnlyForDeploymentPostprocessing = 0;')
 framework_phase = obj("framework-phase", f'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ({core_build},); runOnlyForDeploymentPostprocessing = 0;')
-resource_phase = obj("resource-phase", 'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
+resource_phase = obj("resource-phase", f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({resources_build},); runOnlyForDeploymentPostprocessing = 0;')
 
 project_configs, target_configs, ui_configs = [], [], []
 for name in ("Debug", "Release"):
@@ -74,21 +78,22 @@ for name in ("Debug", "Release"):
     target_settings = {
         "CODE_SIGN_STYLE": "Automatic", "CURRENT_PROJECT_VERSION": "1", "MARKETING_VERSION": "0.1.0",
         "GENERATE_INFOPLIST_FILE": "NO", "INFOPLIST_FILE": "Config/Info.plist",
-        "PRODUCT_BUNDLE_IDENTIFIER": "com.ifeng.QinXu", "PRODUCT_NAME": "$(TARGET_NAME)",
+        "PRODUCT_BUNDLE_IDENTIFIER": "$(QINXU_BUNDLE_IDENTIFIER)", "PRODUCT_NAME": "$(TARGET_NAME)",
         "TARGETED_DEVICE_FAMILY": "1,2", "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator",
         "SUPPORTS_MACCATALYST": "NO", "SWIFT_EMIT_LOC_STRINGS": "YES",
         "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks"
     }
     ui_settings = {
         "CODE_SIGN_STYLE": "Automatic", "GENERATE_INFOPLIST_FILE": "YES",
-        "PRODUCT_BUNDLE_IDENTIFIER": "com.ifeng.QinXuUITests", "PRODUCT_NAME": "$(TARGET_NAME)",
+        "PRODUCT_BUNDLE_IDENTIFIER": "$(QINXU_BUNDLE_IDENTIFIER).UITests", "PRODUCT_NAME": "$(TARGET_NAME)",
         "TARGETED_DEVICE_FAMILY": "1,2", "SUPPORTED_PLATFORMS": "iphoneos iphonesimulator",
         "TEST_TARGET_NAME": "QinXu", "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES": "YES",
         "LD_RUNPATH_SEARCH_PATHS": "$(inherited) @executable_path/Frameworks @loader_path/Frameworks"
     }
     for prefix, settings, collection in (("project", project_settings, project_configs), ("target", target_settings, target_configs), ("ui", ui_settings, ui_configs)):
         values = " ".join(f"{key} = {q(value)};" for key, value in settings.items())
-        collection.append(obj(f"{prefix}-{name}", f'isa = XCBuildConfiguration; buildSettings = {{ {values} }}; name = {name};'))
+        base_config = f"baseConfigurationReference = {signing}; " if prefix == "project" else ""
+        collection.append(obj(f"{prefix}-{name}", f'isa = XCBuildConfiguration; {base_config}buildSettings = {{ {values} }}; name = {name};'))
 
 project_list = obj("project-configs", f'isa = XCConfigurationList; buildConfigurations = ({",".join(project_configs)},); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')
 target_list = obj("target-configs", f'isa = XCConfigurationList; buildConfigurations = ({",".join(target_configs)},); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')

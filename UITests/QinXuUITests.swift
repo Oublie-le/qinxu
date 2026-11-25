@@ -10,6 +10,7 @@ final class QinXuUITests: XCTestCase {
     func testTouchPracticeAdvancesPausesAndRestarts() {
         let app = launchFreshApp()
         defer { app.terminate() }
+        enterPractice("demo-melody", in: app)
         let play = element("practice.play", in: app)
         play.tap()
         expect(play, "label CONTAINS %@", "暂停")
@@ -45,19 +46,21 @@ final class QinXuUITests: XCTestCase {
     @MainActor
     func testLibrarySelectionAndLandscapeLayout() {
         let app = launchFreshApp()
-        defer { app.terminate(); XCUIDevice.shared.orientation = .portrait }
+        defer { app.terminate() }
         let libraryButton = element("library.open", in: app)
         if libraryButton.exists { libraryButton.tap() }
         let rhythm = element("library.score.demo-rhythm", in: app)
         XCTAssertTrue(rhythm.waitForExistence(timeout: 10))
         expect(rhythm, "hittable == true")
         rhythm.tap()
+        expect(element("detail.title", in: app), "label == %@", "轻步 · 节奏练习")
+        element("detail.practice", in: app).tap()
         let title = element("practice.score.title", in: app)
         expect(title, "label == %@", "轻步 · 节奏练习")
         expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
-        capture(app, name: "selected-score-portrait")
+        capture(app, name: "selected-score-detail-to-practice")
 
-        XCUIDevice.shared.orientation = .landscapeLeft
+        XCUIDevice.shared.orientation = .landscapeRight
         let rotated = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
             let frame = app.windows.firstMatch.frame
             return frame.width > frame.height
@@ -78,26 +81,80 @@ final class QinXuUITests: XCTestCase {
         element("history.open", in: app).tap()
         let empty = element("history.empty", in: app)
         XCTAssertTrue(empty.waitForExistence(timeout: 10))
-        expect(empty, "label == %@", "练习会留下足迹")
+        expect(empty, "label == %@", "暂无练习记录")
         capture(app, name: "empty-practice-history")
         let close = element("history.close", in: app)
         XCTAssertTrue(close.isHittable)
         close.tap()
-        expect(element("practice.play", in: app), "hittable == true")
+        expect(element("library.search", in: app), "hittable == true")
         XCTAssertFalse(empty.exists)
     }
 
     @MainActor
+    func testFavoriteSearchAndNavigationPausesPractice() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.favorite.demo-melody", in: app).tap()
+        element("favorites.open", in: app).tap()
+        XCTAssertTrue(element("library.score.demo-melody", in: app).waitForExistence(timeout: 5))
+        XCTAssertFalse(element("library.score.demo-rhythm", in: app).exists)
+        enterPractice("demo-melody", in: app)
+        let play = element("practice.play", in: app)
+        play.tap()
+        expect(play, "label CONTAINS %@", "暂停")
+        element("library.open", in: app).tap()
+        element("practice.open", in: app).tap()
+        expect(play, "label CONTAINS %@", "开始练习")
+        element("library.open", in: app).tap()
+        let search = element("library.search", in: app)
+        search.tap()
+        search.typeText("no-results-123")
+        expect(element("library.score.demo-melody", in: app), "exists == false")
+        XCTAssertFalse(element("library.score.demo-rhythm", in: app).exists)
+        element("library.search.clear", in: app).tap()
+        XCTAssertTrue(element("library.score.demo-melody", in: app).waitForExistence(timeout: 5))
+        capture(app, name: "library-search-cleared")
+    }
+
+    @MainActor
+    func testBundledBeyerCanTurnPagesAndClose() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.filter.books", in: app).tap()
+        let book = element("library.book.beyer-op101", in: app)
+        XCTAssertTrue(book.waitForExistence(timeout: 10))
+        book.tap()
+        XCTAssertTrue(element("book.title", in: app).waitForExistence(timeout: 10))
+        XCTAssertFalse(element("book.unavailable", in: app).exists)
+        let page = element("book.pageInput", in: app)
+        expect(page, "value == %@", "1")
+        element("book.next", in: app).tap()
+        expect(page, "value == %@", "2")
+        element("book.previous", in: app).tap()
+        expect(page, "value == %@", "1")
+        capture(app, name: "beyer-original-book-reader")
+        element("book.close", in: app).tap()
+        expect(element("library.search", in: app), "hittable == true")
+    }
+
+    @MainActor
+    private func enterPractice(_ scoreID: String, in app: XCUIApplication) {
+        let shortcut = element("library.practice." + scoreID, in: app)
+        XCTAssertTrue(shortcut.waitForExistence(timeout: 10))
+        shortcut.tap()
+        expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
+    }
+
+    @MainActor
     private func launchFreshApp() -> XCUIApplication {
-        XCUIDevice.shared.orientation = .portrait
+        XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
         app.launchArguments += ["--ui-testing", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
         app.launch()
-        let play = element("practice.play", in: app)
-        XCTAssertTrue(play.waitForExistence(timeout: 20), "练习主页应在隔离的触屏模式下启动")
-        expect(play, "label CONTAINS %@", "开始练习")
-        expect(element("practice.score.title", in: app), "label == %@", "晨光 · 右手识谱")
-        capture(app, name: "fresh-practice-home")
+        let search = element("library.search", in: app)
+        XCTAssertTrue(search.waitForExistence(timeout: 20), "新首页应显示曲库")
+        expect(element("library.score.demo-melody", in: app), "hittable == true")
+        capture(app, name: "fresh-library-landscape")
         return app
     }
 
@@ -118,10 +175,11 @@ final class QinXuUITests: XCTestCase {
     @MainActor
     private func reveal(_ target: XCUIElement, in app: XCUIApplication, towardBottom: Bool,
                         file: StaticString = #filePath, line: UInt = #line) {
+        if target.exists && target.isHittable { return }
         let scroll = app.scrollViews["practice.scroll"]
         XCTAssertTrue(scroll.waitForExistence(timeout: 10), file: file, line: line)
         for _ in 0..<8 {
-            if target.exists && target.isHittable && scroll.frame.contains(target.frame) { return }
+            if target.exists && target.isHittable { return }
             // Start in the scroll view's outer padding, away from piano-key/score gestures.
             let start = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: towardBottom ? 0.78 : 0.28))
             let end = scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.98, dy: towardBottom ? 0.28 : 0.78))

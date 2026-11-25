@@ -1,0 +1,50 @@
+{
+  "reference_sha256": "fbff7b81e8eb9159e52f0a9f46f3fef1cbe14cb0737dca137d3b52498a2b58cc",
+  "interval_seconds": [
+    0.1741496598639456,
+    66.81115646258503
+  ],
+  "reference_onsets": 882,
+  "predicted_onsets": 584,
+  "onset_metrics": [
+    {
+      "tolerance_ms": 50,
+      "matched": 499,
+      "false_positive": 85,
+      "missed": 383,
+      "precision": 0.8544520547945206,
+      "recall": 0.5657596371882087,
+      "f1": 0.6807639836289223
+    },
+    {
+      "tolerance_ms": 100,
+      "matched": 508,
+      "false_positive": 76,
+      "missed": 374,
+      "precision": 0.8698630136986302,
+      "recall": 0.5759637188208617,
+      "f1": 0.6930422919508867
+    }
+  ],
+  "model_revision": "fa5997af0a8210982619003269994a1be25eddf3",
+  "windows": 326,
+  "max_active_pitches": 6,
+  "inference_ms_median": 6.154333241283894,
+  "inference_ms_p95": 6.4367500599473715,
+  "buffered_delivery_delay_ms_median": 406.6173272145086,
+  "buffered_delivery_delay_ms_p95": 499.41733332661187,
+  "processing_seconds": 5.928128791740164,
+  "limitations": "One offline Mac recording; no device latency, room, digital-piano, pedal, key-release or general accuracy claim.",
+  "dataset": "MAESTRO 3.0.0, 2008, official test split (development check, not independent blind validation)",
+  "piece": "Domenico Scarlatti: Sonata K.525",
+  "source": "https://storage.googleapis.com/magentadata/datasets/maestro/v3.0.0/maestro-v3.0.0.zip?generation=1606468421951352",
+  "license": "CC BY-NC-SA 4.0; recordings excluded from app and version control",
+  "audio_sha256": "8037f5a09bf1b1108893d664d25e82b9900aff805f3dfee3b075afaaf35474b0",
+  "recognition_thresholds_tuned_on_clip": false,
+  "pipeline_source_sha256": {
+    "Sources/QinXuCore/PolyphonicNoteTracker.swift": "ac052618c7853da76e1f9c5f2e4618654b033414e5f632d5e6da815fa56fe8e4",
+    "Sources/QinXuApp/Services/PolyphonicMicrophoneService.swift": "ae7e478d2816d33a4e561a234e9f6da0886ac38624551c9a6d1fa1fac88d9031",
+    "Sources/QinXuApp/Services/BasicPitchModel.swift": "7a1464fd7e7e054268b3cdb92911619e6ceb032349e0fb5e0ab143aeecf53573",
+    "scripts/evaluate-polyphonic.swift": "6cd1885738b1c00b27f6681e688ab41e86d3c98df0533302c6d73121a380efac"
+  }
+}

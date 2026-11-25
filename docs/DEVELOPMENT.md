@@ -13,11 +13,16 @@
 ## 日常验证
 
 ```sh
+bash scripts/prepare-resources.sh
 bash scripts/verify.sh
 bash scripts/build-macos.sh
 ```
 
-验证脚本检查工程是否与源码一致，校验 plist，执行真实自动化测试；存在 iOS SDK 时继续构建模拟器应用。CI 使用 `--require-ios`，禁止把缺失 iOS SDK 当作成功。
+项目脚本会在当前进程优先使用 `/Applications/Xcode.app`，不改系统全局 `xcode-select`。
+
+第一次构建先准备固定版本模型、公版教材与乐谱字体。下载脚本按 SHA-256 校验，模型、PDF、字体二进制只作为本地构建输入；源码、下载脚本和许可提交。
+
+验证脚本检查工程是否与源码一致，校验本地资源及 plist，执行真实自动化测试；存在 iOS SDK 时继续构建模拟器应用。CI 使用 `--require-ios`，禁止把缺失 iOS SDK 当作成功。
 
 新添或移动应用 Swift 文件后运行 `python3 scripts/generate_project.py`。工程由脚本生成，不直接修改 `project.pbxproj`；生成器已支持 `--check` 无写入检查。
 
@@ -29,7 +34,7 @@ bash scripts/build-macos.sh
 QINXU_PREVIEW_DIR="$PWD/.local-build/previews" swift test --filter PracticeRenderingTests
 ```
 
-使用 macOS 的 `NSHostingView` 在内存中渲染项目自身的视图，不读取桌面。自动检查主界面、琴谱、键盘在 393 / 834 / 1194 点宽度下是否正常生成且存在可见内容，并输出 PNG 供检查。它验证共享视图的 macOS 排版，不代表 iPad / iPhone 的 UIKit 布局、触摸和系统弹窗已经验收。
+使用 macOS 的 `NSHostingView` 在内存中渲染项目自身的视图，不读取桌面。自动检查曲库、琴谱、键盘、练习详情及教材阅读器，包含 667 × 375、844 × 390 手机横屏和 iPad 尺寸，并输出 PNG 供检查。它验证共享视图的 macOS 排版，不代表 iPad / iPhone 的 UIKit 布局、触摸和系统弹窗已经验收。
 
 采用此方式是因为 [Apple ImageRenderer](https://developer.apple.com/documentation/swiftui/imagerenderer) 不包含部分由原生平台视图合成的内容，如滚动容器。
 
@@ -48,3 +53,7 @@ git switch -c codex/next-feature
 远程 `origin`：`https://github.com/Oublie-le/qinxu.git`。用户已授权公开推送源码、提交历史和运行 GitHub Actions。功能先在 `codex/` 分支通过检查，再合入 `main`；无需强制推送或改写既有历史。
 
 远程 CI 除共享代码测试与 iOS 构建外，还在两类模拟器执行 `UITests/QinXuUITests.swift`。本地执行方式为 `bash scripts/test-ios.sh iPhone` 或 `iPad`，需要完整 Xcode 和已安装的 iOS 运行时。测试日志与带截图的 `.xcresult` 存在 `.local-build/results`，CI 附件保留 14 天。构建与模拟器通过仍不代表实琴、麦克风和真机签名已验证。
+
+## 本机 iPad 验证
+
+环境准备和安装步骤见 `IPAD_SETUP.md`；目标 iPad 9 / iPadOS 18.0.1。实琴结果单独记入 `DEVICE_TESTS.md` 与 `STATUS.md`，不要把模拟器或合成音频作为设备验收。

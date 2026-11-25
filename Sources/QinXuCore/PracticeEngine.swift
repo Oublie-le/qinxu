@@ -30,7 +30,8 @@ public struct PracticeEngine {
     private var candidates: [Int: Candidate] = [:]
     private var durationChecks: [Int: DurationCheck] = [:]
     private let onsetWindow: Double = 0.30
-    private let maximumInputLag: Double = 0.25
+    private let maximumInputLag: Double
+    private let evaluatesNoteDuration: Bool
     private let chordReleaseWindow: Double = 0.35
 
     private struct Candidate {
@@ -45,10 +46,15 @@ public struct PracticeEngine {
     }
 
     public init(score: PianoScore, mode: PracticeMode = .wait, hand: PracticeHand = .both,
-                tempoBPM: Double? = nil, measureRange: ClosedRange<Int>? = nil) {
+                tempoBPM: Double? = nil, measureRange: ClosedRange<Int>? = nil,
+                inputLagTolerance: TimeInterval = 0.25, evaluatesNoteDuration: Bool = true) {
         self.score = score
         self.mode = mode
         self.hand = hand
+        // Buffered acoustic input can opt in only for waiting, with a hard bound.
+        self.maximumInputLag = mode == .wait && inputLagTolerance.isFinite
+            ? min(3, max(0, inputLagTolerance)) : 0.25
+        self.evaluatesNoteDuration = evaluatesNoteDuration
         let proposedTempo = tempoBPM ?? score.tempoBPM
         self.tempoBPM = proposedTempo.isFinite && proposedTempo > 0 ? proposedTempo : 80
         let selected = score.notes.filter {
@@ -278,6 +284,7 @@ public struct PracticeEngine {
     }
 
     private mutating func reportDuration(pitch: Int, check: DurationCheck, releasedAt: Double) {
+        guard evaluatesNoteDuration else { return }
         let actual = max(0, releasedAt - check.onset)
         let tolerance = max(0.20, check.expected * 0.25)
         let result = actual < check.expected - tolerance ? "偏短" : (actual > check.expected + tolerance ? "偏长" : "合适")

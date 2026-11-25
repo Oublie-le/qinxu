@@ -11,13 +11,13 @@
     <key>CFBundleShortVersionString</key><string>0.1.0</string>
     <key>CFBundleVersion</key><string>1</string>
     <key>LSRequiresIPhoneOS</key><true/>
-    <key>NSMicrophoneUsageDescription</key><string>用于在单音练习中识别你弹奏的钢琴音。音频仅在本机处理，不上传服务器。</string>
+    <key>NSMicrophoneUsageDescription</key><string>用于识别你弹奏的钢琴音。音频仅在本机处理，不上传服务器。</string>
     <key>UIApplicationSupportsIndirectInputEvents</key><true/>
     <key>UILaunchScreen</key><dict/>
     <key>UIApplicationSceneManifest</key><dict>
         <key>UIApplicationSupportsMultipleScenes</key><false/>
     </dict>
-    <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
+    <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
     <key>UISupportedInterfaceOrientations~ipad</key><array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationPortraitUpsideDown</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
     <key>LSSupportsOpeningDocumentsInPlace</key><true/>
     <key>UTImportedTypeDeclarations</key><array><dict>

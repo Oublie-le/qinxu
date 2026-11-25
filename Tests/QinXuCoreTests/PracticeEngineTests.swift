@@ -11,6 +11,50 @@ import Testing
               measures: [.init(number: 1, startBeat: 0, durationBeats: 4)])
     }
 
+    @Test func bufferedWaitingPreservesSpacingAndDoesNotMergeSeparateNotesIntoChord() {
+        let chord = score([note("left", 48, 0, staff: 2), note("right", 60, 0)])
+        var e = PracticeEngine(score: chord, inputLagTolerance: 3, evaluatesNoteDuration: false)
+        e.start(at: 10); e.tick(at: 12.4)
+        e.receive(.on(pitch: 48, velocity: 80), at: 10.1)
+        e.receive(.off(pitch: 48), at: 10.3)
+        e.receive(.on(pitch: 60, velocity: 80), at: 11.3)
+        #expect(e.correctCount == 0 && !e.isFinished)
+        e.receive(.off(pitch: 60), at: 11.5)
+        e.receive(.on(pitch: 48, velocity: 80), at: 11.8)
+        e.receive(.on(pitch: 60, velocity: 80), at: 11.85)
+        #expect(e.correctCount == 2 && e.isFinished)
+        e.receive(.off(pitch: 48), at: 12)
+        e.receive(.off(pitch: 60), at: 12)
+        #expect(e.durationFeedback == nil)
+    }
+
+    @Test func bufferedWaitingRejectsPreviousRunAndBoundedlyOldEvents() {
+        let piece = score([note("first", 60, 0), note("next", 62, 1)])
+        var e = PracticeEngine(score: piece, inputLagTolerance: 3, evaluatesNoteDuration: false)
+        e.start(at: 10); e.tick(at: 14)
+        e.receive(.on(pitch: 60, velocity: 80), at: 10.1)
+        #expect(e.correctCount == 0)
+        e.receive(.off(pitch: 60), at: 10.2)
+        e.pause(at: 14); e.receive(.allNotesOff, at: 14); e.start(at: 20)
+        e.receive(.on(pitch: 60, velocity: 80), at: 13)
+        #expect(e.correctCount == 0 && e.heldPitches.isEmpty)
+        e.tick(at: 21)
+        e.receive(.on(pitch: 60, velocity: 80), at: 20.1)
+        #expect(e.correctCount == 1)
+    }
+
+    @Test func realtimeDefaultsAndRhythmCannotOptIntoLongBufferedInput() {
+        let piece = score([note("first", 60, 0), note("next", 62, 1)])
+        var waiting = PracticeEngine(score: piece)
+        waiting.start(at: 0); waiting.tick(at: 2)
+        waiting.receive(.on(pitch: 60, velocity: 80), at: 0.1)
+        #expect(waiting.correctCount == 0)
+        var rhythm = PracticeEngine(score: piece, mode: .rhythm, inputLagTolerance: 3)
+        rhythm.start(at: 0); rhythm.tick(at: 1)
+        rhythm.receive(.on(pitch: 60, velocity: 80), at: 0.1)
+        #expect(rhythm.correctCount == 0)
+    }
+
     @Test func chordCompletionAndFreshRepeatedOnset() {
         var e = PracticeEngine(score: score([note("c", 60, 0), note("e", 64, 0), note("repeat", 60, 1)]))
         e.start(at: 10)

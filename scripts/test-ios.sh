@@ -1,6 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Prefer the installed full Xcode for this process without changing system settings.
+if [[ -z "${DEVELOPER_DIR:-}" && -x /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild ]]; then
+  export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+fi
 family="${1:-iPhone}"
 python3 scripts/generate_project.py --check
 simulator="$(python3 scripts/select-simulator.py "$family")"

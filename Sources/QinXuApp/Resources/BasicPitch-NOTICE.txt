@@ -1,0 +1,12 @@
+QinXu includes the unmodified Spotify Basic Pitch ICASSP 2022 CoreML model.
+Copyright 2022 Spotify AB. Licensed under Apache License 2.0.
+The complete license is included as BasicPitch-LICENSE.txt.
+
+Upstream: https://github.com/spotify/basic-pitch
+Pinned revision: fa5997af0a8210982619003269994a1be25eddf3
+Upstream package: basic_pitch/saved_models/icassp_2022/nmp.mlpackage
+Local copy: BasicPitch.mlpackage
+
+The model is downloaded and SHA-256 verified by scripts/fetch-basic-pitch.py.
+QinXu's buffering and note-event tracker are separate application code.
+No model weights, architecture or thresholds were tuned for the evaluation clip.

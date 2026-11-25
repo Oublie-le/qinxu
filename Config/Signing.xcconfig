@@ -1,0 +1,3 @@
+// Shared defaults; personal signing identifiers belong in the ignored local include.
+QINXU_BUNDLE_IDENTIFIER = com.ifeng.QinXu
+#include? "LocalSigning.xcconfig"
