@@ -60,6 +60,9 @@ struct PracticeScoreView: View {
             .onChange(of: score.id) { _, _ in
                 proxy.scrollTo(currentMeasure, anchor: .leading)
             }
+            .onChange(of: width) { _, _ in
+                proxy.scrollTo(currentMeasure, anchor: .leading)
+            }
         }
     }
 
