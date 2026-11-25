@@ -27,7 +27,7 @@
 | iPhone / iPad UI 自动交互 | **各 3 项通过，共 6 项执行** | iPhone 17、iPad (A16)，iOS 26.5；触屏 C4/D4 判音、暂停/重启、选曲/旋转、记录空态 |
 | 实际钢琴 MIDI | **未验证** | 尚未取得并连接目标钢琴与设备 |
 | 实际钢琴麦克风准确率 | **未验证** | 目前仅静音、已知频率及合成谐波测试 |
-| 远程 CI | 已启用并实际执行 | [查看 main 最新运行](https://github.com/Oublie-le/qinxu/actions/workflows/verify.yml?query=branch%3Amain)，保存日志、截图与 xcresult |
+| 远程 CI | **构建、共享测试及两种设备 UI 测试全部通过** | [已通过的完整运行](https://github.com/Oublie-le/qinxu/actions/runs/45566248652)；保存日志、截图、测试配置与 xcresult |
 
 测试覆盖乐谱时值/声部/延音线、不支持的 XML、同音重击、错漏恢复、暂停计时、最后音松键、MIDI 任意分包、踏板、数据恢复、单音频率及跨模块流程。新增旧名称目录迁移、导入写入失败回滚、预备拍取消、后台停止、麦克风启动取消、完成记录去重和最终拍暂停不误启动循环的回归测试。
 
@@ -37,7 +37,9 @@
 
 本轮新增真实 iOS XCTest UI 测试，Debug 测试启动使用独立临时曲库并关闭真实硬件访问。等待状态使用有界断言，不用固定 sleep 伪造结果。
 
-验证证据：代码 `382f429` 的[远程日志](https://github.com/Oublie-le/qinxu/actions/runs/45563468850)记录 67 项共享测试通过，两个模拟器均 `TEST SUCCEEDED`、各 3 项零失败。该轮收尾被诊断取消请求打断，工作流整体显示取消；后续 main 运行状态以上方链接为准。修复了 Swift 6.3.3 下复杂视图/测试表达式的类型检查问题，并统一 Debug 应用与核心包的活动架构，避免模拟器测试构建混用 arm64/x86_64。
+验证证据：代码 `85a63de` 的[完整远程运行](https://github.com/Oublie-le/qinxu/actions/runs/45566248652)最终状态为 **success**：67 项共享测试通过，两个模拟器均 `TEST SUCCEEDED`、各 3 项零失败，附件保存与任务收尾也已完成。后续主分支状态可查看 [main 最新运行](https://github.com/Oublie-le/qinxu/actions/workflows/verify.yml?query=branch%3Amain)。
+
+远程验证中修复了 Swift 6.3.3 下复杂视图/测试表达式的类型检查问题，并统一 Debug 应用与核心包的活动架构，避免模拟器测试构建混用 arm64/x86_64。另外将 SwiftPM 的内部 Mac 可执行产品改为 `QinXuPreview`，消除它与 iOS 应用 `QinXu` 同名时测试宿主被解析成裸可执行文件的问题；最终 Mac 应用仍为 `QinXu.app`。
 
 本机只有 Command Line Tools，没有 XCTest；共享代码测试使用工具链自带的 Swift Testing。`Assertions.swift` 是将断言失败记录到 Swift Testing 的小型辅助函数，不是模拟运行或自定义假结果。
 
@@ -45,7 +47,7 @@
 
 - 正式目录 `QinXu`，应用工程 `QinXu.xcodeproj`，源码模块 `QinXuApp` / `QinXuCore`。
 - 入口 `QinXuApp.swift`、主视图 `PracticeHomeView.swift`、主题 `QinXuTheme.swift`、曲谱模型 `ScoreModels.swift`。
-- Git 保留更名前基线与本轮修改；`main` 是本机已验证的开发基线，保留 `codex/qinxu-foundation` 分支和 `v0.1.0-dev.1` 本地历史标签；本轮远程基线标记为 `v0.1.0-dev.2`。
+- Git 保留更名前基线与本轮修改；`main` 是经本机和远程验证的开发基线，保留 `codex/` 开发分支及历史标签；本轮远程基线标记为 `v0.1.0-dev.3`，旧标签保持不变。
 - 远程 `origin` 已配置并上传源码及历史：https://github.com/Oublie-le/qinxu 。缓存和构建产物已忽略。
 - 同一可访问 Application Support 容器内安全迁移旧 `PianoPractice/library.json`，原文件保留。iOS 更换 Bundle ID 的跨沙盒迁移不在支持范围内。
 
