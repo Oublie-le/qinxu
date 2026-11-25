@@ -6,409 +6,575 @@ struct PracticeHomeView: View {
     @ObservedObject var model: PracticeViewModel
     @State private var showingLibrary = false
     @State private var showingHistory = false
+    @State private var showingSettings = false
     @State private var pendingImport = false
+    @State private var librarySearch = ""
 
     private var currentMeasure: Int {
-        model.engine.expectedNotes.first?.measure ?? model.selectedScore.measures.last(where: { $0.startBeat <= model.engine.currentBeat })?.number ?? 1
+        model.engine.expectedNotes.first?.measure ??
+            model.selectedScore.measures.last(where: { $0.startBeat <= model.engine.currentBeat })?.number ?? 1
     }
 
     var body: some View {
         GeometryReader { geometry in
             let wide = geometry.size.width >= 900
+            let inset: CGFloat = geometry.size.width < 600 ? 14 : 28
             HStack(spacing: 0) {
-                if wide { libraryPanel.frame(width: 235) }
+                if wide {
+                    libraryPanel.frame(width: 250)
+                    Rectangle().fill(QinXuTheme.line).frame(width: 1)
+                }
                 VStack(spacing: 0) {
-                    header(wide: wide)
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 20) {
-                            introduction
-                            controls
-                            scoreCard
-                            keyboardCard
-                            connectionCard
-                            Text("本地练习 · 曲谱与练习记录保存在这台设备上")
-                                .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                                .frame(maxWidth: .infinity).padding(.bottom, 8)
-                        }
-                        .padding(geometry.size.width < 600 ? 16 : 28)
-                        .frame(maxWidth: 1280)
-                        .frame(maxWidth: .infinity)
-                    }
-                    .accessibilityIdentifier("practice.scroll")
+                    header(wide: wide, inset: inset)
+                    workspace(inset: inset)
+                    transport(inset: inset)
                 }
             }
             .background(QinXuTheme.background)
         }
-        .tint(QinXuTheme.teal)
+        .foregroundStyle(QinXuTheme.ink)
+        .tint(QinXuTheme.accent)
         .preferredColorScheme(.light)
         .fileImporter(isPresented: $model.isImporting, allowedContentTypes: [.xml, .data], allowsMultipleSelection: false) { result in
             switch result {
-            case .success(let urls): if let url = urls.first { model.importScore(from: url) }
+            case .success(let urls):
+                if let url = urls.first {
+                    librarySearch = ""
+                    model.importScore(from: url)
+                }
             case .failure(let error): model.errorMessage = error.localizedDescription
             }
         }
-        .alert("暂时无法完成", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
+        .alert("无法完成", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("知道了", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
         .sheet(isPresented: $showingLibrary, onDismiss: {
-            if pendingImport { pendingImport = false; model.isImporting = true }
+            if pendingImport {
+                pendingImport = false
+                model.isImporting = true
+            }
         }) {
             NavigationStack {
                 libraryPanel
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { showingLibrary = false }.accessibilityIdentifier("library.close") } }
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("完成") { showingLibrary = false }.accessibilityIdentifier("library.close")
+                        }
+                    }
             }
             .presentationDetents([.large])
         }
-        .sheet(isPresented: $showingHistory) {
-            PracticeHistoryView(history: model.history)
-        }
+        .sheet(isPresented: $showingSettings) { PracticeSettingsView(model: model) }
+        .sheet(isPresented: $showingHistory) { PracticeHistoryView(history: model.history) }
     }
 
-    private func header(wide: Bool) -> some View {
-        HStack {
-            if !wide {
-                Button { showingLibrary = true } label: { Image(systemName: "sidebar.left").font(.system(size: 19)) }
-                    .buttonStyle(.plain).accessibilityLabel("打开曲谱库").accessibilityIdentifier("library.open")
+    private func workspace(inset: CGFloat) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                scoreSheet
+                keyboardPanel
             }
-            Text("练习室").font(.system(size: 14, weight: .semibold))
-            Spacer()
-            Label("离线可用", systemImage: "checkmark.shield")
-                .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-            Button { showingHistory = true } label: { Label("练习记录", systemImage: "clock.arrow.circlepath") }
-                .buttonStyle(.plain).font(.system(size: 12, weight: .medium))
-                .accessibilityIdentifier("history.open")
+            .padding(.horizontal, inset)
+            .padding(.vertical, inset)
+            .frame(maxWidth: 1100)
+            .frame(maxWidth: .infinity)
         }
-        .foregroundStyle(QinXuTheme.ink)
-        .padding(.horizontal, 28).frame(height: 64)
-        .background(QinXuTheme.paper.opacity(0.85))
-        .overlay(alignment: .bottom) { Rectangle().fill(QinXuTheme.line).frame(height: 1) }
+        .id(model.selectedScoreID)
+        .accessibilityIdentifier("practice.scroll")
+    }
+
+    private func header(wide: Bool, inset: CGFloat) -> some View {
+        HStack(spacing: 10) {
+            if wide {
+                Label("练习", systemImage: "music.note")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(QinXuTheme.muted)
+            } else {
+                Button {
+                    showingLibrary = true
+                } label: {
+                    Label("曲库", systemImage: "books.vertical")
+                }
+                .buttonStyle(QuietButtonStyle())
+                .accessibilityLabel("打开曲谱库")
+                .accessibilityIdentifier("library.open")
+            }
+            Spacer(minLength: 4)
+            Button { showingHistory = true } label: {
+                Label("记录", systemImage: "clock.arrow.circlepath")
+            }
+            .buttonStyle(QuietButtonStyle())
+            .accessibilityLabel("练习记录")
+            .accessibilityIdentifier("history.open")
+            Button { showingSettings = true } label: {
+                Label("设置", systemImage: "slider.horizontal.3")
+            }
+            .buttonStyle(QuietButtonStyle())
+            .accessibilityLabel("练习设置")
+            .accessibilityIdentifier("practice.settings")
+        }
+        .padding(.horizontal, inset)
+        .padding(.vertical, 7)
+        .background(QinXuTheme.paper)
+        .overlay(alignment: .bottom) { Divider().overlay(QinXuTheme.line) }
+    }
+
+    private var visibleScores: [PianoScore] {
+        let query = librarySearch.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return model.scores }
+        return model.scores.filter {
+            $0.title.localizedStandardContains(query) || $0.composer.localizedStandardContains(query)
+        }
     }
 
     private var libraryPanel: some View {
-        VStack(alignment: .leading, spacing: 28) {
-            HStack(spacing: 11) {
-                Image(systemName: "pianokeys").font(.system(size: 25))
-                    .foregroundStyle(Color(red: 0.73, green: 0.85, blue: 0.70))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("琴序").font(.system(size: 25, weight: .semibold, design: .serif))
-                    Text("A LITTLE PRACTICE, EVERY DAY").font(.system(size: 7, weight: .medium)).tracking(1)
-                        .foregroundStyle(.white.opacity(0.45))
-                }
-            }.padding(.top, 15)
-
-            VStack(alignment: .leading, spacing: 12) {
-                Text("我的曲谱").font(.system(size: 11, weight: .semibold)).foregroundStyle(.white.opacity(0.45))
-                ScrollView {
-                    VStack(spacing: 8) {
-                        ForEach(model.scores) { score in
-                            Button {
-                                model.selectScore(score.id)
-                                showingLibrary = false
-                            } label: {
-                                HStack(alignment: .top, spacing: 10) {
-                                    Image(systemName: "music.note.list").frame(width: 18).padding(.top, 2)
-                                    VStack(alignment: .leading, spacing: 5) {
-                                        Text(score.title).font(.system(size: 13, weight: .medium)).lineLimit(2)
-                                        Text("\(score.measures.count) 小节 · \(Int(score.tempoBPM)) BPM")
-                                            .font(.system(size: 10)).foregroundStyle(.white.opacity(0.45))
-                                    }
-                                    Spacer(minLength: 0)
-                                    if score.id == model.selectedScoreID { Circle().fill(Color(red: 0.73, green: 0.85, blue: 0.70)).frame(width: 5, height: 5).padding(.top, 6) }
-                                }
-                                .padding(13).frame(maxWidth: .infinity, alignment: .leading)
-                                .background(score.id == model.selectedScoreID ? Color.white.opacity(0.10) : Color.clear, in: RoundedRectangle(cornerRadius: 12))
-                            }.buttonStyle(.plain)
-                                .accessibilityIdentifier("library.score." + score.id)
-                        }
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                Image(systemName: "pianokeys")
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(width: 38, height: 38)
+                    .background(QinXuTheme.accent, in: RoundedRectangle(cornerRadius: 11))
+                    .accessibilityHidden(true)
+                Text("琴序").font(.title2.weight(.bold))
+                Spacer()
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass").foregroundStyle(QinXuTheme.muted)
+                TextField("搜索曲名或作曲家", text: $librarySearch)
+                    .textFieldStyle(.plain)
+                    .accessibilityIdentifier("library.search")
+                if !librarySearch.isEmpty {
+                    Button { librarySearch = "" } label: {
+                        Image(systemName: "xmark.circle.fill").foregroundStyle(QinXuTheme.muted)
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("清除搜索")
+                }
+            }
+            .font(.subheadline)
+            .padding(11)
+            .background(QinXuTheme.background, in: RoundedRectangle(cornerRadius: 10))
+
+            HStack {
+                Text("我的曲谱").font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("\(visibleScores.count)").font(.caption.monospacedDigit()).foregroundStyle(QinXuTheme.muted)
+            }
+            ScrollView {
+                LazyVStack(spacing: 5) {
+                    if visibleScores.isEmpty {
+                        Text("没有匹配的曲谱")
+                            .font(.subheadline)
+                            .foregroundStyle(QinXuTheme.muted)
+                            .padding(.vertical, 24)
+                    }
+                    ForEach(visibleScores) { score in libraryRow(score) }
                 }
             }
             Button {
-                if showingLibrary { pendingImport = true; showingLibrary = false }
-                else { model.isImporting = true }
-            } label: {
-                Label("导入 MusicXML", systemImage: "plus")
-                    .font(.system(size: 12, weight: .medium)).frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .overlay(RoundedRectangle(cornerRadius: 11).stroke(.white.opacity(0.22), style: StrokeStyle(lineWidth: 1, dash: [4])))
-            }.buttonStyle(.plain)
-            VStack(alignment: .leading, spacing: 9) {
-                Image(systemName: "leaf").font(.system(size: 21)).foregroundStyle(Color(red: 0.73, green: 0.85, blue: 0.70))
-                Text("慢一点，也是在进步。").font(.system(size: 13, weight: .medium))
-                Text("先读懂一个音，再连成一段旋律。")
-                    .font(.system(size: 10)).foregroundStyle(.white.opacity(0.45)).lineSpacing(4)
-            }.padding(.bottom, 12)
-        }
-        .padding(20).foregroundStyle(.white).frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(QinXuTheme.navy)
-    }
-
-    private var introduction: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            SectionEyebrow(text: "YOUR DAILY PIANO PRACTICE")
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(model.selectedScore.title).font(.system(size: 32, weight: .medium, design: .serif)).accessibilityIdentifier("practice.score.title")
-                    Spacer(minLength: 14)
-                    pieceMetadata
-                }
-                VStack(alignment: .leading, spacing: 9) {
-                    Text(model.selectedScore.title).font(.system(size: 27, weight: .medium, design: .serif)).accessibilityIdentifier("practice.score.title")
-                    pieceMetadata
-                }
-            }
-            Text(model.mode == .wait ? "按自己的速度，弹对当前音符后继续。" : "跟随时间线练习，留意音高、起音和节奏。")
-                .font(.system(size: 13)).foregroundStyle(QinXuTheme.muted)
-        }.foregroundStyle(QinXuTheme.ink)
-    }
-
-    private var pieceMetadata: some View {
-        HStack(spacing: 13) {
-            if !model.selectedScore.composer.isEmpty { Text(model.selectedScore.composer).lineLimit(1) }
-            Text("\(model.selectedScore.beatsPerMeasure)/\(model.selectedScore.beatUnit) 拍")
-            Text("\(model.selectedScore.measures.count) 小节")
-        }.font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-    }
-
-    private var controls: some View {
-        PracticeCard(padding: 18) {
-            VStack(alignment: .leading, spacing: 17) {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 20) { modePicker.frame(width: 225); handPicker.frame(width: 180); Spacer(); playControls }
-                    VStack(alignment: .leading, spacing: 14) {
-                        modePicker
-                        HStack { handPicker.frame(maxWidth: 210); Spacer(); playControls }
-                    }
-                }
-                if model.mode == .rhythm {
-                    Toggle("节拍器声音", isOn: $model.metronomeEnabled).font(.system(size: 12)).toggleStyle(.switch).fixedSize()
-                }
-                Rectangle().fill(QinXuTheme.line).frame(height: 1)
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 26) { tempoControl.frame(minWidth: 210, maxWidth: 330); Spacer(); loopControl }
-                    VStack(alignment: .leading, spacing: 15) { tempoControl; loopControl }
-                }
-            }
-        }
-    }
-
-    private var modePicker: some View {
-        Picker("练习模式", selection: $model.mode) {
-            ForEach(PracticeMode.allCases, id: \.self) { Text($0.title).tag($0) }
-        }.pickerStyle(.segmented).labelsHidden().onChange(of: model.mode) { _, _ in model.reconfigure() }
-    }
-
-    private var handPicker: some View {
-        Picker("练习手", selection: $model.hand) {
-            ForEach(PracticeHand.allCases, id: \.self) { Text($0.title).tag($0) }
-        }.pickerStyle(.segmented).labelsHidden().onChange(of: model.hand) { _, _ in model.reconfigure() }
-    }
-
-    private var playControls: some View {
-        HStack(spacing: 8) {
-            Button { model.restart() } label: { Image(systemName: "arrow.counterclockwise") }
-                .buttonStyle(QuietButtonStyle()).accessibilityLabel("从头再练").accessibilityIdentifier("practice.restart")
-            Button { model.togglePlayback() } label: {
-                Label(model.isPlaying ? "暂停" : (model.engine.isFinished ? "再练一次" : "开始练习"), systemImage: model.isPlaying ? "pause.fill" : "play.fill")
-            }.buttonStyle(QuietButtonStyle(prominent: true))
-                .accessibilityIdentifier("practice.play")
-        }
-    }
-
-    private var tempoControl: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "metronome").font(.system(size: 16)).foregroundStyle(QinXuTheme.muted)
-            Slider(value: Binding(get: { model.tempo }, set: { model.tempo = $0.rounded() }), in: 20...300, onEditingChanged: { editing in if !editing { model.reconfigure() } })
-                .accessibilityLabel("速度，四分音符每分钟")
-            Text("\(Int(model.tempo))").font(.system(size: 15, weight: .semibold, design: .monospaced)).monospacedDigit()
-            Text("BPM").font(.system(size: 9, weight: .medium)).foregroundStyle(QinXuTheme.muted)
-        }.foregroundStyle(QinXuTheme.ink)
-    }
-
-    private var loopControl: some View {
-        HStack(spacing: 10) {
-            Toggle(isOn: $model.loopEnabled) { Label("循环", systemImage: "repeat") }
-                .toggleStyle(.switch).fixedSize().font(.system(size: 12))
-                .onChange(of: model.loopEnabled) { _, _ in model.reconfigure() }
-            if model.loopEnabled {
-                Picker("起始小节", selection: $model.loopStart) {
-                    ForEach(model.selectedScore.measures) { Text("\($0.number)").tag($0.number) }
-                }.labelsHidden().frame(maxWidth: 75)
-                    .onChange(of: model.loopStart) { _, value in
-                        if model.loopEnd < value { model.loopEnd = value }
-                        model.reconfigure()
-                    }
-                Text("至").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                Picker("结束小节", selection: $model.loopEnd) {
-                    ForEach(model.selectedScore.measures.filter { $0.number >= model.loopStart }) { Text("\($0.number)").tag($0.number) }
-                }.labelsHidden().frame(maxWidth: 75)
-                    .onChange(of: model.loopEnd) { _, _ in model.reconfigure() }
-                Text("小节").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-            } else { Text("反复练习一个片段").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted) }
-        }
-    }
-
-    private var scoreCard: some View {
-        PracticeCard(padding: 0) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center) {
-                    Label("跟谱练习", systemImage: "music.note")
-                        .font(.system(size: 13, weight: .semibold))
-                    Spacer()
-                    Text("第 \(currentMeasure) / \(model.selectedScore.measures.count) 小节")
-                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(QinXuTheme.muted)
-                }.padding(22)
-
-                if model.selectedScore.notes.filter({ model.hand.includes(staff: $0.staff) }).isEmpty {
-                    VStack(spacing: 9) {
-                        Image(systemName: "music.note").font(.system(size: 28)).foregroundStyle(QinXuTheme.muted)
-                        Text("这份曲谱没有\(model.hand.title)声部的音符").font(.system(size: 14, weight: .medium))
-                        Text("切换到双手，或选择另一份曲谱。 ").font(.system(size: 12)).foregroundStyle(QinXuTheme.muted)
-                    }.frame(maxWidth: .infinity).padding(.vertical, 65)
+                if showingLibrary {
+                    pendingImport = true
+                    showingLibrary = false
                 } else {
-                    PracticeScoreView(score: model.selectedScore, hand: model.hand, currentBeat: model.engine.currentBeat, expectedNotes: model.engine.expectedNotes, verdicts: model.engine.verdicts, active: model.isPlaying)
+                    model.isImporting = true
                 }
-
-                VStack(alignment: .leading, spacing: 9) {
-                    ViewThatFits(in: .horizontal) {
-                        HStack(spacing: 15) { feedback; Spacer(); counters }
-                        VStack(alignment: .leading, spacing: 11) { feedback; counters }
-                    }
-                    if let durationFeedback = model.engine.durationFeedback {
-                        Text(durationFeedback).font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                    }
-                }
-                .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-                .background(QinXuTheme.teal.opacity(0.055))
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("简化练习谱：按实际音高与四分音符拍点排布；临时记号逐音显示，留白表示休止。未还原原谱的连线、表情与版式。")
-                    ForEach(model.selectedScore.warnings, id: \.self) { Text("提示：\($0)") }
-                }.font(.system(size: 10)).foregroundStyle(QinXuTheme.muted).lineSpacing(3).padding(18)
-            }.foregroundStyle(QinXuTheme.ink)
+            } label: {
+                Label("导入 MusicXML", systemImage: "square.and.arrow.down")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(QuietButtonStyle(prominent: true))
+            .accessibilityIdentifier("library.import")
+            #if os(macOS)
+            .keyboardShortcut("o", modifiers: .command)
+            #endif
         }
+        .padding(18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(QinXuTheme.paper)
+    }
+
+    private func libraryRow(_ score: PianoScore) -> some View {
+        let selected = score.id == model.selectedScoreID
+        return Button {
+            model.selectScore(score.id)
+            showingLibrary = false
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "music.note.list")
+                    .font(.system(size: 14, weight: .medium))
+                    .frame(width: 31, height: 34)
+                    .foregroundStyle(selected ? QinXuTheme.accent : QinXuTheme.muted)
+                    .background(selected ? QinXuTheme.paper : QinXuTheme.background, in: RoundedRectangle(cornerRadius: 7))
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(score.title).font(.subheadline.weight(.semibold)).lineLimit(2)
+                    Text("\(score.measures.count) 小节 · \(Int(score.tempoBPM)) BPM")
+                        .font(.caption2).foregroundStyle(QinXuTheme.muted)
+                }
+                Spacer(minLength: 0)
+                if selected {
+                    Image(systemName: "checkmark").font(.caption.weight(.bold))
+                        .foregroundStyle(QinXuTheme.accent)
+                        .accessibilityHidden(true)
+                }
+            }
+            .padding(8)
+            .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
+            .background(selected ? QinXuTheme.accentTint : Color.clear, in: RoundedRectangle(cornerRadius: 11))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .accessibilityIdentifier("library.score." + score.id)
+    }
+
+    private var scoreSheet: some View {
+        PracticeCard(padding: 0) {
+            VStack(spacing: 0) {
+                scoreHeading
+                if model.selectedScore.notes.contains(where: { model.hand.includes(staff: $0.staff) }) {
+                    PracticeScoreView(
+                        score: model.selectedScore, hand: model.hand, currentBeat: model.engine.currentBeat,
+                        expectedNotes: model.engine.expectedNotes, verdicts: model.engine.verdicts, active: model.isPlaying
+                    )
+                    .padding(.horizontal, 12)
+                } else {
+                    ContentUnavailableView("没有此声部的音符", systemImage: "music.note",
+                                           description: Text("切换到双手，或选择另一份曲谱。"))
+                        .frame(minHeight: 200)
+                }
+                scoreFeedback
+            }
+        }
+    }
+
+    private var scoreHeading: some View {
+        let score = model.selectedScore
+        return VStack(alignment: .leading, spacing: 9) {
+            Text(score.title)
+                .font(.system(.title, design: .serif, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("practice.score.title")
+
+            if !score.composer.isEmpty {
+                Text(score.composer).font(.subheadline).foregroundStyle(QinXuTheme.muted)
+            }
+
+            HStack(spacing: 10) {
+                Text("\(score.beatsPerMeasure)/\(score.beatUnit) 拍")
+                Text("\(Int(model.tempo)) BPM")
+                if model.loopEnabled {
+                    Image(systemName: "repeat").accessibilityLabel("已启用小节循环")
+                }
+                Spacer(minLength: 6)
+                Text("\(currentMeasure) / \(score.measures.count) 小节")
+                    .fontWeight(.semibold)
+                    .foregroundStyle(QinXuTheme.accent)
+                    .accessibilityLabel("第 \(currentMeasure) 小节，共 \(score.measures.count) 小节")
+            }
+            .font(.caption.monospacedDigit())
+            .foregroundStyle(QinXuTheme.muted)
+
+            let progress = model.engine.isFinished ? 1 : Double(max(0, currentMeasure - 1)) / Double(max(1, score.measures.count))
+            GeometryReader { geometry in
+                Capsule().fill(QinXuTheme.line)
+                    .overlay(alignment: .leading) {
+                        Capsule().fill(QinXuTheme.accent).frame(width: geometry.size.width * min(1, progress))
+                    }
+            }
+            .frame(height: 3)
+            .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 18)
+        .padding(.bottom, 7)
+    }
+
+    private var scoreFeedback: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) { feedback; Spacer(minLength: 0); counters }
+                VStack(alignment: .leading, spacing: 9) { feedback; counters }
+            }
+            if let text = model.engine.durationFeedback {
+                Text(text).font(.caption).foregroundStyle(QinXuTheme.muted)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(QinXuTheme.background)
+        .overlay(alignment: .top) { Divider().overlay(QinXuTheme.line) }
     }
 
     private var feedback: some View {
-        HStack(alignment: .top, spacing: 9) {
-            Image(systemName: model.engine.isFinished ? "checkmark.circle.fill" : "hand.point.up.left")
-                .foregroundStyle(QinXuTheme.teal)
-            VStack(alignment: .leading, spacing: 4) {
-                if let countdown = model.countdown {
-                    Text("预备 · \(countdown)").font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(QinXuTheme.teal)
-                } else {
-                    Text(model.engine.feedback).font(.system(size: 13, weight: .medium)).accessibilityIdentifier("practice.feedback")
-                }
-                if !model.engine.expectedNotes.isEmpty {
-                    Text("当前音符  " + model.engine.expectedNotes.map { note in
-                        let beats = String(format: "%.3g", note.durationBeats)
-                        let seconds = String(format: "%.2f", note.durationBeats * 60 / model.tempo)
-                        return "\(note.name) · \(beats) 拍 ≈ \(seconds) 秒"
-                    }.joined(separator: "；"))
-                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(QinXuTheme.muted)
-                        .accessibilityIdentifier("practice.expected")
-                }
+        VStack(alignment: .leading, spacing: 5) {
+            if let countdown = model.countdown {
+                Text("预备 \(countdown)")
+                    .font(.headline.monospacedDigit())
+                    .foregroundStyle(QinXuTheme.accent)
+            } else {
+                Text(model.engine.feedback)
+                    .font(.subheadline.weight(.semibold))
+                    .accessibilityIdentifier("practice.feedback")
+            }
+            if !model.engine.expectedNotes.isEmpty {
+                Text(model.engine.expectedNotes.map { note in
+                    let beats = String(format: "%.3g", note.durationBeats)
+                    let seconds = String(format: "%.2f", note.durationBeats * 60 / model.tempo)
+                    return "\(note.name) · \(beats) 拍 · \(seconds) 秒"
+                }.joined(separator: "  /  "))
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(QinXuTheme.muted)
+                .accessibilityIdentifier("practice.expected")
             }
         }
     }
 
     private var counters: some View {
-        HStack(spacing: 16) {
-            counter("正确", identifier: "practice.count.correct", count: model.engine.correctCount, color: QinXuTheme.teal)
+        HStack(spacing: 10) {
+            counter("正确", identifier: "practice.count.correct", count: model.engine.correctCount, color: QinXuTheme.success)
             counter("错音", identifier: "practice.count.wrong", count: model.engine.wrongCount, color: QinXuTheme.wrong)
             counter("漏音", identifier: "practice.count.missed", count: model.engine.missedCount, color: QinXuTheme.muted)
         }
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     private func counter(_ title: String, identifier: String, count: Int, color: Color) -> some View {
-        HStack(spacing: 5) {
-            Text("\(count)").font(.system(size: 18, weight: .medium, design: .serif)).monospacedDigit().foregroundStyle(color)
-            Text(title).font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
+        HStack(spacing: 4) {
+            Text("\(count)").font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(color)
+            Text(title).font(.caption2).foregroundStyle(QinXuTheme.muted)
         }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 5)
+        .background(QinXuTheme.paper, in: RoundedRectangle(cornerRadius: 6))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
         .accessibilityValue(String(count))
         .accessibilityIdentifier(identifier)
     }
 
-    private var keyboardCard: some View {
-        PracticeCard {
-            VStack(alignment: .leading, spacing: 15) {
+    private var keyboardPanel: some View {
+        PracticeCard(padding: 12) {
+            VStack(alignment: .leading, spacing: 9) {
                 HStack {
-                    Label("键盘指引", systemImage: "pianokeys").font(.system(size: 13, weight: .semibold))
-                    Spacer()
-                    Circle().fill(QinXuTheme.teal.opacity(0.23)).frame(width: 8, height: 8)
-                    Text("待弹").font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
-                    Circle().fill(QinXuTheme.teal).frame(width: 8, height: 8)
-                    Text("按下").font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
+                    Label("键盘指引", systemImage: "pianokeys").font(.subheadline.weight(.semibold))
+                    Spacer(minLength: 4)
+                    Button { showingSettings = true } label: {
+                        Label(inputTitle, systemImage: inputIcon)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(QinXuTheme.accent)
+                            .padding(.horizontal, 8)
+                            .frame(minHeight: 36)
+                            .background(QinXuTheme.accentTint, in: RoundedRectangle(cornerRadius: 8))
+                    }.buttonStyle(.plain)
+                        .accessibilityHint("打开练习设置以更改输入方式")
                 }
-                PianoKeyboardView(expectedPitches: Set(model.engine.expectedNotes.map(\.midi)), heldPitches: model.engine.heldPitches, hand: model.hand, interactive: model.inputMode == .touch, press: model.press, release: model.release)
-                HStack(alignment: .top, spacing: 8) {
-                    Text(model.inputMode == .touch ? "触屏练习：按住可延音，多指可弹和弦；松开即释放。触屏按键暂不发声。" : "键盘显示待弹与已按下的音。连接钢琴后开始练习。")
-                        .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                    Spacer(minLength: 0)
-                    if model.inputMode != .touch {
-                        Button("试试触屏") { model.setInputMode(.touch) }.font(.system(size: 11, weight: .semibold)).buttonStyle(.plain)
-                    }
-                }
-            }.foregroundStyle(QinXuTheme.ink)
+                PianoKeyboardView(
+                    expectedPitches: Set(model.engine.expectedNotes.map(\.midi)), heldPitches: model.engine.heldPitches,
+                    hand: model.hand, interactive: model.inputMode == .touch, press: model.press, release: model.release
+                )
+            }
         }
     }
 
-    private var connectionCard: some View {
-        InputConnectionView(model: model, midi: model.midi, microphone: model.microphone)
+    private var inputTitle: String {
+        switch model.inputMode {
+        case .touch: "触屏 · 无声"
+        case .midi: model.midi.connected ? "MIDI 已连接" : "MIDI 未连接"
+        case .microphone: "麦克风 · 实验"
+        }
+    }
+
+    private var inputIcon: String {
+        switch model.inputMode {
+        case .touch: "hand.tap"
+        case .midi: "cable.connector"
+        case .microphone: "mic"
+        }
+    }
+
+    private func transport(inset: CGFloat) -> some View {
+        HStack(spacing: 7) {
+            Menu {
+                ForEach(PracticeMode.allCases, id: \.self) { mode in
+                    Button {
+                        if model.mode != mode { model.mode = mode; model.reconfigure() }
+                    } label: {
+                        if model.mode == mode { Label(mode.title, systemImage: "checkmark") }
+                        else { Text(mode.title) }
+                    }.disabled(mode == .rhythm && model.inputMode == .microphone)
+                }
+            } label: {
+                pill(model.mode == .wait ? "识谱" : "节奏")
+            }
+            .menuStyle(.button)
+            .buttonStyle(.borderless)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .padding(.horizontal, 9)
+            .frame(minWidth: 44, minHeight: 44)
+            .background(QinXuTheme.accentTint, in: RoundedRectangle(cornerRadius: 10))
+            .accessibilityLabel("练习模式")
+            .accessibilityValue(model.mode.title)
+
+            Menu {
+                ForEach(PracticeHand.allCases, id: \.self) { hand in
+                    Button {
+                        if model.hand != hand { model.hand = hand; model.reconfigure() }
+                    } label: {
+                        if model.hand == hand { Label(hand.title, systemImage: "checkmark") }
+                        else { Text(hand.title) }
+                    }
+                }
+            } label: {
+                pill(model.hand.title)
+            }
+            .menuStyle(.button)
+            .buttonStyle(.borderless)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .padding(.horizontal, 9)
+            .frame(minWidth: 44, minHeight: 44)
+            .background(QinXuTheme.accentTint, in: RoundedRectangle(cornerRadius: 10))
+            .accessibilityLabel("练习手")
+            .accessibilityValue(model.hand.title)
+
+            Spacer(minLength: 0)
+
+            Button { model.restart() } label: { Image(systemName: "arrow.counterclockwise") }
+                .buttonStyle(QuietButtonStyle())
+                .accessibilityLabel("从头再练")
+                .accessibilityIdentifier("practice.restart")
+
+            Button { model.togglePlayback() } label: {
+                Label(model.isPlaying ? "暂停" : (model.engine.isFinished ? "再练一次" : "开始练习"),
+                      systemImage: model.isPlaying ? "pause.fill" : "play.fill")
+                    .fixedSize()
+            }
+            .buttonStyle(QuietButtonStyle(prominent: true))
+            .accessibilityIdentifier("practice.play")
+        }
+        .padding(.horizontal, inset)
+        .padding(.vertical, 9)
+        .frame(maxWidth: 1100)
+        .frame(maxWidth: .infinity)
+        .background(QinXuTheme.paper)
+        .overlay(alignment: .top) { Divider().overlay(QinXuTheme.line) }
+    }
+
+    private func pill(_ title: String) -> some View {
+        HStack(spacing: 4) {
+            Text(title).font(.system(size: 12, weight: .semibold))
+            Image(systemName: "chevron.down").font(.system(size: 7, weight: .bold))
+        }
+        .foregroundStyle(QinXuTheme.accent)
     }
 }
 
-private struct InputConnectionView: View {
+private struct PracticeSettingsView: View {
+    @ObservedObject var model: PracticeViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("速度") {
+                    HStack {
+                        Slider(value: Binding(get: { model.tempo }, set: { model.tempo = $0.rounded() }), in: 20...300,
+                               onEditingChanged: { editing in if !editing { model.reconfigure() } })
+                        .accessibilityLabel("速度，四分音符每分钟")
+                        Text("\(Int(model.tempo)) BPM").font(.subheadline.monospacedDigit())
+                    }
+                    if model.mode == .rhythm {
+                        Toggle("节拍器声音", isOn: $model.metronomeEnabled)
+                    }
+                }
+
+                Section("小节循环") {
+                    Toggle("重复所选片段", isOn: $model.loopEnabled)
+                        .accessibilityIdentifier("practice.loop.toggle")
+                        .onChange(of: model.loopEnabled) { _, _ in model.reconfigure() }
+                    if model.loopEnabled {
+                        Picker("起始小节", selection: $model.loopStart) {
+                            ForEach(model.selectedScore.measures) { Text("\($0.number)").tag($0.number) }
+                        }
+                        .accessibilityIdentifier("practice.loop.start")
+                        .onChange(of: model.loopStart) { _, value in
+                            if model.loopEnd < value { model.loopEnd = value }
+                            model.reconfigure()
+                        }
+                        Picker("结束小节", selection: $model.loopEnd) {
+                            ForEach(model.selectedScore.measures.filter { $0.number >= model.loopStart }) {
+                                Text("\($0.number)").tag($0.number)
+                            }
+                        }
+                        .onChange(of: model.loopEnd) { _, _ in model.reconfigure() }
+                    }
+                }
+
+                Section("演奏输入") {
+                    InputSettingsView(model: model, midi: model.midi, microphone: model.microphone)
+                }
+
+                Section("曲谱说明") {
+                    Text("练习谱按音高和拍点排布，留白表示休止，排版与原谱可能不同。")
+                    ForEach(model.selectedScore.warnings, id: \.self) { Text($0) }
+                }
+                .font(.caption)
+                .foregroundStyle(QinXuTheme.muted)
+            }
+            .formStyle(.grouped)
+            .navigationTitle("练习设置")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }.accessibilityIdentifier("practice.settings.done")
+                }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 440, minHeight: 470)
+        #endif
+    }
+}
+
+private struct InputSettingsView: View {
     @ObservedObject var model: PracticeViewModel
     @ObservedObject var midi: MIDIService
     @ObservedObject var microphone: MicrophoneService
 
     var body: some View {
-        PracticeCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    Label("演奏输入", systemImage: "cable.connector").font(.system(size: 13, weight: .semibold))
-                    Spacer()
-                    Picker("输入方式", selection: Binding(get: { model.inputMode }, set: { model.setInputMode($0) })) {
-                        Text("MIDI 钢琴").tag(InputMode.midi)
-                        Text("触屏").tag(InputMode.touch)
-                        Text("麦克风 · 实验").tag(InputMode.microphone)
-                    }.pickerStyle(.menu)
-                }
-                switch model.inputMode {
-                case .midi:
-                    HStack(spacing: 10) {
-                        Circle().fill(midi.connected ? QinXuTheme.teal : QinXuTheme.amber).frame(width: 7, height: 7)
-                        Text(midi.status).font(.system(size: 12)).foregroundStyle(QinXuTheme.muted)
-                        Spacer()
-                        Button { model.refreshMIDI() } label: { Label("刷新", systemImage: "arrow.clockwise") }
-                            .buttonStyle(.plain).font(.system(size: 11))
-                    }
-                    Picker("MIDI 来源", selection: Binding<Int32?>(get: { midi.selectedSourceID }, set: { midi.selectSource($0) })) {
-                        Text("选择设备").tag(Optional<Int32>.none)
-                        ForEach(midi.sources) { source in Text(source.name).tag(Optional(source.id)) }
-                    }
-                    Text("通过 USB MIDI 或系统已连接的蓝牙 MIDI 输入。这里不会播放钢琴伴奏音。")
-                        .font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
-                case .touch:
-                    Label("触屏键盘已启用", systemImage: "hand.tap").font(.system(size: 12)).foregroundStyle(QinXuTheme.teal)
-                    Text("用于体验识谱与判音流程。建议使用 iPad 多指演奏，完整练琴请连接 MIDI 钢琴。")
-                        .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                case .microphone:
-                    HStack {
-                        Circle().fill(microphone.isActive ? QinXuTheme.teal : QinXuTheme.amber).frame(width: 7, height: 7)
-                        Text(microphone.status).font(.system(size: 12)).foregroundStyle(QinXuTheme.muted)
-                        Spacer()
-                        if let pitch = microphone.detectedPitch { Text(NoteNames.name(pitch)).font(.system(size: 18, weight: .semibold, design: .monospaced)).foregroundStyle(QinXuTheme.teal) }
-                    }
-                    ProgressView(value: min(1, max(0, microphone.level)))
-                        .accessibilityLabel("麦克风输入音量")
-                    Text("实验功能：C3–C6 单音识谱验证。请在安静环境中逐个弹音，不使用延音踏板；节奏判定、和弦与双手同时演奏暂不支持。")
-                        .font(.system(size: 11)).foregroundStyle(QinXuTheme.amber).lineSpacing(3)
-                }
-            }.foregroundStyle(QinXuTheme.ink)
+        Picker("输入方式", selection: Binding(get: { model.inputMode }, set: { model.setInputMode($0) })) {
+            Text("MIDI 钢琴").tag(InputMode.midi)
+            Text("触屏").tag(InputMode.touch)
+            Text("麦克风 · 实验").tag(InputMode.microphone)
+        }
+        switch model.inputMode {
+        case .midi:
+            Picker("MIDI 来源", selection: Binding<Int32?>(get: { midi.selectedSourceID }, set: { midi.selectSource($0) })) {
+                Text("选择设备").tag(Optional<Int32>.none)
+                ForEach(midi.sources) { source in Text(source.name).tag(Optional(source.id)) }
+            }
+            HStack {
+                Circle().fill(midi.connected ? QinXuTheme.success : QinXuTheme.amber).frame(width: 7, height: 7)
+                Text(midi.status).font(.caption).foregroundStyle(QinXuTheme.muted)
+                Spacer()
+                Button("刷新") { model.refreshMIDI() }
+            }
+        case .touch:
+            Text("触屏琴键可按住和同时弹奏，当前不发声。")
+                .font(.caption).foregroundStyle(QinXuTheme.muted)
+        case .microphone:
+            Text(microphone.status).font(.subheadline)
+            ProgressView(value: min(1, max(0, microphone.level)))
+                .accessibilityLabel("麦克风输入音量")
+            if let pitch = microphone.detectedPitch {
+                Text(NoteNames.name(pitch)).font(.subheadline.monospacedDigit())
+            }
+            Text("实验功能。请用识谱模式逐个弹奏 C3–C6，避免延音踏板和和弦。")
+                .font(.caption).foregroundStyle(QinXuTheme.amber)
         }
     }
 }
@@ -420,42 +586,45 @@ private struct PracticeHistoryView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if history.isEmpty {
-                        VStack(spacing: 14) {
-                            Image(systemName: "clock.arrow.circlepath").font(.system(size: 35)).foregroundStyle(QinXuTheme.teal)
-                            Text("练习会留下足迹").font(.system(size: 22, weight: .medium, design: .serif)).accessibilityIdentifier("history.empty")
-                            Text("完成一轮练习后，在这里查看真实的练习记录。")
-                                .font(.system(size: 13)).foregroundStyle(QinXuTheme.muted)
-                        }.frame(maxWidth: .infinity).padding(.vertical, 90)
-                    } else {
+                if history.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 32)).foregroundStyle(QinXuTheme.accent)
+                            .accessibilityHidden(true)
+                        Text("暂无练习记录").font(.headline).accessibilityIdentifier("history.empty")
+                        Text("完成一轮练习后，记录会显示在这里。")
+                            .font(.subheadline).foregroundStyle(QinXuTheme.muted)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 48)
+                } else {
+                    LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(history.sorted { $0.date > $1.date }) { record in
                             PracticeCard {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    HStack(alignment: .top) {
-                                        VStack(alignment: .leading, spacing: 6) {
-                                            Text(record.scoreTitle).font(.system(size: 16, weight: .semibold))
-                                            Text(record.date.formatted(date: .abbreviated, time: .shortened)).font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                                        }
-                                        Spacer()
-                                        Text(record.mode.title).font(.system(size: 10)).foregroundStyle(QinXuTheme.teal).padding(7).background(QinXuTheme.teal.opacity(0.08), in: Capsule())
-                                    }
-                                    HStack(spacing: 15) {
-                                        Text("正确 \(record.correct)")
-                                        Text("错音 \(record.wrong)")
-                                        Text("漏音 \(record.missed)")
-                                        Spacer()
-                                        Text("\(Int(record.durationSeconds)) 秒")
-                                    }.font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
+                                VStack(alignment: .leading, spacing: 9) {
+                                    Text(record.scoreTitle).font(.headline)
+                                    Text(record.date.formatted(date: .abbreviated, time: .shortened))
+                                        .font(.caption).foregroundStyle(QinXuTheme.muted)
+                                    Text("正确 \(record.correct) · 错音 \(record.wrong) · 漏音 \(record.missed) · \(Int(record.durationSeconds)) 秒")
+                                        .font(.caption.monospacedDigit()).foregroundStyle(QinXuTheme.muted)
                                 }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
                         }
                     }
-                }.padding(22)
+                    .padding(18)
+                }
             }
-            .background(QinXuTheme.background).foregroundStyle(QinXuTheme.ink)
+            .background(QinXuTheme.background)
             .navigationTitle("练习记录")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.accessibilityIdentifier("history.close") } }
-        }.frame(minWidth: 340, minHeight: 440)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }.accessibilityIdentifier("history.close")
+                }
+            }
+        }
+        #if os(macOS)
+        .frame(minWidth: 390, minHeight: 420)
+        #endif
     }
 }

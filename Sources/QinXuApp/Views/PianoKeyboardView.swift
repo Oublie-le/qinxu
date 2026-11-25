@@ -45,14 +45,14 @@ private struct PianoTouchKey: View {
     let release: (Int) -> Void
     @State private var touching = false
     private var color: Color {
-        if held || touching { return QinXuTheme.teal }
-        if expected { return black ? QinXuTheme.teal.opacity(0.7) : Color(red: 0.77, green: 0.88, blue: 0.81) }
+        if held || touching { return QinXuTheme.accent }
+        if expected { return black ? QinXuTheme.accent : QinXuTheme.accentTint }
         return black ? QinXuTheme.navy : .white
     }
     private var keyShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: black ? 4 : 5)
     }
-    private var borderColor: Color { black ? Color.black.opacity(0.25) : QinXuTheme.line }
+    private var borderColor: Color { expected ? QinXuTheme.accent.opacity(0.65) : black ? Color.black.opacity(0.25) : QinXuTheme.line }
     private var labelColor: Color { black || held || touching ? Color.white.opacity(0.9) : QinXuTheme.muted }
     private var accessibleName: String {
         NoteNames.name(pitch) + (expected ? "，待弹" : "") + (held ? "，按下" : "")

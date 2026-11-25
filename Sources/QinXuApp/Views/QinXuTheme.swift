@@ -1,25 +1,29 @@
 import SwiftUI
 
 enum QinXuTheme {
-    static let background = Color(red: 0.96, green: 0.95, blue: 0.92)
-    static let paper = Color(red: 0.995, green: 0.99, blue: 0.97)
-    static let navy = Color(red: 0.10, green: 0.17, blue: 0.20)
-    static let ink = Color(red: 0.16, green: 0.23, blue: 0.25)
-    static let muted = Color(red: 0.44, green: 0.48, blue: 0.47)
-    static let teal = Color(red: 0.13, green: 0.44, blue: 0.40)
-    static let line = Color(red: 0.86, green: 0.87, blue: 0.83)
-    static let wrong = Color(red: 0.75, green: 0.30, blue: 0.24)
-    static let amber = Color(red: 0.65, green: 0.45, blue: 0.15)
+    static let background = Color(red: 0.953, green: 0.960, blue: 0.978)
+    static let paper = Color.white
+    static let navy = Color(red: 0.10, green: 0.13, blue: 0.22)
+    static let ink = Color(red: 0.09, green: 0.12, blue: 0.20)
+    static let muted = Color(red: 0.34, green: 0.39, blue: 0.49)
+    static let accent = Color(red: 0.212, green: 0.341, blue: 0.914)
+    static let accentTint = Color(red: 0.923, green: 0.941, blue: 1)
+    static let success = Color(red: 0.07, green: 0.45, blue: 0.34)
+    static let line = Color(red: 0.875, green: 0.898, blue: 0.940)
+    static let wrong = Color(red: 0.75, green: 0.18, blue: 0.28)
+    static let amber = Color(red: 0.61, green: 0.38, blue: 0.06)
 }
 
 struct PracticeCard<Content: View>: View {
-    var padding: CGFloat = 22
+    var padding: CGFloat = 18
     @ViewBuilder var content: Content
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 18)
         content.padding(padding)
-            .background(QinXuTheme.paper, in: RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(QinXuTheme.line.opacity(0.8), lineWidth: 1))
+            .background(QinXuTheme.paper, in: shape)
+            .clipShape(shape)
+            .overlay(shape.strokeBorder(QinXuTheme.line, lineWidth: 1).allowsHitTesting(false))
     }
 }
 
@@ -29,18 +33,10 @@ struct QuietButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 13, weight: .semibold))
-            .padding(.horizontal, 15).padding(.vertical, 11)
+            .padding(.horizontal, prominent ? 15 : 10)
+            .frame(minWidth: 44, minHeight: 44)
             .foregroundStyle(prominent ? Color.white : QinXuTheme.ink)
-            .background(prominent ? QinXuTheme.teal : Color.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 11))
-            .overlay(RoundedRectangle(cornerRadius: 11).stroke(prominent ? Color.clear : QinXuTheme.line, lineWidth: 1))
+            .background(prominent ? QinXuTheme.accent : QinXuTheme.background, in: RoundedRectangle(cornerRadius: 11))
             .opacity(configuration.isPressed ? 0.7 : 1)
-    }
-}
-
-struct SectionEyebrow: View {
-    var text: String
-    var body: some View {
-        Text(text).font(.system(size: 10, weight: .bold, design: .monospaced))
-            .tracking(2).foregroundStyle(QinXuTheme.muted)
     }
 }

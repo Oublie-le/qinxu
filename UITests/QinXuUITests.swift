@@ -29,7 +29,7 @@ final class QinXuUITests: XCTestCase {
         expect(element("practice.expected", in: app), "label CONTAINS %@", "E4")
         capture(app, name: "touch-two-correct-notes")
 
-        reveal(play, in: app, towardBottom: false)
+        XCTAssertTrue(play.isHittable, "滚动到琴键后，底部播放按钮应保持可用")
         play.tap()
         expect(play, "label CONTAINS %@", "开始练习")
         expect(element("practice.count.correct", in: app), "value == %@", "2")
@@ -65,7 +65,7 @@ final class QinXuUITests: XCTestCase {
         XCTAssertEqual(XCTWaiter.wait(for: [rotated], timeout: 10), .completed)
         // Verify a real control remains visible after layout changes, then exercise it.
         let play = element("practice.play", in: app)
-        reveal(play, in: app, towardBottom: true)
+        XCTAssertTrue(play.isHittable, "横屏时底部播放按钮应保持可用")
         play.tap()
         expect(play, "label CONTAINS %@", "暂停")
         capture(app, name: "selected-score-landscape")
@@ -78,13 +78,30 @@ final class QinXuUITests: XCTestCase {
         element("history.open", in: app).tap()
         let empty = element("history.empty", in: app)
         XCTAssertTrue(empty.waitForExistence(timeout: 10))
-        expect(empty, "label == %@", "练习会留下足迹")
+        expect(empty, "label == %@", "暂无练习记录")
         capture(app, name: "empty-practice-history")
         let close = element("history.close", in: app)
         XCTAssertTrue(close.isHittable)
         close.tap()
         expect(element("practice.play", in: app), "hittable == true")
         XCTAssertFalse(empty.exists)
+    }
+
+    @MainActor
+    func testPracticeSettingsCanEnableLoopAndReturnToScore() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("practice.settings", in: app).tap()
+
+        let loop = element("practice.loop.toggle", in: app)
+        expect(loop, "hittable == true")
+        loop.tap()
+        XCTAssertTrue(element("practice.loop.start", in: app).waitForExistence(timeout: 8))
+        capture(app, name: "practice-settings-loop")
+
+        element("practice.settings.done", in: app).tap()
+        expect(element("practice.play", in: app), "hittable == true")
+        XCTAssertFalse(loop.exists)
     }
 
     @MainActor
