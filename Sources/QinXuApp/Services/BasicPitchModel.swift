@@ -37,6 +37,7 @@ final class BasicPitchModel {
         let bundle = Bundle.main
         #endif
         return bundle.url(forResource: "BasicPitch", withExtension: "mlpackage", subdirectory: "Resources")
+            ?? bundle.url(forResource: "BasicPitch", withExtension: "mlpackage")
     }
 
     init(modelURL: URL? = BasicPitchModel.resourceURL) throws {

@@ -22,9 +22,17 @@ open QinXu.xcodeproj
 
 1. 用数据线连接、解锁 iPad，并信任此 Mac。
 2. 配对后在 iPad 的「设置 → 隐私与安全性 → 开发者模式」开启，按系统要求重启并确认。
-3. Xcode「Settings → Accounts」添加自己的 Apple 账号；项目 QinXu 目标的「Signing & Capabilities」选择自己的 Team。保留 Automatically manage signing。
+3. Xcode「Settings → Apple Accounts」添加自己的 Apple 账号；在账号/团队的「Manage Certificates」创建 Apple Development 证书。使用下方脚本将 Team ID 保存为本机配置，保留 Automatically manage signing。
 4. Scheme 选择 QinXu，运行设备选择这台 iPad，Run。若个人账号提示 Bundle Identifier 冲突，换为自己的唯一标识；不要提交个人签名配置。
 5. 如果 iPad 提示开发者不受信任，按系统指引在「设置 → 通用 → VPN 与设备管理」完成信任，然后重新打开。
+
+个人签名配置只写入 Git 忽略的 `Config/LocalSigning.xcconfig`，不会进入共享工程或保存密码，重新生成工程也会保留：
+
+```sh
+python3 scripts/configure-ios-signing.py YOURTEAMID
+# 如默认 Bundle ID 被其他团队占用，再设置自己的唯一标识：
+python3 scripts/configure-ios-signing.py YOURTEAMID --bundle-id com.example.QinXu
+```
 
 ## 麦克风验证路径
 

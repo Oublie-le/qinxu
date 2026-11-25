@@ -57,3 +57,5 @@ git switch -c codex/next-feature
 ## 本机 iPad 验证
 
 环境准备和安装步骤见 `IPAD_SETUP.md`；目标 iPad 9 / iPadOS 18.0.1。实琴结果单独记入 `DEVICE_TESTS.md` 与 `STATUS.md`，不要把模拟器或合成音频作为设备验收。
+
+应用资源打包遵循平台布局：iOS 将模型包、`Books`、`Fonts` 等复制为根级资源，禁止创建名为 `Resources` 的自定义根目录；Mac 把 SwiftPM 的资源 bundle 放进 `Contents/Resources`。见 [Apple Bundle Structures](https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html)。

@@ -48,9 +48,15 @@ ui_product = obj("ui-product", 'isa = PBXFileReference; explicitFileType = wrapp
 ui_group = obj("ui-group", f'isa = PBXGroup; children = ({",".join(ui_refs)},); name = UITests; sourceTree = "<group>";')
 ui_source_phase = obj("ui-sources", f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(ui_builds)},); runOnlyForDeploymentPostprocessing = 0;')
 ui_framework_phase = obj("ui-frameworks", 'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
-resources = obj("resources", 'isa = PBXFileReference; lastKnownFileType = folder; path = Sources/QinXuApp/Resources; sourceTree = SOURCE_ROOT;')
-resources_build = obj("resources-build", f'isa = PBXBuildFile; fileRef = {resources};')
-refs.append(resources)
+# iOS uses a flat app bundle. A root directory literally named Resources can
+# make codesign interpret the app as another bundle format. Copy these children.
+resource_builds = []
+for name, file_type in [("BasicPitch.mlpackage", "folder"), ("Books", "folder"), ("Fonts", "folder"),
+                        ("BasicPitch-LICENSE.txt", "text"), ("BasicPitch-NOTICE.txt", "text")]:
+    relative = "Sources/QinXuApp/Resources/" + name
+    resource_ref = obj("resource:" + name, f'isa = PBXFileReference; lastKnownFileType = {file_type}; path = {q(relative)}; sourceTree = SOURCE_ROOT;')
+    refs.append(resource_ref)
+    resource_builds.append(obj("resource-build:" + name, f'isa = PBXBuildFile; fileRef = {resource_ref};'))
 product = obj("product", 'isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QinXu.app; sourceTree = BUILT_PRODUCTS_DIR;')
 plist = obj("plist", 'isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Config/Info.plist; sourceTree = SOURCE_ROOT;')
 signing = obj("signing-config", 'isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Signing.xcconfig; sourceTree = SOURCE_ROOT;')
@@ -62,7 +68,7 @@ core_product = obj("core-product", f'isa = XCSwiftPackageProductDependency; pack
 core_build = obj("core-build", f'isa = PBXBuildFile; productRef = {core_product};')
 source_phase = obj("source-phase", f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(builds)},); runOnlyForDeploymentPostprocessing = 0;')
 framework_phase = obj("framework-phase", f'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ({core_build},); runOnlyForDeploymentPostprocessing = 0;')
-resource_phase = obj("resource-phase", f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({resources_build},); runOnlyForDeploymentPostprocessing = 0;')
+resource_phase = obj("resource-phase", f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(resource_builds)},); runOnlyForDeploymentPostprocessing = 0;')
 
 project_configs, target_configs, ui_configs = [], [], []
 for name in ("Debug", "Release"):
