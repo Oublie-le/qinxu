@@ -1,6 +1,6 @@
 # 当前进度与验证记录
 
-更新日期：2026-11-24。产品：琴序（QinXu）。当前版本：0.1.0 开发版。M0 工程、核心和本机自动化验收已完成；M1 的 iPad 真机验收待环境和设备就绪。
+更新日期：2026-11-25。产品：琴序（QinXu）。当前版本：0.1.0 开发版。M0 工程、核心及自动化验收已完成；已补齐远程 iOS 编译与基础 UI 验收，M1 的实琴真机验收待环境和设备就绪。
 
 ## 已实现
 
@@ -16,17 +16,18 @@
 
 | 检查 | 结果 | 边界 |
 |---|---|---|
-| Swift Testing 自动化测试 | **67 项通过** | macOS、Swift 6.1.2；55 项核心、9 项应用状态、3 组渲染测试（9 个尺寸用例） |
+| Swift Testing 自动化测试 | **67 项通过** | 本机 Swift 6.1.2 及远程 Swift 6.3.3；55 项核心、9 项应用状态、3 组渲染测试（9 个尺寸用例） |
 | 解析 → MIDI 字节 → 节奏评分 | 三首示例均通过 | 合成 MIDI 事件，不代表硬件连接已测 |
 | 模型、引擎、输入与共享界面编译 | 通过 | macOS SDK |
 | macOS Release 应用构建与本地临时签名 | 通过 | `.local-build/QinXu.app` |
 | Xcode 工程与 Info.plist 语法 | `plutil -lint` 通过 | 不是 iOS SDK 构建 |
-| iOS 模拟器 / 真机构建 | **未执行** | 机器只有 Command Line Tools，缺少完整 Xcode |
+| iOS 模拟器构建 | **通过** | GitHub Actions：Xcode 26.6、iOS 26.5 SDK |
+| iOS 真机签名 / 安装 | **未执行** | 仍需本机完整 Xcode、开发团队及目标设备 |
 | 自身视图离屏渲染 | **通过，已检查 PNG** | 主界面、琴谱、键盘，宽 393 / 834 / 1194 点；macOS NSHostingView |
-| iOS UI 点击 / 系统弹窗 | **未完成** | 缺少完整 Xcode；离屏渲染不能替代模拟器或真机交互 |
+| iPhone / iPad UI 自动交互 | **各 3 项通过，共 6 项执行** | iPhone 17、iPad (A16)，iOS 26.5；触屏 C4/D4 判音、暂停/重启、选曲/旋转、记录空态 |
 | 实际钢琴 MIDI | **未验证** | 尚未取得并连接目标钢琴与设备 |
 | 实际钢琴麦克风准确率 | **未验证** | 目前仅静音、已知频率及合成谐波测试 |
-| 远程 CI | 未执行 | 工作流已写入，未推送任何远程仓库 |
+| 远程 CI | 已启用并实际执行 | [查看 main 最新运行](https://github.com/Oublie-le/qinxu/actions/workflows/verify.yml?query=branch%3Amain)，保存日志、截图与 xcresult |
 
 测试覆盖乐谱时值/声部/延音线、不支持的 XML、同音重击、错漏恢复、暂停计时、最后音松键、MIDI 任意分包、踏板、数据恢复、单音频率及跨模块流程。新增旧名称目录迁移、导入写入失败回滚、预备拍取消、后台停止、麦克风启动取消、完成记录去重和最终拍暂停不误启动循环的回归测试。
 
@@ -34,14 +35,18 @@
 
 `bash scripts/verify.sh` 实测输出：自动化 PASS；iOS SKIP（缺少 SDK）。CI 使用 `--require-ios`，缺 SDK 时失败。工程生成器 `--check` 验证通过。LLVM 行覆盖统计：判定引擎 94.97%，MusicXML 93.72%，MIDI 字节解码 95.74%，本地存储 94.79%；这是本机自动化覆盖，不是硬件质量指标。
 
-本机没有 XCTest；测试使用工具链自带的 Swift Testing。`Assertions.swift` 是将断言失败记录到 Swift Testing 的小型辅助函数，不是模拟运行或自定义假结果。
+本轮新增真实 iOS XCTest UI 测试，Debug 测试启动使用独立临时曲库并关闭真实硬件访问。等待状态使用有界断言，不用固定 sleep 伪造结果。
+
+验证证据：代码 `382f429` 的[远程日志](https://github.com/Oublie-le/qinxu/actions/runs/45563468850)记录 67 项共享测试通过，两个模拟器均 `TEST SUCCEEDED`、各 3 项零失败。该轮收尾被诊断取消请求打断，工作流整体显示取消；后续 main 运行状态以上方链接为准。修复了 Swift 6.3.3 下复杂视图/测试表达式的类型检查问题，并统一 Debug 应用与核心包的活动架构，避免模拟器测试构建混用 arm64/x86_64。
+
+本机只有 Command Line Tools，没有 XCTest；共享代码测试使用工具链自带的 Swift Testing。`Assertions.swift` 是将断言失败记录到 Swift Testing 的小型辅助函数，不是模拟运行或自定义假结果。
 
 ## 命名与代码管理
 
 - 正式目录 `QinXu`，应用工程 `QinXu.xcodeproj`，源码模块 `QinXuApp` / `QinXuCore`。
 - 入口 `QinXuApp.swift`、主视图 `PracticeHomeView.swift`、主题 `QinXuTheme.swift`、曲谱模型 `ScoreModels.swift`。
-- Git 保留更名前基线与本轮修改；`main` 是本机已验证的开发基线，保留 `codex/qinxu-foundation` 分支和 `v0.1.0-dev.1` 标签。
-- 未创建远程仓库、未上传代码；缓存和构建产物已忽略。
+- Git 保留更名前基线与本轮修改；`main` 是本机已验证的开发基线，保留 `codex/qinxu-foundation` 分支和 `v0.1.0-dev.1` 本地历史标签；本轮远程基线标记为 `v0.1.0-dev.2`。
+- 远程 `origin` 已配置并上传源码及历史：https://github.com/Oublie-le/qinxu 。缓存和构建产物已忽略。
 - 同一可访问 Application Support 容器内安全迁移旧 `PianoPractice/library.json`，原文件保留。iOS 更换 Bundle ID 的跨沙盒迁移不在支持范围内。
 
 ## 明确限制
@@ -51,11 +56,11 @@
 - 从跨小节延音线中间开始循环会明确提示改从前一音起始小节练习，避免漏掉持续音。
 - 麦克风只在逐个单音、识谱模式下实验，不用于双手和弦或节奏评分。
 - 屏幕琴键是输入方式，当前不合成钢琴音色。
-- 真机签名、iOS UI、真实 MIDI 延迟、音频路由、长期性能和实琴识音尚需完成，不能宣称已可上架。
+- 真机签名、iOS 麦克风权限和文件导入弹窗、真实 MIDI 延迟、音频路由、长期性能和实琴识音尚需完成，不能宣称已可上架。
 
 ## 接下来
 
 1. 安装完整 Xcode，并完成 iOS 平台组件初始化。
-2. 构建 iOS 模拟器，验证 iPad / iPhone 横竖屏与导入交互。
+2. 基于远程模拟器测试结果，补验文件导入和音频权限等系统交互。
 3. 用用户的目标钢琴与 iPad 执行 `DEVICE_TESTS.md`，根据真实结果修正输入/判定参数。
 4. 先验收 MIDI 版本，再扩展麦克风实琴测试与多音模型验证。

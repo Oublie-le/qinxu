@@ -1,5 +1,7 @@
 # 琴序 · QinXu
 
+[源代码](https://github.com/Oublie-le/qinxu) · [自动构建与测试](https://github.com/Oublie-le/qinxu/actions/workflows/verify.yml)
+
 面向 iPad / iPhone 的本地钢琴练习应用。当前为首轮开发版本，优先完成 MIDI + MusicXML 的练琴闭环，另带 **实验性麦克风单音识别**。项目内也提供同一份 SwiftUI 界面的 macOS 开发预览，方便没有 Xcode 模拟器时验证交互。
 
 ## 当前功能
@@ -51,7 +53,16 @@ xcodebuild -project QinXu.xcodeproj -scheme QinXu \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
 
-只有 Command Line Tools 时，验证脚本会明确标记 iOS 构建为 SKIP；加 `--require-ios` 则缺少 Xcode 也会返回失败。CI 配置在 `.github/workflows/verify.yml`，尚未推送或执行远程 CI。
+只有 Command Line Tools 时，验证脚本会明确标记 iOS 构建为 SKIP；加 `--require-ios` 则缺少 Xcode 也会返回失败。CI 配置在 `.github/workflows/verify.yml`：执行共享代码测试和 iOS 编译，并分别在 iPhone、iPad 模拟器执行 UI 测试；结果与截图保存在每次运行的附件中。实际验收结果见 `docs/STATUS.md`。
+
+具备完整 Xcode 和 iOS 模拟器运行时后，可运行真实触屏交互测试：
+
+```sh
+bash scripts/test-ios.sh iPhone
+bash scripts/test-ios.sh iPad
+```
+
+测试自动选择本机已安装的对应模拟器，覆盖触屏判音、暂停／重启、曲库切换、横竖屏与记录空态。使用独立临时曲库，不访问真实 MIDI 或麦克风。该测试入口仅在 Debug 构建中启用。
 
 ## 曲谱支持范围
 

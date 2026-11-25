@@ -44,4 +44,6 @@ git switch -c codex/next-feature
 
 提交包含源码、测试、原创样谱、工程生成器和开发记录。构建产物、缓存、Xcode 用户状态和个人签名信息不进入版本库。每次交付更新 `docs/STATUS.md`，如实记录尚未执行的验收。
 
-当前未配置远程仓库；本地 Git 提供历史与回退，不等同于异地备份。确定 GitHub / 私有服务仓库后再添加远程并推送。
+远程 `origin`：`https://github.com/Oublie-le/qinxu.git`。用户已授权公开推送源码、提交历史和运行 GitHub Actions。功能先在 `codex/` 分支通过检查，再合入 `main`；无需强制推送或改写既有历史。
+
+远程 CI 除共享代码测试与 iOS 构建外，还在两类模拟器执行 `UITests/QinXuUITests.swift`。本地执行方式为 `bash scripts/test-ios.sh iPhone` 或 `iPad`，需要完整 Xcode 和已安装的 iOS 运行时。测试日志与带截图的 `.xcresult` 存在 `.local-build/results`，CI 附件保留 14 天。构建与模拟器通过仍不代表实琴、麦克风和真机签名已验证。
