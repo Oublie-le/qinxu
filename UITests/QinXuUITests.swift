@@ -203,9 +203,10 @@ final class QinXuUITests: XCTestCase {
         // This changes musical duration; there is no test-only clock or fixed sleep.
         element("practice.tempo", in: app).tap()
         let tempo = app.sliders.matching(identifier: "globalMetronome.tempo").firstMatch
-        XCTAssertTrue(element("globalMetronome.sheet", in: app).waitForExistence(timeout: 8))
+        XCTAssertTrue(element("globalMetronome.title", in: app).waitForExistence(timeout: 8))
         reveal(tempo, in: app, towardBottom: true, scrollIdentifier: "globalMetronome.scroll")
         tempo.adjust(toNormalizedSliderPosition: 0)
+        expect(tempo, "value == %@", "20")
         element("globalMetronome.save", in: app).tap()
         expect(element("practice.tempo", in: app), "label CONTAINS %@", "四分音符每分钟 20 次")
         element("practice.play", in: app).tap()
@@ -270,18 +271,18 @@ final class QinXuUITests: XCTestCase {
         let app = launchFreshApp(storeID: storeID)
         defer { app.terminate() }
         element("navigation.metronome", in: app).tap()
-        XCTAssertTrue(element("globalMetronome.sheet", in: app).waitForExistence(timeout: 8))
+        XCTAssertTrue(element("globalMetronome.title", in: app).waitForExistence(timeout: 8))
 
         let tempo = app.sliders.matching(identifier: "globalMetronome.tempo").firstMatch
         reveal(tempo, in: app, towardBottom: true, scrollIdentifier: "globalMetronome.scroll")
-        tempo.adjust(toNormalizedSliderPosition: 0.25) // 20...300, quarter position is 90.
-        expect(tempo, "value == %@", "90")
+        expect(tempo, "value == %@", "80")
+        setGlobalMetronomeTempo(90, in: app)
         chooseGlobalMetronomeOption("tempoNote", value: "quarter", in: app)
         chooseGlobalMetronomeOption("beatsPerMeasure", value: "3", in: app)
         chooseGlobalMetronomeOption("beatUnit", value: "4", in: app)
         chooseGlobalMetronomeOption("clickNote", value: "eighth", in: app)
         element("globalMetronome.save", in: app).tap()
-        expect(element("globalMetronome.sheet", in: app), "exists == false")
+        expect(element("globalMetronome.title", in: app), "exists == false")
 
         let summary = "3/4，四分音符每分钟 90 次，每响八分音符"
         element("navigation.metronome", in: app).tap()
@@ -392,6 +393,27 @@ final class QinXuUITests: XCTestCase {
     private func remainingSeconds(in value: String) -> Double? {
         guard let comma = value.lastIndex(of: "，"), let seconds = value.lastIndex(of: "秒"), comma < seconds else { return nil }
         return Double(value[value.index(after: comma)..<seconds].trimmingCharacters(in: .whitespaces))
+    }
+
+    @MainActor
+    private func setGlobalMetronomeTempo(_ target: Int, in app: XCUIApplication,
+                                         file: StaticString = #filePath, line: UInt = #line) {
+        let tempo = app.sliders.matching(identifier: "globalMetronome.tempo").firstMatch
+        // Use the stepper's real one-BPM actions and read every result. Slider
+        // coordinates do not map exactly to values across native device layouts.
+        for _ in 0..<20 {
+            guard let value = tempo.value as? String, let current = Int(value) else {
+                XCTFail("无法读取节拍器的实际速度", file: file, line: line)
+                return
+            }
+            if current == target { return }
+            let increment = current < target
+            let button = element("globalMetronome.tempoStepper-" + (increment ? "Increment" : "Decrement"), in: app)
+            reveal(button, in: app, towardBottom: true, scrollIdentifier: "globalMetronome.scroll", file: file, line: line)
+            button.tap()
+            expect(tempo, "value == %@", String(current + (increment ? 1 : -1)), file: file, line: line)
+        }
+        expect(tempo, "value == %@", String(target), file: file, line: line)
     }
 
     @MainActor

@@ -300,6 +300,7 @@ private struct ScoreLibraryCard: View {
                     ScoreCoverView(score: score, imageData: imageData)
                         .aspectRatio(3.0 / 4.0, contentMode: .fit)
                         .frame(maxWidth: compact ? 92 : 140)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("查看曲谱：" + score.title)

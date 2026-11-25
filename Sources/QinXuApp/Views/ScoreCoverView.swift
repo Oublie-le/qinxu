@@ -40,7 +40,9 @@ struct ScoreCoverView: View {
                     fallback(size: geometry.size)
                 }
             }
+            .frame(width: geometry.size.width, height: geometry.size.height)
             .clipShape(RoundedRectangle(cornerRadius: 7))
+            .contentShape(Rectangle())
             .overlay(alignment: .leading) {
                 Rectangle().fill(palette.ink.opacity(0.10)).frame(width: 1)
                     .padding(.leading, 4)
@@ -54,10 +56,16 @@ struct ScoreCoverView: View {
     private func fallback(size: CGSize) -> some View {
         let small = size.width < 100
         return ZStack(alignment: .topLeading) {
-            Circle().fill(palette.ink.opacity(0.10))
-                .frame(width: size.width * 1.02, height: size.width * 1.02)
-                .overlay(Circle().stroke(palette.ink.opacity(0.16), lineWidth: 0.7).padding(14))
-                .offset(x: size.width * 0.35, y: size.height * 0.59)
+            // Draw the cropped ornament within the cover's bounds. An offset
+            // Circle view enlarged the button's accessibility frame beyond its
+            // visible cover, putting its activation point over quick practice.
+            Canvas { context, _ in
+                let circle = CGRect(x: size.width * 0.35, y: size.height * 0.59,
+                                    width: size.width * 1.02, height: size.width * 1.02)
+                context.fill(Path(ellipseIn: circle), with: .color(palette.ink.opacity(0.10)))
+                context.stroke(Path(ellipseIn: circle.insetBy(dx: 14, dy: 14)),
+                               with: .color(palette.ink.opacity(0.16)), lineWidth: 0.7)
+            }.frame(width: size.width, height: size.height).accessibilityHidden(true)
             VStack(alignment: .leading, spacing: small ? 5 : 8) {
                 Text(score.title.components(separatedBy: " · ").first ?? score.title)
                     .font(.system(size: small ? 15 : 19, weight: .medium, design: .serif))

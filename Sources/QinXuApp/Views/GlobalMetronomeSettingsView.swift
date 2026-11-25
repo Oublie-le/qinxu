@@ -17,6 +17,7 @@ struct GlobalMetronomeSettingsView: View {
             HStack(spacing: 12) {
                 Label("全局节拍器", systemImage: "metronome")
                     .font(.system(size: 18, weight: .semibold))
+                    .accessibilityIdentifier("globalMetronome.title")
                 Spacer(minLength: 4)
                 Button("取消") { model.showingMetronomeSettings = false }
                     .buttonStyle(.plain).font(.system(size: 13))
@@ -60,7 +61,6 @@ struct GlobalMetronomeSettingsView: View {
         .background(QinXuTheme.background)
         .foregroundStyle(QinXuTheme.ink)
         .tint(QinXuTheme.accent)
-        .accessibilityIdentifier("globalMetronome.sheet")
     }
 
     private var liveControls: some View {
