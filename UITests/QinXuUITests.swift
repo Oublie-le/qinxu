@@ -93,14 +93,16 @@ final class QinXuUITests: XCTestCase {
         defer { app.terminate() }
         element("practice.settings", in: app).tap()
 
-        let loop = element("practice.loop.toggle", in: app)
+        let loop = app.switches["practice.loop.toggle"]
         expect(loop, "hittable == true")
+        expect(loop, "value == %@", "0")
         loop.tap()
-        XCTAssertTrue(element("practice.loop.start", in: app).waitForExistence(timeout: 8))
+        expect(loop, "value == %@", "1")
         capture(app, name: "practice-settings-loop")
 
         element("practice.settings.done", in: app).tap()
         expect(element("practice.play", in: app), "hittable == true")
+        XCTAssertTrue(element("practice.loop.enabled", in: app).waitForExistence(timeout: 8))
         XCTAssertFalse(loop.exists)
     }
 

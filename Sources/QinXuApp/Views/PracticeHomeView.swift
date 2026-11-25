@@ -267,6 +267,7 @@ struct PracticeHomeView: View {
                 Text("\(Int(model.tempo)) BPM")
                 if model.loopEnabled {
                     Image(systemName: "repeat").accessibilityLabel("已启用小节循环")
+                        .accessibilityIdentifier("practice.loop.enabled")
                 }
                 Spacer(minLength: 6)
                 Text("\(currentMeasure) / \(score.measures.count) 小节")
@@ -494,14 +495,20 @@ private struct PracticeSettingsView: View {
                 }
 
                 Section("小节循环") {
-                    Toggle("重复所选片段", isOn: $model.loopEnabled)
-                        .accessibilityIdentifier("practice.loop.toggle")
-                        .onChange(of: model.loopEnabled) { _, _ in model.reconfigure() }
+                    HStack {
+                        Text("重复所选片段").accessibilityHidden(true)
+                        Spacer()
+                        Toggle("重复所选片段", isOn: $model.loopEnabled)
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .fixedSize()
+                            .accessibilityIdentifier("practice.loop.toggle")
+                            .onChange(of: model.loopEnabled) { _, _ in model.reconfigure() }
+                    }
                     if model.loopEnabled {
                         Picker("起始小节", selection: $model.loopStart) {
                             ForEach(model.selectedScore.measures) { Text("\($0.number)").tag($0.number) }
                         }
-                        .accessibilityIdentifier("practice.loop.start")
                         .onChange(of: model.loopStart) { _, value in
                             if model.loopEnd < value { model.loopEnd = value }
                             model.reconfigure()
