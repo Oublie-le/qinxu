@@ -16,6 +16,9 @@ xcodebuild test -project QinXu.xcodeproj -scheme QinXu \
   2>&1 | tee "$result_dir/xcodebuild.log"
 test_status=$?
 set -e
+for test_plan in .local-build/DerivedData/Build/Products/*.xctestrun; do
+  if [[ -f "$test_plan" ]]; then cp "$test_plan" "$result_dir/"; fi
+done
 if [[ -d "$result_dir/QinXu.xcresult" ]]; then
   if ! xcrun xcresulttool export attachments --path "$result_dir/QinXu.xcresult" --output-path "$result_dir/attachments"; then
     echo "Could not export attachments; the complete .xcresult is retained."

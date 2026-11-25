@@ -4,6 +4,7 @@
 
 - 产品：琴序；工程、可执行文件及 scheme：`QinXu`。
 - 应用模块：`Sources/QinXuApp`；入口：`QinXuApp.swift`；主界面：`PracticeHomeView.swift`。
+- SwiftPM 的 Mac 预览可执行产品为 `QinXuPreview`，打包后仍是 `QinXu.app`；避免与 iOS 测试目标产品 `QinXu` 同名。
 - 音乐核心：`Sources/QinXuCore`；核心测试：`Tests/QinXuCoreTests`；应用层测试：`Tests/QinXuAppTests`。
 - 开发 Bundle ID：`com.ifeng.QinXu`；macOS 预览：`com.ifeng.QinXu.mac`。
 

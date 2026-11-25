@@ -5,7 +5,7 @@ swift build -c release
 binary_dir="$(swift build -c release --show-bin-path)"
 app_dir="$PWD/.local-build/QinXu.app"
 mkdir -p "$app_dir/Contents/MacOS"
-cp "$binary_dir/QinXu" "$app_dir/Contents/MacOS/QinXu"
+cp "$binary_dir/QinXuPreview" "$app_dir/Contents/MacOS/QinXu"
 cat > "$app_dir/Contents/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

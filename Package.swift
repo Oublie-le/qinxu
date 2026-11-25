@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
         .library(name: "QinXuCore", targets: ["QinXuCore"]),
-        .executable(name: "QinXu", targets: ["QinXuApp"])
+        .executable(name: "QinXuPreview", targets: ["QinXuApp"])
     ],
     targets: [
         .target(name: "QinXuCore"),
