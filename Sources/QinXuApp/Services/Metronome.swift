@@ -14,19 +14,21 @@ final class Metronome {
         accent = try? AVAudioPlayer(data: Self.click(frequency: 1400))
         soft?.prepareToPlay(); accent?.prepareToPlay()
     }
-    func play(accented: Bool) {
+    func play(accented: Bool) throws {
         guard deviceAccessEnabled else { return }
-        if !ownsAudioSession { prepareSession() }
+        if !ownsAudioSession { try prepareSession() }
         let player = accented ? accent : soft
-        player?.currentTime = 0; player?.play()
+        guard let player else { throw LibraryError.message("无法创建节拍音频。") }
+        player.currentTime = 0
+        guard player.play() else { throw LibraryError.message("无法播放节拍音频。") }
     }
-    func prepareSession() {
+    private func prepareSession() throws {
         guard deviceAccessEnabled else { return }
-        ownsAudioSession = true
         #if os(iOS)
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-        try? AVAudioSession.sharedInstance().setActive(true)
+        try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try AVAudioSession.sharedInstance().setActive(true)
         #endif
+        ownsAudioSession = true
     }
     func stop() {
         soft?.stop(); accent?.stop()

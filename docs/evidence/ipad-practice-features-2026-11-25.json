@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-25",
+  "version": "0.1.0 development",
+  "device": {
+    "modelReportedByUser": "iPad (9th generation)",
+    "osReportedByUser": "iPadOS 18.0.1",
+    "execution": "Connected physical iPad, XCTest UI automation"
+  },
+  "sharedVerification": {
+    "command": "bash scripts/verify.sh --require-ios",
+    "coreTests": 83,
+    "appTests": 52,
+    "result": "passed",
+    "iosSimulatorTargetBuild": "passed"
+  },
+  "initialUITestRun": {
+    "result": "Failed",
+    "totalTestCount": 11,
+    "passedTests": 9,
+    "failedTests": 2,
+    "skippedTests": 0,
+    "localResultBundle": ".local-build/results/DevicePractice.Ts0WNx/QinXu.xcresult",
+    "failures": [
+      "First-launch library-card lookup before ready snapshot",
+      "Long-note test still expected old BPM label after UI changed to quarter-notes per minute"
+    ]
+  },
+  "targetedUITestFollowup": {
+    "result": "Passed",
+    "totalTestCount": 2,
+    "passedTests": 2,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "localResultBundle": ".local-build/results/DevicePracticeRetry.fTrm8q/QinXu.xcresult",
+    "changes": "Test-only bounded readiness wait after terminating old process; tempo assertion updated to current Chinese accessibility label",
+    "tests": [
+      "testBeyerLessonOpensRealPracticeAndKeepsKeyboardGeometry",
+      "testLongNoteShowsDecreasingBeatsAndSecondsAndPauseClearsIt"
+    ]
+  },
+  "coverage": [
+    "Existing six UI paths",
+    "Immersion hides navigation, preserves keyboard scoring, exits without pausing",
+    "Written long-note seconds/beats decrease and pause clears guide",
+    "Independent visual metronome advances/stops and sound preference toggles",
+    "One wrong and one correct event yield accurate partial report without rhythm/missed/overall scores",
+    "Second-measure progress resumes via detail and accepts actual touch input"
+  ],
+  "screenshotsInspected": [
+    "Full-screen immersive touch session",
+    "Partial reading report with actual touch counts",
+    "Beyer written-duration countdown",
+    "667/1194 point shared-view guidance, immersion and report previews"
+  ],
+  "uniqueUITestPathsWithPassingEvidence": 11,
+  "normalLaunchAfterTesting": "devicectl success",
+  "strictCodeSignatureVerification": "passed",
+  "excluded": [
+    "Physical-piano microphone accuracy",
+    "Physical MIDI timing",
+    "Audible metronome and acoustic audio-route measurements",
+    "Physical key-release or pedal scoring",
+    "Cross-launch device persistence (covered by local store and ViewModel tests)"
+  ]
+}

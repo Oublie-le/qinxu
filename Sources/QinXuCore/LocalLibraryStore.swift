@@ -106,7 +106,10 @@ public struct LocalLibraryStore {
 
     private func decode(_ data: Data) throws -> Snapshot {
         let snapshot = try JSONDecoder().decode(Snapshot.self, from: data)
-        guard snapshot.version == 1 else {
+        // A compatible outer schema can still contain a newer report with fields
+        // this app cannot round-trip. Preserve the original bytes before any save.
+        guard snapshot.version == 1,
+              snapshot.history.allSatisfy({ $0.report.map { $0.version == 1 } ?? true }) else {
             throw NSError(domain: "QinXu.Library", code: 1,
                           userInfo: [NSLocalizedDescriptionKey: "数据版本暂不支持，将保留恢复副本。"])
         }

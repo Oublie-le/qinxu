@@ -55,4 +55,35 @@ import Testing
         #expect(engine.sustainedPitches(at: 20).isEmpty)
         #expect(engine.sustainedPitches(at: .nan).isEmpty)
     }
+
+    @Test func countdownPreservesTotalDurationAndUsesOriginalCaptureOnset() throws {
+        var engine = PracticeEngine(score: piece, tempoBPM: 120, inputLagTolerance: 3,
+                                    evaluatesNoteDuration: false)
+        engine.start(at: 10)
+        engine.tick(at: 11.4)
+        engine.receive(.on(pitch: 48, velocity: 80), at: 10.1)
+        engine.receive(.on(pitch: 60, velocity: 80), at: 10.1)
+        let guide = try #require(engine.sustainGuidance(at: 11.4).first)
+        #expect(guide.pitch == 48 && guide.noteIDs == ["bass"])
+        #expect(guide.totalSeconds == 2 && guide.totalBeats == 4)
+        #expect(abs(guide.remainingSeconds - 0.7) < 0.000001)
+        #expect(abs(guide.remainingBeats - 1.4) < 0.000001)
+        #expect(abs(guide.remainingFraction - 0.35) < 0.000001)
+        #expect(engine.sustainGuidance(at: 12.1).isEmpty)
+        engine.pause(at: 11.5)
+        #expect(engine.sustainGuidance(at: 11.6).isEmpty)
+    }
+
+    @Test func unisonGuidanceKeepsBothNoteIDsAndLongestWrittenDuration() throws {
+        let score = PianoScore(title: "同音", tempoBPM: 60, notes: [
+            .init(id: "right", midi: 60, startBeat: 0, durationBeats: 2),
+            .init(id: "left", midi: 60, startBeat: 0, durationBeats: 4, staff: 2)
+        ], measures: [.init(number: 1, startBeat: 0, durationBeats: 4)])
+        var engine = PracticeEngine(score: score)
+        engine.start(at: 10); engine.receive(.on(pitch: 60, velocity: 80), at: 10)
+        let guide = try #require(engine.sustainGuidance(at: 11).first)
+        #expect(engine.isFinished && engine.sustainGuidance(at: 11).count == 1)
+        #expect(guide.noteIDs == ["left", "right"] && guide.totalSeconds == 4)
+        #expect(guide.remainingSeconds == 3 && guide.remainingFraction == 0.75)
+    }
 }

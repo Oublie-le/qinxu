@@ -89,9 +89,11 @@ public struct PracticeSummary: Identifiable, Codable, Equatable, Sendable {
     public var missed: Int
     public var durationSeconds: Double
     public var mode: PracticeMode
-    public init(id: String = UUID().uuidString, date: Date = Date(), scoreTitle: String, correct: Int, wrong: Int, missed: Int, durationSeconds: Double, mode: PracticeMode) {
+    public var report: PracticeReport?
+    public init(id: String = UUID().uuidString, date: Date = Date(), scoreTitle: String, correct: Int, wrong: Int, missed: Int, durationSeconds: Double, mode: PracticeMode, report: PracticeReport? = nil) {
         self.id = id; self.date = date; self.scoreTitle = scoreTitle; self.correct = correct
         self.wrong = wrong; self.missed = missed; self.durationSeconds = durationSeconds; self.mode = mode
+        self.report = report
     }
     public var accuracy: Double {
         let total = correct + wrong + missed

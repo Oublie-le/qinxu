@@ -232,6 +232,143 @@ import QinXuCore
         #expect(model.selectedScoreID == selected && model.scores.count == count)
     }
 
+    @Test func holdCountdownShrinksAndReportWaitsForFinalWrittenDuration() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.togglePlayback(); model.press(60)
+        #expect(model.sustainGuidance.first?.remainingSeconds == 1)
+        clock.now = 0.4; model.tick()
+        #expect(abs((model.sustainGuidance.first?.remainingFraction ?? 0) - 0.6) < 0.0001)
+        model.release(60); clock.now = 1; model.press(62)
+        #expect(model.engine.isFinished && !model.showingReport && model.isPlaying)
+        clock.now = 1.8; model.tick()
+        #expect(!model.showingReport && model.sustainedPitches == [62])
+        clock.now = 2; model.tick()
+        #expect(model.showingReport && !model.isPlaying && model.sustainGuidance.isEmpty)
+        #expect(model.latestReport?.correct == 2 && model.latestReport?.overallScore == nil)
+        #expect(model.history.first?.report?.correct == 2)
+    }
+
+    @Test func pausingDuringFinalHoldCancelsAutomaticReport() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.togglePlayback(); model.press(60); model.release(60); model.press(62)
+        model.suspendForBackground()
+        clock.now = 100; model.tick()
+        #expect(!model.showingReport && !model.metronomeRunning && model.sustainGuidance.isEmpty)
+        model.showCurrentReport()
+        #expect(model.showingReport && model.latestReport?.correct == 2)
+    }
+
+    @Test func metronomeRunsIndependentlyAndStopsOnLifecycleChanges() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.toggleMetronome()
+        #expect(model.metronomeRunning && model.metronomeBeat == 1 && !model.isPlaying)
+        clock.now = 1; model.tick(); #expect(model.metronomeBeat == 2)
+        clock.now = 4; model.tick(); #expect(model.metronomeBeat == 1)
+        model.setInputMode(.microphonePolyphonic)
+        #expect(!model.metronomeRunning && model.metronomeBeat == nil)
+        model.toggleMetronome(); clock.now = 5; model.tick()
+        #expect(model.metronomeRunning && model.metronomeBeat == 2)
+        #expect(!model.polyphonicMicrophone.isActive && model.errorMessage == nil)
+        model.suspendForBackground(); clock.now = 10; model.tick()
+        #expect(!model.metronomeRunning && model.metronomeBeat == nil)
+    }
+
+    @Test func metronomeRemainsStoppedWhenUserDisablesItBeforePlaying() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.toggleMetronome(); model.toggleMetronome(); model.togglePlayback()
+        clock.now = 1; model.tick()
+        #expect(model.isPlaying && !model.metronomeRunning && model.metronomeBeat == nil)
+    }
+
+    @Test func savedProgressRestoresMeasureSettingsAndDoesNotGradeResumeAsWholePiece() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        var piece = score(); piece.id = "two-measures"
+        piece.measures = [.init(number: 1, startBeat: 0, durationBeats: 1), .init(number: 2, startBeat: 1, durationBeats: 1)]
+        piece.notes[1].measure = 2
+        model.scores.append(piece); model.selectScore(piece.id)
+        model.hand = .right; model.tempo = 72; model.reconfigure()
+        model.togglePlayback(); model.press(60)
+        #expect(model.progress(for: piece.id)?.measure == 2)
+        model.suspendForBackground()
+        let restored = PracticeViewModel(storage: LocalLibraryStore(url: folder.appendingPathComponent("library.json")),
+                                         clock: { clock.now }, automaticTimer: false, deviceAccessEnabled: false)
+        restored.resume(scoreID: piece.id)
+        #expect(restored.practiceStartMeasure == 2 && restored.hand == .right && restored.tempo == 72)
+        #expect(restored.engine.expectedNotes.first?.midi == 62 && !restored.isPlaying)
+        restored.togglePlayback(); restored.press(62)
+        #expect(restored.latestReport?.startMeasure == 2 && restored.latestReport?.isComplete == false)
+        #expect(restored.latestReport?.overallScore == nil && restored.progress(for: piece.id)?.isCompleted == true)
+        clock.now = 5; restored.tick(); restored.showingReport = false
+        restored.togglePlayback()
+        #expect(restored.practiceStartMeasure == 1 && restored.engine.expectedNotes.first?.midi == 60)
+        restored.restart()
+        #expect(restored.practiceStartMeasure == 1 && restored.engine.expectedNotes.first?.midi == 60)
+    }
+
+    @Test func scoreChangeSavesOldScoreAndUnplayedSelectionDoesNotOverwriteProgress() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.togglePlayback(); model.press(60)
+        let oldID = model.selectedScoreID
+        let anotherID = DemoScores.all[0].id
+        model.selectScore(anotherID)
+        #expect(model.progress(for: oldID)?.scoreID == oldID)
+        #expect(model.progress(for: anotherID) == nil)
+        model.suspendForBackground()
+        #expect(model.progress(for: anotherID) == nil)
+    }
+
+    @Test func completedShortLoopSavesItsActualMeasureNotScoreEnd() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        var piece = score(); piece.id = "short-loop-position"
+        piece.measures = [.init(number: 1, startBeat: 0, durationBeats: 1), .init(number: 2, startBeat: 1, durationBeats: 1)]
+        piece.notes[1].measure = 2
+        model.scores.append(piece); model.selectScore(piece.id)
+        model.practiceMeasure(1); model.togglePlayback(); model.press(60)
+        #expect(model.progress(for: piece.id)?.measure == 1)
+        #expect(model.progress(for: piece.id)?.isCompleted == false)
+        #expect(model.latestReport?.endMeasure == 1 && !model.showingReport)
+        model.practiceMeasure(2); model.togglePlayback(); model.press(62)
+        #expect(model.progress(for: piece.id)?.measure == 2)
+        #expect(model.progress(for: piece.id)?.isCompleted == false)
+    }
+
+    @Test func microphoneValidationUsesOnlyTheResumedRange() async throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        var piece = score(); piece.id = "resume-microphone-range"
+        piece.measures = [.init(number: 1, startBeat: 0, durationBeats: 1), .init(number: 2, startBeat: 1, durationBeats: 1)]
+        piece.notes[0].midi = 36; piece.notes[1].measure = 2
+        model.scores.append(piece); model.selectScore(piece.id)
+        model.togglePlayback(); model.press(36); model.suspendForBackground()
+        model.resume(scoreID: piece.id); model.setInputMode(.microphone)
+        model.togglePlayback()
+        #expect(model.practiceStartMeasure == 2 && model.isStartingInput && model.errorMessage == nil)
+        model.suspendForBackground()
+        await Task.yield()
+        #expect(!model.microphone.isActive && !model.isPlaying)
+    }
+
+    @Test func reportKeepsMeasuredRhythmAndHistoryPersistsItsBreakdown() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        model.mode = .rhythm; model.reconfigure(); model.togglePlayback()
+        clock.now = 4; model.tick(); model.press(60); model.release(60)
+        clock.now = 5.2; model.press(62); model.release(62)
+        clock.now = 6.2; model.tick()
+        let report = try #require(model.latestReport)
+        #expect(report.isComplete && report.late == 1 && report.overallScore != nil)
+        #expect(abs((report.meanAbsoluteOnsetErrorMilliseconds ?? 0) - 100) < 0.0001)
+        let loaded = LocalLibraryStore(url: folder.appendingPathComponent("library.json")).load()
+        #expect(loaded.history.first?.report == report)
+    }
+
     private static let validXML = """
     <?xml version="1.0" encoding="utf-8"?>
     <score-partwise version="4.0"><work><work-title>导入测试</work-title></work>

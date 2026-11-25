@@ -47,6 +47,33 @@ import Testing
         expectNil(store.load().error)
     }
 
+    @Test func testNewerReportVersionPreservesUnknownFieldsBeforeNextSave() throws {
+        let directory = temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = LocalLibraryStore(url: directory.appendingPathComponent("library.json"))
+        let score = DemoScores.all[0]
+        let summary = PracticeEngine(score: score).summary(inputSource: "MIDI 钢琴")
+        try store.save(scores: [score], history: [summary], lastScoreID: score.id)
+        var object = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: store.url)) as? [String: Any])
+        var history = try #require(object["history"] as? [[String: Any]])
+        var report = try #require(history[0]["report"] as? [String: Any])
+        report["version"] = 2
+        report["futureMeasurements"] = ["preserve": [1, 2, 3]]
+        history[0]["report"] = report
+        object["history"] = history
+        let original = try JSONSerialization.data(withJSONObject: object)
+        try original.write(to: store.url)
+
+        let loaded = store.load()
+        expectTrue(loaded.error?.contains("数据版本暂不支持") == true)
+        expectTrue(loaded.scores.isEmpty && loaded.history.isEmpty)
+        expectEqual(try Data(contentsOf: store.url), original)
+        try store.save(scores: [score], history: [], lastScoreID: score.id)
+        expectEqual(try recoveryData(in: directory), [original])
+        expectNil(store.load().error)
+        expectEqual(store.load().scores, [score])
+    }
+
     @Test func testMigrationPreservesScoresHistorySelectionAndLegacyBytes() throws {
         let base = temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: base) }

@@ -9,17 +9,21 @@ struct PracticeHomeView: View {
     @State private var detailScoreID: String?
     @State private var showingDevices = false
     @State private var coverSelection: CoverSelection?
+    @State private var immersivePractice = false
 
     var body: some View {
         GeometryReader { geometry in
             let compact = geometry.size.height < 550 && geometry.size.width > geometry.size.height
             let labels = geometry.size.width >= 800 && !compact
+            let immersed = immersivePractice && section == .practice && detailScoreID == nil
             HStack(spacing: 0) {
-                navigation(labels: labels)
-                    .frame(width: labels ? 174 : 62)
-                Rectangle().fill(QinXuTheme.line).frame(width: 1)
+                if !immersed {
+                    navigation(labels: labels)
+                        .frame(width: labels ? 174 : 62)
+                    Rectangle().fill(QinXuTheme.line).frame(width: 1)
+                }
                 VStack(spacing: 0) {
-                    if !compact { header }
+                    if !compact && !immersed { header }
                     content(compact: compact)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -84,9 +88,11 @@ struct PracticeHomeView: View {
             case .practice:
                 PracticeSessionView(model: model, compact: compact, onExit: {
                     model.suspendForBackground()
+                    immersivePractice = false
                     section = .library
                     detailScoreID = model.selectedScoreID
-                }, onShowDevices: openDevices)
+                }, onShowDevices: openDevices, immersive: immersivePractice,
+                   onToggleImmersion: { immersivePractice.toggle() })
             case .history:
                 PracticeHistoryContent(history: model.history, scores: model.scores,
                     compact: compact, onPractice: { id in
@@ -161,6 +167,7 @@ struct PracticeHomeView: View {
 
     private func navigate(_ next: QinXuSection) {
         if section == .practice && next != .practice { model.suspendForBackground() }
+        if next != .practice { immersivePractice = false }
         detailScoreID = nil
         section = next
     }

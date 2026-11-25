@@ -7,6 +7,7 @@ struct PracticeHistoryContent: View {
     var compact: Bool
     var onPractice: (String) -> Void
     var onClose: () -> Void
+    @State private var selectedReport: PracticeSummary?
 
     private var ordered: [PracticeSummary] { history.sorted { $0.date > $1.date } }
     private var duration: Int { Int(history.reduce(0) { $0 + $1.durationSeconds } / 60) }
@@ -29,7 +30,7 @@ struct PracticeHistoryContent: View {
                     }.frame(maxWidth: .infinity).padding(.vertical, compact ? 35 : 95)
                 } else {
                     HStack(spacing: 12) {
-                        metric("已完成", value: "\(history.count)", unit: "次", symbol: "checkmark.circle")
+                        metric("练习记录", value: "\(history.count)", unit: "次", symbol: "checkmark.circle")
                         metric("练习时长", value: "\(duration)", unit: "分钟", symbol: "clock")
                         metric("累计正确", value: "\(history.reduce(0) { $0 + $1.correct })", unit: "音", symbol: "music.note")
                     }
@@ -37,6 +38,12 @@ struct PracticeHistoryContent: View {
                 }
             }.padding(compact ? 16 : 26)
         }.accessibilityIdentifier("history.scroll")
+            .sheet(item: $selectedReport) { record in
+                if let report = record.report {
+                    PracticeReportView(report: report, scoreTitle: record.scoreTitle, compact: compact,
+                        onClose: { selectedReport = nil }, onRetry: retryAction(for: record))
+                }
+            }
     }
 
     private func metric(_ title: String, value: String, unit: String, symbol: String) -> some View {
@@ -66,8 +73,8 @@ struct PracticeHistoryContent: View {
                         .padding(7).background(QinXuTheme.sage, in: Capsule())
                 }
                 ViewThatFits(in: .horizontal) {
-                    HStack { results(record); Spacer(); retry(record) }
-                    VStack(alignment: .leading, spacing: 12) { results(record); retry(record) }
+                    HStack { results(record); Spacer(); recordActions(record) }
+                    VStack(alignment: .leading, spacing: 12) { results(record); recordActions(record) }
                 }
             }
         }
@@ -77,17 +84,35 @@ struct PracticeHistoryContent: View {
         HStack(spacing: 16) {
             Label("正确 \(record.correct)", systemImage: "checkmark.circle").foregroundStyle(QinXuTheme.teal)
             Label("错音 \(record.wrong)", systemImage: "xmark.circle").foregroundStyle(QinXuTheme.wrong)
-            Label("漏音 \(record.missed)", systemImage: "minus.circle")
+            if record.mode == .rhythm { Label("漏音 \(record.missed)", systemImage: "minus.circle") }
+            if let score = record.report?.overallScore { Text("得分 \(score)").foregroundStyle(QinXuTheme.accent) }
             Text("\(Int(record.durationSeconds)) 秒")
         }.font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
     }
 
-    @ViewBuilder private func retry(_ record: PracticeSummary) -> some View {
-        // Older summaries have no score ID. Only offer a retry when the title is unambiguous.
+    private func availableScoreID(for record: PracticeSummary) -> String? {
+        if let id = record.report?.scoreID, scores.contains(where: { $0.id == id }) { return id }
+        // Older summaries have no score ID. Only retry an unambiguous title.
         let matches = scores.filter { $0.title == record.scoreTitle }
-        if matches.count == 1, let score = matches.first {
-            Button { onPractice(score.id) } label: { Label("再练这首", systemImage: "arrow.counterclockwise") }
+        return matches.count == 1 ? matches.first?.id : nil
+    }
+
+    private func retryAction(for record: PracticeSummary) -> (() -> Void)? {
+        guard let id = availableScoreID(for: record) else { return nil }
+        return { selectedReport = nil; onPractice(id) }
+    }
+
+    private func recordActions(_ record: PracticeSummary) -> some View {
+        HStack(spacing: 8) {
+            if record.report != nil {
+                Button { selectedReport = record } label: { Label("查看报告", systemImage: "chart.bar.doc.horizontal") }
+                    .buttonStyle(QuietButtonStyle())
+                    .accessibilityIdentifier("history.report." + record.id)
+            }
+            if let id = availableScoreID(for: record) {
+                Button { onPractice(id) } label: { Label("再练这首", systemImage: "arrow.counterclockwise") }
                 .buttonStyle(QuietButtonStyle(prominent: true))
+            }
         }
     }
 }

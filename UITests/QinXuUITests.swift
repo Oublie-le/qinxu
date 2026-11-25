@@ -161,6 +161,185 @@ final class QinXuUITests: XCTestCase {
     }
 
     @MainActor
+    func testImmersionHidesNavigationAndKeepsKeyboardPlayable() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        enterPractice("demo-melody", in: app)
+        let immersion = element("practice.immersion", in: app)
+        reveal(immersion, in: app, towardBottom: false)
+        immersion.tap()
+        expect(immersion, "value == %@", "已开启")
+        expect(element("library.open", in: app), "exists == false")
+        XCTAssertFalse(element("practice.back", in: app).exists)
+
+        let play = element("practice.play", in: app)
+        XCTAssertTrue(play.isHittable, "沉浸模式应保留播放控制")
+        play.tap()
+        let c4 = element("keyboard.key.60", in: app)
+        XCTAssertTrue(c4.isHittable, "沉浸模式应保留可触摸键盘")
+        tapKey(60, in: app)
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+        expect(element("practice.expected", in: app), "label CONTAINS %@", "D4")
+        capture(app, name: "immersive-keyboard-real-input")
+
+        reveal(immersion, in: app, towardBottom: false)
+        immersion.tap()
+        expect(immersion, "value == %@", "已关闭")
+        expect(element("library.open", in: app), "hittable == true")
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+        expect(play, "label CONTAINS %@", "暂停")
+    }
+
+    @MainActor
+    func testLongNoteShowsDecreasingBeatsAndSecondsAndPauseClearsIt() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.book.beyer-op101", in: app).tap()
+        let lesson = element("textbook.practice.beyer-op101-001-theme", in: app)
+        XCTAssertTrue(lesson.waitForExistence(timeout: 10))
+        lesson.tap()
+
+        // Use the actual tempo control to make this whole note long enough to inspect.
+        // This changes musical duration; there is no test-only clock or fixed sleep.
+        element("practice.tempo", in: app).tap()
+        let tempo = app.sliders.matching(identifier: "practice.settings.tempo").firstMatch
+        let settingsForm = element("practice.settings.form", in: app)
+        XCTAssertTrue(settingsForm.waitForExistence(timeout: 8))
+        for _ in 0..<5 {
+            if tempo.exists && tempo.isHittable { break }
+            settingsForm.swipeUp()
+        }
+        XCTAssertTrue(tempo.exists && tempo.isHittable, "设置中的速度滑块应可见")
+        tempo.adjust(toNormalizedSliderPosition: 0)
+        element("practice.settings.close", in: app).tap()
+        expect(element("practice.tempo", in: app), "label CONTAINS %@", "20 个四分音符")
+        element("practice.play", in: app).tap()
+        tapKey(72, in: app)
+
+        let hold = element("practice.sustain.72", in: app)
+        XCTAssertTrue(hold.waitForExistence(timeout: 5))
+        expect(hold, "label CONTAINS %@", "C5")
+        let initialValue = hold.value as? String ?? ""
+        XCTAssertTrue(initialValue.contains("剩余") && initialValue.contains("拍") && initialValue.contains("秒"))
+        let initialSeconds = remainingSeconds(in: initialValue)
+        XCTAssertNotNil(initialSeconds)
+        XCTAssertGreaterThan(initialSeconds ?? 0, 0)
+        XCTAssertLessThanOrEqual(initialSeconds ?? .infinity, 12)
+        let decreasing = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard hold.exists, let first = initialSeconds,
+                  let now = self.remainingSeconds(in: hold.value as? String ?? "") else { return false }
+            return now > 0 && now < first
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [decreasing], timeout: 5), .completed,
+                       "长音剩余秒数应随实际练习时钟递减")
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+        capture(app, name: "long-note-seconds-and-beats-countdown")
+
+        element("practice.play", in: app).tap()
+        expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
+        expect(hold, "exists == false")
+    }
+
+    @MainActor
+    func testMetronomeVisualBeatRunsAndStopsIndependently() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        enterPractice("demo-melody", in: app)
+        let toggle = element("practice.metronome.toggle", in: app)
+        let beat = element("practice.metronome.beat", in: app)
+        expect(toggle, "label == %@", "启动节拍器")
+        toggle.tap()
+        expect(toggle, "label == %@", "停止节拍器")
+        expect(beat, "value BEGINSWITH %@", "第 ")
+        let initialBeat = beat.value as? String ?? ""
+        let advancing = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            guard let value = beat.value as? String else { return false }
+            return value.hasPrefix("第 ") && value != initialBeat
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [advancing], timeout: 5), .completed,
+                       "节拍指示应实际推进，不能只改变按钮标题")
+        expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
+        let sound = element("practice.metronome.sound", in: app)
+        sound.tap()
+        expect(sound, "label == %@", "打开节拍器声音")
+        capture(app, name: "metronome-visual-beat-without-playback")
+        toggle.tap()
+        expect(toggle, "label == %@", "启动节拍器")
+        expect(beat, "value == %@", "未运行")
+        // --ui-testing disables audio-device access; this validates visual controls, not audible clicks.
+    }
+
+    @MainActor
+    func testReportShowsRealWrongAndCorrectCountsWithoutInventedRhythmScore() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        enterPractice("demo-melody", in: app)
+        let report = element("practice.report", in: app)
+        XCTAssertFalse(report.isEnabled)
+        element("practice.play", in: app).tap()
+        tapKey(62, in: app) // D4 is wrong while C4 is expected.
+        expect(element("practice.count.wrong", in: app), "value == %@", "1")
+        tapKey(60, in: app)
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+        report.tap()
+        expect(element("report.title", in: app), "label == %@", "晨光 · 右手识谱")
+        expect(element("report.metric.correct", in: app), "value == %@", "1")
+        expect(element("report.metric.wrong", in: app), "value == %@", "1")
+        expect(element("report.metric.pitchAccuracy", in: app), "value == %@", "50.0%")
+        XCTAssertFalse(element("report.overallScore", in: app).exists)
+        XCTAssertFalse(element("report.metric.rhythmScore", in: app).exists)
+        XCTAssertFalse(element("report.metric.missed", in: app).exists)
+        let suggestions = element("report.suggestions", in: app)
+        reveal(suggestions, in: app, towardBottom: true, scrollIdentifier: "report.scroll")
+        XCTAssertTrue(suggestions.exists)
+        capture(app, name: "partial-reading-report-real-counts")
+        element("report.close", in: app).tap()
+        expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+    }
+
+    @MainActor
+    func testSavedMeasureCanResumeThroughScoreDetail() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        enterPractice("demo-melody", in: app)
+        element("practice.play", in: app).tap()
+        for (index, pitch) in [60, 62, 64, 67].enumerated() {
+            tapKey(pitch, in: app)
+            expect(element("practice.count.correct", in: app), "value == %@", String(index + 1))
+        }
+        expect(element("practice.expected", in: app), "label CONTAINS %@", "A4")
+        element("practice.play", in: app).tap()
+        element("library.open", in: app).tap()
+        element("library.score.demo-melody", in: app).tap()
+        expect(element("detail.progress", in: app), "label MATCHES %@", ".*第\\s*2\\s*小节.*")
+        let resume = element("detail.resume", in: app)
+        XCTAssertTrue(resume.waitForExistence(timeout: 8))
+        resume.tap()
+        expect(element("practice.expected", in: app), "label CONTAINS %@", "A4")
+        expect(element("practice.count.correct", in: app), "value == %@", "0")
+        element("practice.play", in: app).tap()
+        tapKey(69, in: app)
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+        expect(element("practice.expected", in: app), "label CONTAINS %@", "G4")
+        capture(app, name: "saved-measure-resumed-through-detail")
+        // Fresh UI launches intentionally get isolated stores. Cross-launch persistence has separate store tests.
+    }
+
+    @MainActor
+    private func tapKey(_ pitch: Int, in app: XCUIApplication,
+                        file: StaticString = #filePath, line: UInt = #line) {
+        let key = element("keyboard.key.\(pitch)", in: app)
+        reveal(key, in: app, towardBottom: true, file: file, line: line)
+        key.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+    }
+
+    private func remainingSeconds(in value: String) -> Double? {
+        guard let comma = value.lastIndex(of: "，"), let seconds = value.lastIndex(of: "秒"), comma < seconds else { return nil }
+        return Double(value[value.index(after: comma)..<seconds].trimmingCharacters(in: .whitespaces))
+    }
+
+    @MainActor
     private func enterPractice(_ scoreID: String, in app: XCUIApplication) {
         let shortcut = element("library.practice." + scoreID, in: app)
         XCTAssertTrue(shortcut.waitForExistence(timeout: 10))
@@ -170,13 +349,24 @@ final class QinXuUITests: XCTestCase {
 
     @MainActor
     private func launchFreshApp() -> XCUIApplication {
-        XCUIDevice.shared.orientation = .landscapeLeft
         let app = XCUIApplication()
+        // A manually opened app may still be running before the first test.
+        // Rotate after closing it, then wait for the newly launched layout.
+        if app.state != .notRunning { app.terminate() }
+        XCUIDevice.shared.orientation = .landscapeLeft
         app.launchArguments += ["--ui-testing", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
         app.launch()
         let search = element("library.search", in: app)
         XCTAssertTrue(search.waitForExistence(timeout: 20), "新首页应显示曲库")
-        expect(element("library.score.demo-melody", in: app), "hittable == true")
+        let melody = app.buttons.matching(identifier: "library.score.demo-melody").firstMatch
+        let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            let window = app.windows.firstMatch
+            guard window.exists, search.exists, melody.exists else { return false }
+            let frame = window.frame
+            return frame.width > frame.height && search.isHittable && melody.isHittable
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 20), .completed,
+                       "首页横屏布局、搜索框和样谱卡片应就绪")
         capture(app, name: "fresh-library-landscape")
         return app
     }
@@ -192,14 +382,15 @@ final class QinXuUITests: XCTestCase {
         let predicate = argument.map { NSPredicate(format: format, $0) } ?? NSPredicate(format: format)
         let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
         XCTAssertEqual(XCTWaiter.wait(for: [expectation], timeout: 8), .completed,
-                       "未等到界面状态：\(element.identifier), \(format), \(argument ?? "")", file: file, line: line)
+                       "未等到界面状态：\(format), \(argument ?? "")", file: file, line: line)
     }
 
     @MainActor
     private func reveal(_ target: XCUIElement, in app: XCUIApplication, towardBottom: Bool,
+                        scrollIdentifier: String = "practice.scroll",
                         file: StaticString = #filePath, line: UInt = #line) {
         if target.exists && target.isHittable { return }
-        let scroll = app.scrollViews["practice.scroll"]
+        let scroll = app.scrollViews[scrollIdentifier]
         XCTAssertTrue(scroll.waitForExistence(timeout: 10), file: file, line: line)
         for _ in 0..<8 {
             if target.exists && target.isHittable { return }

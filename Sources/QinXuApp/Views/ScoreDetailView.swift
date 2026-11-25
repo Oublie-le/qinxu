@@ -12,6 +12,10 @@ struct ScoreDetailView: View {
     private var isFavorite: Bool { model.favoriteScoreIDs.contains(score.id) }
     private var isOriginal: Bool { DemoScores.all.contains { $0.id == score.id } }
     private var sourceTitle: String { BundledPracticeLibrary.ids.contains(score.id) ? "内置教材" : isOriginal ? "原创样谱" : "已导入" }
+    private var checkpoint: PracticeCheckpoint? {
+        guard let value = model.progress(for: score.id), !value.isCompleted else { return nil }
+        return value
+    }
     private var hands: String {
         let right = score.notes.contains { $0.staff == 1 }
         let left = score.notes.contains { $0.staff == 2 }
@@ -25,6 +29,7 @@ struct ScoreDetailView: View {
                     .font(.system(size: 12)).buttonStyle(.plain).foregroundStyle(QinXuTheme.muted)
                     .accessibilityIdentifier("detail.back")
                 heading
+                if let checkpoint { resumeCard(checkpoint) }
                 preview
                 notationNotes
             }
@@ -70,9 +75,11 @@ struct ScoreDetailView: View {
 
     private var actions: some View {
         HStack(spacing: 8) {
-            Button(action: onPractice) { Label("开始练习", systemImage: "play.fill") }
-                .buttonStyle(QuietButtonStyle(prominent: true))
-                .accessibilityIdentifier("detail.practice")
+            if checkpoint == nil {
+                Button(action: onPractice) { Label("开始练习", systemImage: "play.fill") }
+                    .buttonStyle(QuietButtonStyle(prominent: true))
+                    .accessibilityIdentifier("detail.practice")
+            }
             Button { model.toggleFavorite(score.id) } label: {
                 Image(systemName: isFavorite ? "bookmark.fill" : "bookmark")
             }
@@ -92,6 +99,31 @@ struct ScoreDetailView: View {
                 .accessibilityLabel("曲谱封面").accessibilityIdentifier("detail.cover")
         }
         .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func resumeCard(_ progress: PracticeCheckpoint) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
+                Label("上次停在第 \(progress.measure) 小节", systemImage: "bookmark.circle")
+                    .font(.system(size: compact ? 12 : 14, weight: .medium))
+                    .accessibilityIdentifier("detail.progress")
+                Text("\(progress.hand.title) · \(progress.mode.title) · \(Int(progress.tempoBPM)) BPM")
+                    .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
+            }
+            Spacer(minLength: 4)
+            Button { model.resume(scoreID: score.id); onPractice() } label: {
+                Label("继续练习", systemImage: "play.fill")
+            }.buttonStyle(QuietButtonStyle(prominent: true)).accessibilityIdentifier("detail.resume")
+            Button {
+                if model.selectedScoreID != score.id { model.selectScore(score.id) }
+                model.loopEnabled = false
+                model.restart()
+                onPractice()
+            } label: { Label("从头", systemImage: "arrow.counterclockwise") }
+                .buttonStyle(QuietButtonStyle()).accessibilityIdentifier("detail.restart")
+        }
+        .padding(compact ? 12 : 16)
+        .background(QinXuTheme.sage, in: RoundedRectangle(cornerRadius: 12))
     }
 
     private var metadata: some View {

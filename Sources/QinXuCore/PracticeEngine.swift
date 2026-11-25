@@ -19,6 +19,7 @@ public struct PracticeEngine {
     public private(set) var durationFeedback: String?
 
     private let groups: [[ScoreNote]]
+    private let selectedMeasureNumbers: Set<Int>
     private let rangeStart: Double
     private let rangeEnd: Double
     private var groupIndex = 0
@@ -31,7 +32,9 @@ public struct PracticeEngine {
     private var durationChecks: [Int: DurationCheck] = [:]
     // A visual reminder of the written duration, independent from key release,
     // acoustic decay and which onset the waiting evaluator expects next.
-    private var holdGuideEnds: [Int: Double] = [:]
+    private var holdGuides: [Int: HoldGuide] = [:]
+    private var onsetErrors: [String: Double] = [:]
+    private var wrongByMeasure: [Int: Int] = [:]
     private let onsetWindow: Double = 0.30
     private let maximumInputLag: Double
     private let evaluatesNoteDuration: Bool
@@ -46,6 +49,13 @@ public struct PracticeEngine {
         var onset: Double
         var expected: Double
         var usedPedal: Bool
+    }
+    private struct HoldGuide {
+        let onset: Double
+        let totalSeconds: Double
+        let totalBeats: Double
+        let noteIDs: [String]
+        var end: Double { onset + totalSeconds }
     }
 
     public init(score: PianoScore, mode: PracticeMode = .wait, hand: PracticeHand = .both,
@@ -68,6 +78,7 @@ public struct PracticeEngine {
             return $0.id < $1.id
         }
         let measures = score.measures.filter { measureRange?.contains($0.number) ?? true }
+        self.selectedMeasureNumbers = Set(measures.map(\.number)).union(selected.map(\.measure))
         self.rangeStart = measures.map(\.startBeat).min() ?? selected.first?.startBeat ?? 0
         self.rangeEnd = max(rangeStart, measures.map { $0.startBeat + $0.durationBeats }.max()
             ?? selected.map { $0.startBeat + $0.durationBeats }.max() ?? rangeStart)
@@ -95,13 +106,23 @@ public struct PracticeEngine {
     /// Uses the same capture clock as evaluation. A buffered microphone result
     /// must not restart a whole note's written duration when it is delivered.
     public func sustainedPitches(at time: TimeInterval) -> Set<Int> {
+        Set(sustainGuidance(at: time).map(\.pitch))
+    }
+
+    public func sustainGuidance(at time: TimeInterval) -> [SustainGuidance] {
         guard time.isFinite, let start = runStartTime, time >= start else { return [] }
         let elapsed = runStartElapsed + time - start
-        return Set(holdGuideEnds.filter { $0.value > elapsed + 0.000001 }.map(\.key))
+        return holdGuides.keys.sorted().compactMap { pitch in
+            guard let guide = holdGuides[pitch], guide.end > elapsed + 0.000001 else { return nil }
+            let remaining = min(guide.totalSeconds, max(0, guide.end - elapsed))
+            return SustainGuidance(pitch: pitch, noteIDs: guide.noteIDs, remainingSeconds: remaining,
+                                   totalSeconds: guide.totalSeconds, remainingBeats: remaining * tempoBPM / 60,
+                                   totalBeats: guide.totalBeats)
+        }
     }
 
     public var sustainGuidanceEndTime: TimeInterval? {
-        guard let start = runStartTime, let end = holdGuideEnds.values.max() else { return nil }
+        guard let start = runStartTime, let end = holdGuides.values.map(\.end).max() else { return nil }
         return start + end - runStartElapsed
     }
 
@@ -122,7 +143,7 @@ public struct PracticeEngine {
         candidates.removeAll()
         // A hold interrupted by a pause has no meaningful duration verdict.
         durationChecks.removeAll()
-        holdGuideEnds.removeAll()
+        holdGuides.removeAll()
         runStartTime = nil
         if !isFinished { feedback = "已暂停，继续后从当前位置练习" }
     }
@@ -169,7 +190,7 @@ public struct PracticeEngine {
             heldPitches.removeAll()
             candidates.removeAll()
             durationChecks.removeAll()
-            holdGuideEnds.removeAll()
+            holdGuides.removeAll()
             pedalDown = false
         case .off(let pitch):
             heldPitches.remove(pitch)
@@ -204,7 +225,9 @@ public struct PracticeEngine {
         heldPitches.removeAll()
         candidates.removeAll()
         durationChecks.removeAll()
-        holdGuideEnds.removeAll()
+        holdGuides.removeAll()
+        onsetErrors.removeAll()
+        wrongByMeasure.removeAll()
         pedalDown = false
         correctCount = 0
         wrongCount = 0
@@ -216,9 +239,18 @@ public struct PracticeEngine {
         feedback = groups.isEmpty ? "所选范围和声部没有可练习的音符" : "准备好后开始练习"
     }
 
-    public func summary(at date: Date = Date()) -> PracticeSummary {
+    public func report(inputSource: String? = nil, isPartial: Bool = false) -> PracticeReport {
+        PracticeReport(scoreID: score.id, mode: mode, hand: hand, tempoBPM: tempoBPM,
+                       inputSource: inputSource, notes: groups.flatMap { $0 },
+                       measureNumbers: selectedMeasureNumbers, verdicts: verdicts,
+                       onsetErrors: onsetErrors, wrongByMeasure: wrongByMeasure,
+                       finished: isFinished, isPartial: isPartial)
+    }
+
+    public func summary(at date: Date = Date(), inputSource: String? = nil, isPartial: Bool = false) -> PracticeSummary {
         PracticeSummary(date: date, scoreTitle: score.title, correct: correctCount,
-                        wrong: wrongCount, missed: missedCount, durationSeconds: elapsedSeconds, mode: mode)
+                        wrong: wrongCount, missed: missedCount, durationSeconds: elapsedSeconds, mode: mode,
+                        report: report(inputSource: inputSource, isPartial: isPartial))
     }
 
     private func isResolved(_ note: ScoreNote) -> Bool {
@@ -240,6 +272,7 @@ public struct PracticeEngine {
         let notes = expectedNotes
         guard notes.contains(where: { $0.midi == pitch }) else {
             wrongCount += 1
+            recordWrong(in: notes.first?.measure ?? selectedMeasureNumbers.min() ?? 1)
             for note in notes { verdicts[note.id] = .wrong }
             feedback = "弹了 \(NoteNames.name(pitch))，请弹 \(Set(notes.map(\.name)).sorted().joined(separator: "、"))"
             return
@@ -256,7 +289,8 @@ public struct PracticeEngine {
             guard let candidate = candidates[pitch] else { continue }
             let beats = notes.filter { $0.midi == pitch }.map(\.durationBeats).max() ?? 0
             let check = DurationCheck(onset: candidate.onset, expected: beats * 60 / tempoBPM, usedPedal: candidate.usedPedal)
-            holdGuideEnds[pitch] = candidate.onset + check.expected
+            holdGuides[pitch] = HoldGuide(onset: candidate.onset, totalSeconds: check.expected,
+                totalBeats: beats, noteIDs: notes.filter { $0.midi == pitch }.map(\.id).sorted())
             if let release = candidate.release { reportDuration(pitch: pitch, check: check, releasedAt: release) }
             else { durationChecks[pitch] = check }
         }
@@ -282,6 +316,7 @@ public struct PracticeEngine {
         }
         guard let nearest = matching.min(by: { abs($0.startBeat - beat) < abs($1.startBeat - beat) }) else {
             wrongCount += 1
+            recordWrong(in: measure(at: beat))
             for note in expectedNotes where abs((note.startBeat - beat) * 60 / tempoBPM) <= onsetWindow {
                 if !isResolved(note) { verdicts[note.id] = .wrong }
             }
@@ -296,12 +331,26 @@ public struct PracticeEngine {
             // input arrives. Only the bounded, active-run path reaches here.
             if verdicts[note.id] == .missed { missedCount -= 1 }
             verdicts[note.id] = verdict
+            onsetErrors[note.id] = difference * 1_000
         }
         correctCount += sameOnset.count
         durationChecks[pitch] = DurationCheck(onset: inputSeconds,
             expected: (sameOnset.map(\.durationBeats).max() ?? 0) * 60 / tempoBPM, usedPedal: pedalDown)
-        holdGuideEnds[pitch] = inputSeconds + (sameOnset.map(\.durationBeats).max() ?? 0) * 60 / tempoBPM
+        let beats = sameOnset.map(\.durationBeats).max() ?? 0
+        holdGuides[pitch] = HoldGuide(onset: inputSeconds, totalSeconds: beats * 60 / tempoBPM,
+            totalBeats: beats, noteIDs: sameOnset.map(\.id).sorted())
         feedback = verdict == .early ? "音高正确，起音稍早" : (verdict == .late ? "音高正确，起音稍晚" : "音高与起音正确")
+    }
+
+    private mutating func recordWrong(in measure: Int) {
+        wrongByMeasure[measure, default: 0] += 1
+    }
+
+    private func measure(at beat: Double) -> Int {
+        let measures = score.measures.filter { selectedMeasureNumbers.contains($0.number) }
+            .sorted { $0.startBeat < $1.startBeat }
+        return measures.last(where: { $0.startBeat <= beat })?.number
+            ?? measures.first?.number ?? expectedNotes.first?.measure ?? 1
     }
 
     private mutating func reportDuration(pitch: Int, check: DurationCheck, releasedAt: Double) {

@@ -136,20 +136,29 @@ struct ScoreLibraryView: View {
     }
 
     private var currentScoreStrip: some View {
-        HStack(spacing: 10) {
+        let progress = model.progress(for: model.selectedScoreID)
+        let resumable = progress.map { !$0.isCompleted } ?? false
+        return HStack(spacing: 10) {
             Image(systemName: "music.note.list")
                 .font(.system(size: 15)).foregroundStyle(QinXuTheme.teal)
                 .frame(width: 30, height: 30)
                 .background(QinXuTheme.sage, in: RoundedRectangle(cornerRadius: 8))
             Text("当前曲谱").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
             Text(model.selectedScore.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
-            if !compact {
+            if let progress {
+                Text(progress.isCompleted ? "\(progress.hand.title)已到末尾" : "第 \(progress.measure) 小节")
+                    .font(.system(size: 11)).foregroundStyle(QinXuTheme.teal).lineLimit(1)
+                    .accessibilityIdentifier("library.progress")
+            } else if !compact {
                 Text("\(model.selectedScore.measures.count) 小节 · \(Int(model.selectedScore.tempoBPM)) BPM")
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted).lineLimit(1)
             }
             Spacer(minLength: 4)
-            Button { onPractice(model.selectedScoreID) } label: {
-                Label("练习", systemImage: "play.fill").font(.system(size: 12, weight: .medium))
+            Button {
+                if resumable { model.resume(scoreID: model.selectedScoreID) }
+                onPractice(model.selectedScoreID)
+            } label: {
+                Label(resumable ? "继续" : "练习", systemImage: "play.fill").font(.system(size: 12, weight: .medium))
                     .padding(.horizontal, 12).frame(minHeight: 34)
                     .foregroundStyle(QinXuTheme.accent)
                     .background(QinXuTheme.softAccent, in: RoundedRectangle(cornerRadius: 8))

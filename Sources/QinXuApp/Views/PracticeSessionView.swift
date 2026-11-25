@@ -7,7 +7,11 @@ struct PracticeSessionView: View {
     let compact: Bool
     let onExit: () -> Void
     let onShowDevices: () -> Void
+    var immersive = false
+    var onToggleImmersion: () -> Void = {}
     @State private var showingSettings = false
+    @State private var showingModeHelp = false
+    private var displayedBeatsPerQuarter: Double { Double(model.selectedScore.beatUnit) / 4 }
 
     private var currentMeasure: Int {
         model.engine.expectedNotes.first?.measure
@@ -17,69 +21,89 @@ struct PracticeSessionView: View {
 
     private var expectedDescription: String {
         model.engine.expectedNotes.map { note in
-            let beats = String(format: "%.3g", note.durationBeats)
+            let beats = String(format: "%.3g", note.durationBeats * displayedBeatsPerQuarter)
             let seconds = String(format: "%.2f", note.durationBeats * 60 / model.tempo)
             return "\(note.name) · \(beats) 拍 ≈ \(seconds) 秒"
         }.joined(separator: "；")
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: compact ? 5 : 18) {
-                heading
-                if !compact { practiceOptions }
-                scoreSurface
-                if !compact { feedback }
-                if !compact { keyboard }
+        VStack(spacing: 0) {
+            heading.padding(.horizontal, compact ? 8 : 24).padding(.vertical, compact ? 0 : 12)
+            ScrollView {
+                VStack(alignment: .leading, spacing: compact ? 5 : 18) {
+                    if !compact && !immersive { practiceOptions }
+                    scoreSurface
+                }
+                .padding(.horizontal, compact ? 8 : 24)
+                .padding(.top, compact ? 0 : 8).padding(.bottom, compact ? 4 : 20)
+                .frame(maxWidth: 1400)
+                .frame(maxWidth: .infinity)
             }
-            .padding(compact ? 8 : 24)
-            .frame(maxWidth: 1400)
-            .frame(maxWidth: .infinity)
+            .accessibilityIdentifier("practice.scroll")
         }
-        .accessibilityIdentifier("practice.scroll")
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
-                if compact { feedback.padding(.horizontal, 8).padding(.top, 4) }
-                if compact { keyboard.padding(.horizontal, 8).padding(.top, 4) }
+                feedback.padding(.horizontal, compact ? 8 : 20).padding(.top, compact ? 2 : 4)
+                keyboard.padding(.horizontal, compact ? 8 : 20).padding(.top, compact ? 2 : 8)
                 transport
             }.background(QinXuTheme.paper)
         }
         .background(QinXuTheme.background)
         .foregroundStyle(QinXuTheme.ink)
         .sheet(isPresented: $showingSettings) { settings }
+        .sheet(isPresented: $showingModeHelp) { modeHelp }
+        .sheet(isPresented: $model.showingReport) {
+            if let report = model.latestReport {
+                PracticeReportView(report: report, scoreTitle: model.selectedScore.title, compact: compact,
+                    onClose: { model.showingReport = false },
+                    onRetry: { model.showingReport = false; model.restart() },
+                    onMeasure: { measure in model.showingReport = false; model.practiceMeasure(measure) })
+            }
+        }
     }
 
     private var heading: some View {
         HStack(spacing: 12) {
-            Button(action: onExit) { Image(systemName: "chevron.left") }
-                .buttonStyle(.plain)
-                .frame(width: 32, height: 32)
-                .accessibilityLabel("返回曲谱详情")
-                .accessibilityIdentifier("practice.back")
+            if !immersive {
+                Button(action: onExit) { Image(systemName: "chevron.left") }
+                    .buttonStyle(.plain)
+                    .frame(width: 32, height: 32)
+                    .accessibilityLabel("返回曲谱详情")
+                    .accessibilityIdentifier("practice.back")
+            }
             VStack(alignment: .leading, spacing: 4) {
                 Text(model.selectedScore.title)
-                    .font(.system(size: compact ? 18 : 27, weight: .semibold))
-                    .lineLimit(compact ? 1 : 2)
+                    .font(.system(size: compact ? 18 : immersive ? 21 : 27, weight: .semibold))
+                    .lineLimit(1)
                     .accessibilityIdentifier("practice.score.title")
-                if !compact {
+                if !compact && !immersive {
                     Text("\(model.selectedScore.composer) · \(model.selectedScore.beatsPerMeasure)/\(model.selectedScore.beatUnit) 拍 · \(model.selectedScore.measures.count) 小节")
                         .font(.system(size: 12)).foregroundStyle(QinXuTheme.muted)
                 }
             }
             Spacer(minLength: 6)
-            if compact {
+            if compact && !immersive {
                 Button { showingSettings = true } label: {
                     Label("\(model.mode.title) · \(model.hand.title)", systemImage: "slider.horizontal.3")
                         .font(.system(size: 11))
                 }.buttonStyle(.plain).accessibilityIdentifier("practice.settings")
             }
-            Button(action: onShowDevices) {
-                Label(model.inputMode.title, systemImage: model.inputMode == .touch ? "hand.tap" : "cable.connector")
-                    .labelStyle(.iconOnly)
+            if !immersive {
+                Button(action: onShowDevices) {
+                    Label(model.inputMode.title, systemImage: model.inputMode.isMicrophone ? "mic" : model.inputMode == .touch ? "hand.tap" : "cable.connector")
+                        .labelStyle(.iconOnly)
+                }
+                .buttonStyle(.plain).font(.system(size: 13))
+                .foregroundStyle(QinXuTheme.muted)
+                .accessibilityIdentifier("practice.devices")
             }
-            .buttonStyle(.plain).font(.system(size: 11))
-            .foregroundStyle(QinXuTheme.muted)
-            .accessibilityIdentifier("practice.devices")
+            Button(action: onToggleImmersion) {
+                Label(immersive ? "退出沉浸" : "沉浸", systemImage: immersive ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                    .font(.system(size: 12, weight: .medium)).padding(.vertical, 8)
+            }.buttonStyle(.plain).foregroundStyle(QinXuTheme.accent)
+                .accessibilityValue(immersive ? "已开启" : "已关闭")
+                .accessibilityIdentifier("practice.immersion")
         }
     }
 
@@ -87,24 +111,38 @@ struct PracticeSessionView: View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: compact ? 12 : 20) {
                 modePicker.frame(width: compact ? 188 : 235)
+                modeHelpButton
                 Spacer(minLength: 8)
                 handPicker.frame(width: compact ? 170 : 210)
                 settingsButton
             }
             VStack(spacing: 8) {
                 modePicker
-                HStack { handPicker; settingsButton }
+                HStack { handPicker; modeHelpButton; settingsButton }
             }
         }
     }
 
     private var modePicker: some View {
-        Picker("练习模式", selection: $model.mode) {
-            ForEach(PracticeMode.allCases, id: \.self) { Text($0.title).tag($0) }
+        Picker("练习模式", selection: Binding(get: { model.mode }, set: { value in
+            guard !model.inputMode.isMicrophone || value == .wait else { return }
+            model.mode = value
+            model.reconfigure()
+        })) {
+            Text(PracticeMode.wait.title).tag(PracticeMode.wait)
+            Text(PracticeMode.rhythm.title).tag(PracticeMode.rhythm)
+                .disabled(model.inputMode.isMicrophone)
         }
         .pickerStyle(.segmented).labelsHidden()
         .accessibilityIdentifier("practice.mode")
-        .onChange(of: model.mode) { _, _ in model.reconfigure() }
+    }
+
+    private var modeHelpButton: some View {
+        Button { showingModeHelp = true } label: {
+            Image(systemName: "questionmark.circle").font(.system(size: 16)).frame(width: 32, height: 32)
+        }.buttonStyle(.plain).foregroundStyle(QinXuTheme.muted)
+            .accessibilityLabel("识谱与节奏模式说明")
+            .accessibilityIdentifier("practice.mode.help")
     }
 
     private var handPicker: some View {
@@ -126,7 +164,7 @@ struct PracticeSessionView: View {
 
     private var scoreSurface: some View {
         VStack(alignment: .leading, spacing: 0) {
-            if !compact {
+            if !compact && !immersive {
             HStack(spacing: 10) {
                 Text("第 \(currentMeasure) / \(model.selectedScore.measures.count) 小节")
                     .monospacedDigit()
@@ -162,48 +200,90 @@ struct PracticeSessionView: View {
     }
 
     private var feedback: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .center, spacing: 12) { feedbackText; Spacer(minLength: 8); counters }
-            VStack(alignment: .leading, spacing: 7) { feedbackText; counters }
+        VStack(alignment: .leading, spacing: compact ? 2 : 8) {
+            HStack(alignment: .center, spacing: 12) { feedbackText; Spacer(minLength: 6); counters }
+            sustainStrip
         }
-        .padding(.horizontal, compact ? 10 : 16).padding(.vertical, compact ? 7 : 12)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, compact ? 10 : 16).padding(.vertical, compact ? 3 : 8)
+        .frame(maxWidth: .infinity, minHeight: compact ? 60 : 106, maxHeight: compact ? 60 : 106, alignment: .topLeading)
         .background(QinXuTheme.sage, in: RoundedRectangle(cornerRadius: 10))
     }
 
     private var feedbackText: some View {
         VStack(alignment: .leading, spacing: 3) {
             if let countdown = model.countdown {
-                Text("预备 · \(countdown)").font(.system(size: compact ? 16 : 23, weight: .semibold))
+                Text("预备 · \(countdown)").font(.system(size: compact ? 11 : 14, weight: .semibold))
                     .foregroundStyle(QinXuTheme.accent)
                     .accessibilityIdentifier("practice.countdown")
             } else {
-                Text(model.engine.feedback).font(.system(size: compact ? 11 : 13, weight: .medium))
+                Text(model.inputMode.isMicrophone ? model.engine.feedback : model.engine.durationFeedback ?? model.engine.feedback)
+                    .font(.system(size: compact ? 11 : 13, weight: .medium)).lineLimit(1)
                     .accessibilityIdentifier("practice.feedback")
             }
             if !expectedDescription.isEmpty {
-                Text(expectedDescription)
+                Text("下一待弹  " + expectedDescription)
                     .font(.system(size: compact ? 10 : 11, design: .monospaced))
                     .foregroundStyle(QinXuTheme.muted)
+                    .lineLimit(1)
                     .accessibilityIdentifier("practice.expected")
-            }
-            if model.inputMode != .microphonePolyphonic, let durationFeedback = model.engine.durationFeedback {
-                Text(durationFeedback).font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-            }
-            if model.inputMode.isMicrophone {
-                Label(model.inputStatus, systemImage: "mic")
-                    .font(.system(size: compact ? 10 : 11))
-                    .foregroundStyle(QinXuTheme.muted)
-                    .accessibilityIdentifier("practice.microphoneStatus")
+            } else {
+                Text(model.sustainGuidance.isEmpty ? "本段已没有待弹音符" : "下一待弹  已弹完，请保持长音")
+                    .font(.system(size: compact ? 10 : 11)).foregroundStyle(QinXuTheme.muted).lineLimit(1)
             }
         }
+    }
+
+    private var sustainStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: compact ? 7 : 10) {
+                Label("保持", systemImage: "hourglass").font(.system(size: compact ? 10 : 11, weight: .medium))
+                    .foregroundStyle(QinXuTheme.accent)
+                if model.sustainGuidance.isEmpty {
+                    Text("弹下音符后，显示剩余拍数与秒数")
+                        .font(.system(size: compact ? 10 : 11)).foregroundStyle(QinXuTheme.muted)
+                } else {
+                    ForEach(Array(model.sustainGuidance.prefix(6))) { guide in
+                        sustainIndicator(guide)
+                    }
+                    if model.sustainGuidance.count > 6 {
+                        Text("另有 \(model.sustainGuidance.count - 6) 音")
+                            .font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
+                    }
+                }
+            }.frame(height: compact ? 24 : 43)
+        }
+        .accessibilityIdentifier("practice.sustain")
+    }
+
+    private func sustainIndicator(_ guide: SustainGuidance) -> some View {
+        VStack(alignment: .leading, spacing: compact ? 3 : 5) {
+            HStack(spacing: 5) {
+                Text(NoteNames.name(guide.pitch)).fontWeight(.semibold)
+                Text(String(format: "%.1f秒 / %.1f拍", guide.remainingSeconds, guide.remainingBeats * displayedBeatsPerQuarter))
+            }.font(.system(size: compact ? 9 : 11, design: .monospaced)).monospacedDigit()
+            GeometryReader { geometry in
+                Capsule().fill(QinXuTheme.accent.opacity(0.14))
+                    .overlay(alignment: .leading) {
+                        Capsule().fill(QinXuTheme.accent)
+                            .frame(width: max(0, geometry.size.width * guide.remainingFraction))
+                    }
+            }.frame(height: 4)
+        }
+        .frame(width: compact ? 125 : 155)
+        .foregroundStyle(QinXuTheme.accent)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(NoteNames.name(guide.pitch)) 应保持")
+        .accessibilityValue(String(format: "剩余 %.1f 拍，%.1f 秒", guide.remainingBeats * displayedBeatsPerQuarter, guide.remainingSeconds))
+        .accessibilityIdentifier("practice.sustain.\(guide.pitch)")
     }
 
     private var counters: some View {
         HStack(spacing: compact ? 10 : 18) {
             counter("正确", identifier: "practice.count.correct", count: model.engine.correctCount, color: QinXuTheme.teal)
             counter("错音", identifier: "practice.count.wrong", count: model.engine.wrongCount, color: QinXuTheme.wrong)
-            counter("漏音", identifier: "practice.count.missed", count: model.engine.missedCount, color: QinXuTheme.muted)
+            if model.mode == .rhythm {
+                counter("漏音", identifier: "practice.count.missed", count: model.engine.missedCount, color: QinXuTheme.muted)
+            }
         }
     }
 
@@ -232,24 +312,34 @@ struct PracticeSessionView: View {
                               expectedPitches: Set(model.engine.expectedNotes.map(\.midi)),
                               heldPitches: model.engine.heldPitches,
                               sustainedPitches: model.sustainedPitches,
+                              sustainSeconds: Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingSeconds) }),
+                              sustainFractions: Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingFraction) }),
                               interactive: model.inputMode == .touch, press: model.press,
                               release: model.release, representsSound: model.inputMode.isMicrophone, compact: compact)
-            if model.inputMode.isMicrophone {
-                Text(compact ? "绿色待弹 · 浅橙应保持 · 橙色声音；余音不是新的按键。" : "整首音域固定，可横向滑动。浅橙色延音按谱面时值提示；余音不是新的按键。")
-                    .font(.system(size: compact ? 9 : 11)).foregroundStyle(QinXuTheme.muted)
-            } else if !compact {
+            if !compact && !immersive {
+                if model.inputMode.isMicrophone {
+                    Text("浅橙与倒计时表示谱面要求；橙色声音可能包含余音，不代表琴键仍按着。")
+                        .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
+                } else {
                 Text(model.inputMode == .touch ? "整首音域固定；可横向滑动。触屏按住可延音，松开即释放；按键暂不发声。" : "整首音域固定；可横向滑动。键盘显示待弹与已按下的音符。")
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
+                }
             }
         }
     }
 
     private var transport: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: compact ? 10 : 22) { tempoButton; Spacer(minLength: 8); playControls; Spacer(minLength: 8); loopButton }
-            VStack(spacing: 7) {
+            HStack(spacing: compact ? 10 : 22) {
+                metronomeControl
+                Spacer(minLength: 8)
                 playControls
-                HStack { tempoButton; Spacer(); loopButton }
+                Spacer(minLength: 8)
+                if !immersive { reportButton; loopButton }
+            }
+            VStack(spacing: 7) {
+                HStack { playControls; Spacer(); if !immersive { reportButton } }
+                HStack { metronomeControl; Spacer(); if !immersive { loopButton } }
             }
         }
         .padding(.horizontal, compact ? 12 : 24).padding(.vertical, compact ? 5 : 12)
@@ -259,12 +349,55 @@ struct PracticeSessionView: View {
 
     private var tempoButton: some View {
         Button { showingSettings = true } label: {
-            HStack(spacing: 7) {
-                Image(systemName: "metronome")
-                Text("\(Int(model.tempo))").font(.system(size: 17, weight: .medium, design: .rounded)).monospacedDigit()
-                Text("BPM").font(.system(size: 10))
-            }.padding(.vertical, 7)
-        }.buttonStyle(.plain).accessibilityLabel("速度 \(Int(model.tempo)) BPM，轻点调整")
+            HStack(spacing: 3) {
+                Text("♩ \(Int(model.tempo))/分").monospacedDigit()
+                Image(systemName: "chevron.down").font(.system(size: 7))
+            }.font(.system(size: compact ? 10 : 12, weight: .medium)).padding(.vertical, 3)
+        }.buttonStyle(.plain).accessibilityLabel("速度每分钟 \(Int(model.tempo)) 个四分音符，轻点调整")
+            .accessibilityIdentifier("practice.tempo")
+    }
+
+    private var metronomeControl: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: compact ? 7 : 10) {
+                Button { model.toggleMetronome() } label: {
+                    Label("节拍器", systemImage: "metronome")
+                        .font(.system(size: compact ? 11 : 13, weight: .medium))
+                        .foregroundStyle(model.metronomeRunning ? QinXuTheme.accent : QinXuTheme.ink)
+                }.buttonStyle(.plain)
+                    .accessibilityLabel(model.metronomeRunning ? "停止节拍器" : "启动节拍器")
+                    .accessibilityIdentifier("practice.metronome.toggle")
+                tempoButton
+                Button { model.metronomeEnabled.toggle() } label: {
+                    Image(systemName: model.metronomeEnabled && !model.inputMode.isMicrophone ? "speaker.wave.2" : "speaker.slash")
+                        .font(.system(size: compact ? 11 : 13)).frame(width: 24, height: 24)
+                }.buttonStyle(.plain).disabled(model.inputMode.isMicrophone)
+                    .foregroundStyle(QinXuTheme.muted)
+                    .accessibilityLabel(model.inputMode.isMicrophone ? "麦克风输入仅视觉节拍" : model.metronomeEnabled ? "关闭节拍器声音" : "打开节拍器声音")
+                    .accessibilityIdentifier("practice.metronome.sound")
+            }
+            HStack(spacing: 5) {
+                ForEach(1...max(1, min(12, model.selectedScore.beatsPerMeasure)), id: \.self) { beat in
+                    Circle().fill(model.metronomeBeat == beat ? QinXuTheme.accent : QinXuTheme.line)
+                        .frame(width: beat == 1 ? 7 : 5, height: beat == 1 ? 7 : 5)
+                }
+                if model.inputMode.isMicrophone {
+                    Text("仅闪拍").font(.system(size: 9)).foregroundStyle(QinXuTheme.muted)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("节拍指示")
+            .accessibilityValue(model.metronomeBeat.map { "第 \($0) 拍" } ?? "未运行")
+            .accessibilityIdentifier("practice.metronome.beat")
+        }
+    }
+
+    private var reportButton: some View {
+        Button { model.showCurrentReport() } label: {
+            Label("报告", systemImage: "chart.bar.xaxis").font(.system(size: 11))
+        }.buttonStyle(.plain).foregroundStyle(QinXuTheme.muted)
+            .disabled(model.engine.correctCount == 0 && model.engine.wrongCount == 0 && model.engine.missedCount == 0)
+            .accessibilityIdentifier("practice.report")
     }
 
     private var playControls: some View {
@@ -293,9 +426,17 @@ struct PracticeSessionView: View {
             Form {
                 Section("模式与分手") {
                     modePicker
+                    DisclosureGroup("识谱和节奏有什么区别？") {
+                        Text("识谱：等你弹对后继续，不评抢拍、拖拍或漏音。节奏：预备一小节后按速度持续前进，记录错音、漏音和起音早晚。")
+                            .foregroundStyle(QinXuTheme.muted)
+                    }.accessibilityIdentifier("practice.mode.help.settings")
+                    if model.inputMode.isMicrophone {
+                        Text("麦克风目前仅支持识谱。节奏评分请切换 MIDI 或触屏输入。")
+                            .foregroundStyle(QinXuTheme.muted)
+                    }
                     handPicker
                 }
-                Section("速度") {
+                Section("速度 · 四分音符/分钟") {
                     HStack {
                         Image(systemName: "metronome")
                         Text("\(Int(model.tempo)) BPM").monospacedDigit()
@@ -303,8 +444,15 @@ struct PracticeSessionView: View {
                     Slider(value: Binding(get: { model.tempo }, set: { model.tempo = $0.rounded() }), in: 20...300,
                            onEditingChanged: { editing in if !editing { model.reconfigure() } })
                         .accessibilityLabel("速度，四分音符每分钟")
-                    if model.mode == .rhythm {
-                        Toggle("节拍器声音", isOn: $model.metronomeEnabled)
+                        .accessibilityIdentifier("practice.settings.tempo")
+                }
+                Section("节拍器") {
+                    Button(model.metronomeRunning ? "停止节拍器" : "启动节拍器") { model.toggleMetronome() }
+                    Toggle("节拍器声音", isOn: $model.metronomeEnabled)
+                        .disabled(model.inputMode.isMicrophone)
+                    if model.inputMode.isMicrophone {
+                        Text("麦克风模式仅显示视觉拍点，避免节拍器声音进入识音。")
+                            .foregroundStyle(QinXuTheme.muted)
                     }
                 }
                 Section("小节循环") {
@@ -328,12 +476,39 @@ struct PracticeSessionView: View {
                     Text("触屏琴键暂不发声。麦克风提供实验性单音与多音识谱；多音需要缓冲音频，实琴准确率和设备延迟尚待验证，不用于节奏或按键时长评分。")
                 }
             }
+            .accessibilityIdentifier("practice.settings.form")
             .font(.system(size: 13))
             .navigationTitle("练习设置")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { showingSettings = false } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { showingSettings = false }.accessibilityIdentifier("practice.settings.close") } }
         }
         .tint(QinXuTheme.accent)
         .frame(minWidth: 320, minHeight: 280)
         .onAppear { model.suspendForBackground() }
+    }
+
+    private var modeHelp: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    modeExplanation("识谱模式", symbol: "music.note", text: "弹对当前音或和弦后才继续。可以停下来找键，不按固定时间判抢拍、拖拍和漏音。适合先认熟音符。")
+                    modeExplanation("节奏模式", symbol: "metronome", text: "预备一小节后，按设定速度持续向前。起音过早算抢拍，过晚算拖拍，错过时间窗算漏音。暂停会停住练习时间线。")
+                    modeExplanation("长音提示", symbol: "hourglass", text: "橙色倒计时显示谱面要求还应保持多久，按当前速度换算秒数。它是练习指引；麦克风声音包含余音，不能证明琴键仍按着。")
+                    if model.inputMode.isMicrophone {
+                        Label("麦克风仅开放识谱模式，并使用视觉节拍，避免节拍器声音干扰识音。", systemImage: "mic")
+                            .font(.system(size: 13)).foregroundStyle(QinXuTheme.muted)
+                    }
+                }.padding(24).frame(maxWidth: 620, alignment: .leading)
+            }.background(QinXuTheme.background)
+                .navigationTitle("练习模式")
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("知道了") { showingModeHelp = false } } }
+        }.frame(minWidth: 320, minHeight: 280)
+            .onAppear { model.suspendForBackground() }
+    }
+
+    private func modeExplanation(_ title: String, symbol: String, text: String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label(title, systemImage: symbol).font(.system(size: 17, weight: .semibold))
+            Text(text).font(.system(size: 14)).lineSpacing(5).foregroundStyle(QinXuTheme.muted)
+        }
     }
 }

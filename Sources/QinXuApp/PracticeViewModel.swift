@@ -33,19 +33,41 @@ final class PracticeViewModel: ObservableObject {
     @Published var isImporting = false
     @Published var inputMode: InputMode = .touch
     @Published var countdown: Int?
-    @Published var metronomeEnabled = true
+    /// Sound preference; microphone practice always uses visual pulses only.
+    @Published var metronomeEnabled = true {
+        didSet { if !metronomeEnabled { metronome.stop() } }
+    }
+    @Published private(set) var metronomeRunning = false
+    @Published private(set) var metronomeBeat: Int?
+    @Published private(set) var sustainGuidance: [SustainGuidance] = []
+    @Published private(set) var latestReport: PracticeReport?
+    @Published var showingReport = false
+    @Published private(set) var checkpoints: [String: PracticeCheckpoint] = [:]
+    @Published private(set) var practiceStartMeasure = 1
     @Published private(set) var isStartingInput = false
     @Published private(set) var sustainedPitches: Set<Int> = []
     private var countdownEnd: TimeInterval?
     private var loopRestartAt: TimeInterval?
     private var sessionSaved = false
     private var lastMetronomeBeat: String?
+    private var metronomeAnchor: TimeInterval?
+    private var metronomeFollowsPractice = true
+    private var reportDueAt: TimeInterval?
+    private var sessionHasStarted = false
+    private var lastCheckpointKey: String?
+    private var lastCheckpointAttempt: TimeInterval = -.infinity
+    private var finishedCheckpointSaved = false
+    private var engineIsResumed = false
+    private var engineIsLoop = false
+    private var engineRangeEnd = 1
+    private var stoppingTransport = false
     private var timer: Timer?
     private var cancellables: Set<AnyCancellable> = []
     private let metronome: Metronome
     private let clock: () -> TimeInterval
     private let storage: LocalLibraryStore
     private let presentationStore: ScorePresentationStore
+    private let progressStore: PracticeProgressStore
     private var transitionID = 0
 
     init(storage: LocalLibraryStore = LocalLibraryStore(),
@@ -53,6 +75,7 @@ final class PracticeViewModel: ObservableObject {
          automaticTimer: Bool = true, deviceAccessEnabled: Bool = true) {
         self.storage = storage
         self.presentationStore = ScorePresentationStore(libraryURL: storage.url)
+        self.progressStore = PracticeProgressStore(libraryURL: storage.url)
         self.clock = clock
         self.metronome = Metronome(deviceAccessEnabled: deviceAccessEnabled)
         let library = storage.load()
@@ -62,6 +85,7 @@ final class PracticeViewModel: ObservableObject {
         selectedScoreID = initial.id; tempo = initial.tempoBPM
         loopEnd = max(1, initial.measures.count)
         engine = PracticeEngine(score: initial)
+        engineRangeEnd = initial.measures.count
         history = library.history
         midi = MIDIService(deviceAccessEnabled: deviceAccessEnabled)
         microphone = MicrophoneService(deviceAccessEnabled: deviceAccessEnabled)
@@ -70,7 +94,9 @@ final class PracticeViewModel: ObservableObject {
         let presentation = presentationStore.load()
         favoriteScoreIDs = presentation.snapshot.favoriteScoreIDs
         scoreCoverData = presentation.snapshot.scoreCoverData
-        let loadErrors = [library.error, presentation.error, BundledPracticeLibrary.beyer.error].compactMap { $0 }
+        let progress = progressStore.load()
+        checkpoints = progress.checkpoints
+        let loadErrors = [library.error, presentation.error, progress.error, BundledPracticeLibrary.beyer.error].compactMap { $0 }
         if !loadErrors.isEmpty { errorMessage = loadErrors.joined(separator: "\n") }
         midi.onEvent = { [weak self] event, time in
             guard let self, self.inputMode == .midi else { return }
@@ -89,6 +115,10 @@ final class PracticeViewModel: ObservableObject {
         microphone.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         polyphonicMicrophone.$isActive.dropFirst().sink { [weak self] active in
             guard let self, !active, self.inputMode == .microphonePolyphonic, self.isPlaying else { return }
+            self.stopTransport()
+        }.store(in: &cancellables)
+        microphone.$isActive.dropFirst().sink { [weak self] active in
+            guard let self, !active, self.inputMode == .microphone, self.isPlaying else { return }
             self.stopTransport()
         }.store(in: &cancellables)
         midi.$connected.dropFirst().sink { [weak self] connected in
@@ -115,7 +145,7 @@ final class PracticeViewModel: ObservableObject {
     deinit { timer?.invalidate() }
 
     var selectedScore: PianoScore { scores.first(where: { $0.id == selectedScoreID }) ?? scores[0] }
-    var isPlaying: Bool { engine.isRunning || isStartingInput || countdownEnd != nil || loopRestartAt != nil }
+    var isPlaying: Bool { engine.isRunning || isStartingInput || countdownEnd != nil || loopRestartAt != nil || reportDueAt != nil }
     var midiStatus: String { midi.status }
     var inputStatus: String {
         switch inputMode {
@@ -130,7 +160,9 @@ final class PracticeViewModel: ObservableObject {
 
     private func activateScore(_ id: String, persist: Bool) {
         guard scores.contains(where: { $0.id == id }) else { return }
+        stopTransport()
         selectedScoreID = id; tempo = min(300, max(20, selectedScore.tempoBPM))
+        practiceStartMeasure = 1; loopEnabled = false
         loopStart = 1; loopEnd = max(1, selectedScore.measures.count)
         if hand == .left && !selectedScore.notes.contains(where: { $0.staff == 2 }) { hand = .both }
         reconfigure()
@@ -142,13 +174,20 @@ final class PracticeViewModel: ObservableObject {
         tempo = tempo.isFinite ? min(300, max(20, tempo)) : 80
         let total = max(1, selectedScore.measures.count)
         loopStart = min(total, max(1, loopStart)); loopEnd = min(total, max(loopStart, loopEnd))
+        practiceStartMeasure = PracticeTiming.safeStartMeasure(score: selectedScore, hand: hand,
+            requestedMeasure: min(total, max(1, practiceStartMeasure))) ?? 1
         if inputMode.isMicrophone { mode = .wait }
         engine = PracticeEngine(score: selectedScore, mode: mode, hand: hand, tempoBPM: tempo,
-                                measureRange: loopEnabled ? loopStart...loopEnd : nil,
+                                measureRange: loopEnabled ? loopStart...loopEnd : practiceStartMeasure...total,
                                 inputLagTolerance: inputMode == .microphonePolyphonic ? 3 : 0.25,
-                                evaluatesNoteDuration: inputMode != .microphonePolyphonic)
-        sustainedPitches = []
-        sessionSaved = false; lastMetronomeBeat = nil
+                                evaluatesNoteDuration: !inputMode.isMicrophone)
+        engineIsResumed = !loopEnabled && practiceStartMeasure > 1
+        engineIsLoop = loopEnabled
+        engineRangeEnd = loopEnabled ? loopEnd : total
+        sustainedPitches = []; sustainGuidance = []
+        sessionSaved = false; sessionHasStarted = false; lastMetronomeBeat = nil
+        latestReport = nil; showingReport = false; lastCheckpointKey = nil
+        finishedCheckpointSaved = false; lastCheckpointAttempt = -.infinity
     }
 
     func togglePlayback() {
@@ -156,7 +195,10 @@ final class PracticeViewModel: ObservableObject {
         if loopEnabled, let issue = PracticeTiming.loopStartIssue(score: selectedScore, hand: hand, startMeasure: loopStart) {
             errorMessage = issue; return
         }
-        if engine.isFinished { reconfigure() }
+        if engine.isFinished {
+            if !loopEnabled { practiceStartMeasure = 1 }
+            reconfigure()
+        }
         guard !engine.isFinished else {
             errorMessage = "所选声部或小节没有音符，请换一个练习范围。"; return
         }
@@ -179,20 +221,30 @@ final class PracticeViewModel: ObservableObject {
                 self.isStartingInput = false
                 guard self.inputMode == startingMode,
                       startingMode == .microphonePolyphonic ? self.polyphonicMicrophone.isActive : self.microphone.isActive else { return }
-                self.engine.start(at: self.clock())
+                let now = self.clock()
+                self.engine.start(at: now); self.sessionHasStarted = true
+                self.startPracticeMetronome(at: now)
+                self.saveCheckpoint()
             }
         } else if mode == .rhythm {
-            if metronomeEnabled { metronome.prepareSession() }
             let pulses = selectedScore.beatsPerMeasure
             let secondsPerPulse = 4.0 / Double(selectedScore.beatUnit) * 60 / tempo
             countdownEnd = clock() + Double(pulses) * secondsPerPulse
             countdown = pulses; lastMetronomeBeat = nil
+            startPracticeMetronome(at: clock())
         } else {
             engine.start(at: clock())
+            sessionHasStarted = true
+            startPracticeMetronome(at: clock())
+            saveCheckpoint()
         }
     }
 
-    func restart() { reconfigure() }
+    func restart() {
+        stopTransport()
+        practiceStartMeasure = 1
+        reconfigure()
+    }
     func press(_ pitch: Int) {
         guard inputMode == .touch else { return }
         receive(.on(pitch: pitch, velocity: 90), at: clock())
@@ -269,17 +321,21 @@ final class PracticeViewModel: ObservableObject {
     func suspendForBackground() { stopTransport() }
 
     private func stopTransport() {
+        guard !stoppingTransport else { return }
+        stoppingTransport = true
+        defer { stoppingTransport = false }
         transitionID += 1
-        countdownEnd = nil; countdown = nil; loopRestartAt = nil; isStartingInput = false
+        countdownEnd = nil; countdown = nil; loopRestartAt = nil; isStartingInput = false; reportDueAt = nil
         let now = clock()
         engine.pause(at: now)
         engine.receive(.allNotesOff, at: now)
-        sustainedPitches = []
+        sustainedPitches = []; sustainGuidance = []
         // Pausing on the final beat may complete the engine. Save it, but never auto-restart.
         finishIfNeeded(at: now, allowLoopRestart: false)
+        saveCheckpoint()
         microphone.stop()
         polyphonicMicrophone.stop()
-        metronome.stop()
+        stopMetronome()
     }
 
     private func receive(_ event: NoteInput, at time: TimeInterval) {
@@ -291,8 +347,10 @@ final class PracticeViewModel: ObservableObject {
             return
         }
         engine.receive(event, at: time)
+        if engine.isRunning || engine.correctCount + engine.wrongCount + engine.missedCount > 0 { sessionHasStarted = true }
         updateSustainGuidance(at: clock())
         finishIfNeeded(at: clock())
+        saveCheckpoint()
     }
 
     func tick() {
@@ -302,14 +360,13 @@ final class PracticeViewModel: ObservableObject {
             if now >= end {
                 countdownEnd = nil; countdown = nil; lastMetronomeBeat = nil
                 engine.start(at: end)
+                sessionHasStarted = true
+                saveCheckpoint()
             } else {
                 let secondsPerPulse = 4.0 / Double(selectedScore.beatUnit) * 60 / tempo
                 let count = max(1, Int(ceil((end - now) / secondsPerPulse)))
                 if countdown != count { countdown = count }
-                if lastMetronomeBeat != "count-\(count)" {
-                    if metronomeEnabled { metronome.play(accented: count == selectedScore.beatsPerMeasure) }
-                    lastMetronomeBeat = "count-\(count)"
-                }
+                updateMetronome(at: now)
                 return
             }
         }
@@ -317,47 +374,147 @@ final class PracticeViewModel: ObservableObject {
             guard now >= restartTime else { return }
             loopRestartAt = nil
             engine.reset(); sessionSaved = false; lastMetronomeBeat = nil
+            finishedCheckpointSaved = false
             engine.start(at: now)
+            metronomeAnchor = now
             updateSustainGuidance(at: now)
         }
         if engine.isRunning {
             engine.tick(at: now)
-            if engine.isRunning && mode == .rhythm && !inputMode.isMicrophone {
-                if let position = PracticeTiming.metronomePosition(atQuarterBeat: engine.currentBeat, score: selectedScore),
-                   lastMetronomeBeat != position.id {
-                    if metronomeEnabled { metronome.play(accented: position.accented) }
-                    lastMetronomeBeat = position.id
-                }
-            }
         }
+        updateMetronome(at: now)
         finishIfNeeded(at: now)
+        saveCheckpoint()
+        if let due = reportDueAt, now >= due {
+            reportDueAt = nil
+            stopMetronome()
+            microphone.stop(); polyphonicMicrophone.stop()
+            latestReport = engine.report(inputSource: inputMode.title, isPartial: isResumedSession)
+            showingReport = true
+        }
     }
 
     private func updateSustainGuidance(at time: TimeInterval) {
         let next = engine.sustainedPitches(at: time)
         if sustainedPitches != next { sustainedPitches = next }
+        let guidance = engine.sustainGuidance(at: time)
+        if sustainGuidance != guidance { sustainGuidance = guidance }
     }
 
     private func finishIfNeeded(at now: TimeInterval, allowLoopRestart: Bool = true) {
         guard engine.isFinished, !sessionSaved, engine.correctCount + engine.wrongCount + engine.missedCount > 0 else { return }
         sessionSaved = true
-        history.insert(engine.summary(), at: 0)
+        latestReport = engine.report(inputSource: inputMode.title, isPartial: isResumedSession)
+        history.insert(engine.summary(inputSource: inputMode.title, isPartial: isResumedSession), at: 0)
         if history.count > 200 { history = Array(history.prefix(200)) }
         saveLibrary()
         if loopEnabled && allowLoopRestart {
             loopRestartAt = max(now + 1, engine.sustainGuidanceEndTime ?? now)
         }
-        else {
-            metronome.stop()
-            if inputMode == .microphone { microphone.stop() }
-            if inputMode == .microphonePolyphonic { polyphonicMicrophone.stop() }
+        else if allowLoopRestart {
+            // The final attack is accepted before its written hold has elapsed.
+            // Keep its countdown visible instead of covering it with the report.
+            reportDueAt = max(now, engine.sustainGuidanceEndTime ?? now)
         }
     }
 
-    private func validatePolyphonicRange() -> Bool {
-        let notes = selectedScore.notes.filter {
-            hand.includes(staff: $0.staff) && (!loopEnabled || (loopStart...loopEnd).contains($0.measure))
+    private var isResumedSession: Bool { engineIsResumed }
+
+    func showCurrentReport() {
+        stopTransport()
+        latestReport = engine.report(inputSource: inputMode.title, isPartial: isResumedSession)
+        showingReport = true
+    }
+
+    func practiceMeasure(_ measure: Int) {
+        guard let safe = PracticeTiming.safeStartMeasure(score: selectedScore, hand: hand, requestedMeasure: measure) else { return }
+        stopTransport()
+        practiceStartMeasure = 1
+        loopEnabled = true; loopStart = safe; loopEnd = max(safe, min(selectedScore.measures.count, measure))
+        reconfigure()
+    }
+
+    func progress(for scoreID: String) -> PracticeCheckpoint? {
+        guard let checkpoint = checkpoints[scoreID], let score = scores.first(where: { $0.id == scoreID }),
+              checkpoint.matches(score) else { return nil }
+        return checkpoint
+    }
+
+    func resume(scoreID: String) {
+        guard let checkpoint = progress(for: scoreID), let score = scores.first(where: { $0.id == scoreID }),
+              let measure = checkpoint.resumeMeasure(in: score) else { return }
+        stopTransport()
+        selectedScoreID = scoreID; practiceStartMeasure = measure
+        hand = checkpoint.hand; mode = inputMode.isMicrophone ? .wait : checkpoint.mode
+        tempo = checkpoint.tempoBPM; loopEnabled = false
+        loopStart = 1; loopEnd = score.measures.count
+        reconfigure(); saveLibrary()
+    }
+
+    private func saveCheckpoint() {
+        guard sessionHasStarted, !(engine.isFinished && finishedCheckpointSaved) else { return }
+        // Use the old engine's configuration while selection controls are changing.
+        let score = engine.score
+        let measure = engine.mode == .wait ? engine.expectedNotes.first?.measure ?? engineRangeEnd
+            : score.measures.last(where: { $0.startBeat <= engine.currentBeat + 0.000001 })?.number ?? 1
+        let reachedEnd = engine.isFinished && !engineIsLoop && engineRangeEnd == score.measures.count
+        let key = "\(score.id)|\(measure)|\(reachedEnd)|\(engine.hand.rawValue)|\(engine.mode.rawValue)|\(engine.tempoBPM)"
+        guard key != lastCheckpointKey, clock() - lastCheckpointAttempt >= 1 || stoppingTransport,
+              let checkpoint = PracticeCheckpoint.make(score: score, measure: measure, hand: engine.hand,
+                  mode: engine.mode, tempoBPM: engine.tempoBPM, isCompleted: reachedEnd) else { return }
+        var next = checkpoints; next[score.id] = checkpoint
+        do {
+            try progressStore.save(next)
+            checkpoints = next; lastCheckpointKey = key
+            finishedCheckpointSaved = engine.isFinished
+        } catch {
+            lastCheckpointAttempt = clock()
+            errorMessage = "保存练习位置失败：\(error.localizedDescription)"
         }
+    }
+
+    func toggleMetronome() {
+        if metronomeRunning {
+            metronomeFollowsPractice = false; stopMetronome()
+        } else {
+            metronomeFollowsPractice = true
+            startPracticeMetronome(at: clock())
+        }
+    }
+
+    private func startPracticeMetronome(at now: TimeInterval) {
+        guard metronomeFollowsPractice else { return }
+        metronomeRunning = true; metronomeAnchor = now; lastMetronomeBeat = nil
+        updateMetronome(at: now)
+    }
+
+    private func stopMetronome() {
+        metronome.stop(); metronomeRunning = false; metronomeBeat = nil
+        metronomeAnchor = nil; lastMetronomeBeat = nil
+    }
+
+    private func updateMetronome(at now: TimeInterval) {
+        guard metronomeRunning, let anchor = metronomeAnchor, now.isFinite, now >= anchor else { return }
+        let pulseSeconds = 4.0 / Double(selectedScore.beatUnit) * 60 / tempo
+        let index = Int(floor((now - anchor) / pulseSeconds + 0.000001))
+        var pulse = index % selectedScore.beatsPerMeasure + 1
+        var id = "free-\(index)"
+        if countdownEnd != nil { id = "count-\(index)" }
+        else if engine.isRunning && mode == .rhythm,
+                let position = PracticeTiming.metronomePosition(atQuarterBeat: engine.currentBeat, score: selectedScore) {
+            pulse = position.pulse + 1; id = "score-\(position.id)"
+        }
+        if metronomeBeat != pulse { metronomeBeat = pulse }
+        guard id != lastMetronomeBeat else { return }
+        lastMetronomeBeat = id
+        // Playback category would interrupt recording, and speaker clicks pollute pitch input.
+        guard metronomeEnabled, !inputMode.isMicrophone else { return }
+        do { try metronome.play(accented: pulse == 1) }
+        catch { metronomeEnabled = false; errorMessage = "节拍器声音不可用：\(error.localizedDescription)" }
+    }
+
+    private func validatePolyphonicRange() -> Bool {
+        let notes = engine.score.notes.filter { engine.verdicts[$0.id] != nil }
         guard notes.allSatisfy({ (21...108).contains($0.midi) }) else {
             errorMessage = "双手识音模型覆盖钢琴 A0–C8，请选择此音域内的曲谱。"; return false
         }
@@ -365,9 +522,7 @@ final class PracticeViewModel: ObservableObject {
     }
 
     private func validateMicrophoneSubset() -> Bool {
-        let notes = selectedScore.notes.filter {
-            hand.includes(staff: $0.staff) && (!loopEnabled || (loopStart...loopEnd).contains($0.measure))
-        }.sorted { $0.startBeat < $1.startBeat }
+        let notes = engine.score.notes.filter { engine.verdicts[$0.id] != nil }.sorted { $0.startBeat < $1.startBeat }
         guard notes.allSatisfy({ (48...84).contains($0.midi) }) else {
             errorMessage = "麦克风实验模式只覆盖 C3–C6，请选择合适音域的单音曲目。"; return false
         }

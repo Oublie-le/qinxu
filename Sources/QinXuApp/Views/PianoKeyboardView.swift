@@ -37,6 +37,8 @@ struct PianoKeyboardView: View {
     let expectedPitches: Set<Int>
     let heldPitches: Set<Int>
     var sustainedPitches: Set<Int> = []
+    var sustainSeconds: [Int: Double] = [:]
+    var sustainFractions: [Int: Double] = [:]
     let interactive: Bool
     let press: (Int) -> Void
     let release: (Int) -> Void
@@ -66,6 +68,7 @@ struct PianoKeyboardView: View {
     private func key(_ pitch: Int, black: Bool) -> some View {
         PianoTouchKey(pitch: pitch, black: black, expected: expectedPitches.contains(pitch),
                       held: heldPitches.contains(pitch), sustained: sustainedPitches.contains(pitch),
+                      sustainSeconds: sustainSeconds[pitch], sustainFraction: sustainFractions[pitch],
                       interactive: interactive, representsSound: representsSound, press: press, release: release)
     }
 }
@@ -76,6 +79,8 @@ private struct PianoTouchKey: View {
     let expected: Bool
     let held: Bool
     let sustained: Bool
+    let sustainSeconds: Double?
+    let sustainFraction: Double?
     let interactive: Bool
     let representsSound: Bool
     let press: (Int) -> Void
@@ -109,15 +114,20 @@ private struct PianoTouchKey: View {
         if expected { states.append("待弹") }
         if held || touching { states.append(representsSound ? "识别到声音" : "已按下") }
         if sustained { states.append("应保持") }
+        if let sustainSeconds { states.append(String(format: "剩余 %.1f 秒", sustainSeconds)) }
         return states.isEmpty ? (representsSound ? "未识别到声音" : "未按下") : states.joined(separator: "，")
     }
 
     @ViewBuilder private var noteLabel: some View {
         if expected || held || sustained || pitch % 12 == 0 {
-            Text(NoteNames.name(pitch))
-                .font(.system(size: black ? 7 : 9, weight: .medium, design: .monospaced))
-                .foregroundStyle(labelColor)
-                .padding(.bottom, black ? 7 : 10)
+            VStack(spacing: 2) {
+                Text(NoteNames.name(pitch))
+                    .font(.system(size: black ? 7 : 9, weight: .medium, design: .monospaced))
+                if let sustainSeconds {
+                    Text(String(format: "%.1f", sustainSeconds))
+                        .font(.system(size: 7, weight: .semibold, design: .monospaced))
+                }
+            }.foregroundStyle(labelColor).padding(.bottom, black ? 7 : 10)
         }
     }
 
@@ -131,6 +141,14 @@ private struct PianoTouchKey: View {
                 }
             }
             .overlay(alignment: .bottom) { noteLabel }
+            .overlay(alignment: .bottomLeading) {
+                if let sustainFraction {
+                    GeometryReader { geometry in
+                        Capsule().fill(held || touching ? Color.white.opacity(0.9) : QinXuTheme.accent)
+                            .frame(width: max(0, geometry.size.width * min(1, max(0, sustainFraction))), height: 3)
+                    }.frame(height: 3).padding(.horizontal, 3).padding(.bottom, 3)
+                }
+            }
             .padding(.horizontal, black ? 0 : 0.5)
             .contentShape(Rectangle())
     }
