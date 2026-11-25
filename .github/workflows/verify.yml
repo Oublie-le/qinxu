@@ -21,7 +21,6 @@ jobs:
       - name: Build macOS preview
         run: bash scripts/build-macos.sh
   ios-ui:
-    needs: verify
     runs-on: macos-latest
     timeout-minutes: 25
     strategy:

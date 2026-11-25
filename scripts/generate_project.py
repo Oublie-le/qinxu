@@ -68,7 +68,8 @@ for name in ("Debug", "Release"):
         "DEBUG_INFORMATION_FORMAT": "dwarf" if name == "Debug" else "dwarf-with-dsym",
         "SWIFT_OPTIMIZATION_LEVEL": "-Onone" if name == "Debug" else "-O",
         "SWIFT_ACTIVE_COMPILATION_CONDITIONS": "DEBUG" if name == "Debug" else "",
-        "ENABLE_TESTABILITY": "YES" if name == "Debug" else "NO"
+        "ENABLE_TESTABILITY": "YES" if name == "Debug" else "NO",
+        "ONLY_ACTIVE_ARCH": "YES" if name == "Debug" else "NO"
     }
     target_settings = {
         "CODE_SIGN_STYLE": "Automatic", "CURRENT_PROJECT_VERSION": "1", "MARKETING_VERSION": "0.1.0",
