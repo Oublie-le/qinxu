@@ -57,7 +57,8 @@ struct PracticeHistoryContent: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(record.scoreTitle).font(.system(size: 16, weight: .semibold))
-                        Text(record.date.formatted(date: .abbreviated, time: .shortened))
+                        Text(record.date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened,
+                                                                   locale: Locale(identifier: "zh_Hans_CN"))))
                             .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                     }
                     Spacer()

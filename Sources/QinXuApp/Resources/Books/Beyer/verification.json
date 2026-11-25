@@ -1,0 +1,536 @@
+{
+  "version": 1,
+  "lessons": [
+    {
+      "id": "beyer-op101-001-theme",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 8,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v01",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 15,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v02",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 16,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v03",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 16,
+      "beats": 24.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v04",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 20,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v05",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 21,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v06",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 20,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v07",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 20,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v08",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 23,
+      "beats": 24.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v09",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 30,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v10",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 23,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v11",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 28,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-001-v12",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "measures": 8,
+      "notes": 28,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-theme",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 16,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v01",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 28,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v02",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 31,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v03",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 39,
+      "beats": 48.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v04",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 27,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v05",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 24,
+      "notes": 58,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v06",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 28,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v07",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 16,
+      "notes": 41,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-002-v08",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "measures": 24,
+      "notes": 63,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-003",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-003",
+      "measures": 18,
+      "notes": 34,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-004",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-004",
+      "measures": 12,
+      "notes": 42,
+      "beats": 48.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-005",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-005",
+      "measures": 12,
+      "notes": 46,
+      "beats": 48.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-006",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-006",
+      "measures": 12,
+      "notes": 38,
+      "beats": 36.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-007",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-007",
+      "measures": 8,
+      "notes": 51,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-008",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-008",
+      "measures": 24,
+      "notes": 122,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-009",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-009",
+      "measures": 48,
+      "notes": 191,
+      "beats": 144.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-010",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-010",
+      "measures": 16,
+      "notes": 86,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-011",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-011",
+      "measures": 24,
+      "notes": 90,
+      "beats": 72.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-012",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-012",
+      "measures": 8,
+      "notes": 38,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-013",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-013",
+      "measures": 8,
+      "notes": 38,
+      "beats": 32.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-014",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-014",
+      "measures": 12,
+      "notes": 66,
+      "beats": 48.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-016",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-016",
+      "measures": 24,
+      "notes": 80,
+      "beats": 48.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-017",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-017",
+      "measures": 24,
+      "notes": 121,
+      "beats": 96.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-018",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-018",
+      "measures": 24,
+      "notes": 117,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-020",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-020",
+      "measures": 24,
+      "notes": 140,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-021",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-021",
+      "measures": 24,
+      "notes": 139,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-022",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-022",
+      "measures": 24,
+      "notes": 159,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-024",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-024",
+      "measures": 12,
+      "notes": 79,
+      "beats": 48.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-025",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-025",
+      "measures": 24,
+      "notes": 126,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-026",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-026",
+      "measures": 24,
+      "notes": 131,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-027",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-027",
+      "measures": 24,
+      "notes": 142,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-028",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-028",
+      "measures": 16,
+      "notes": 95,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-030",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-030",
+      "measures": 24,
+      "notes": 143,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-031",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-031",
+      "measures": 24,
+      "notes": 164,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-032",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-032",
+      "measures": 40,
+      "notes": 164,
+      "beats": 120.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-033",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-033",
+      "measures": 24,
+      "notes": 130,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-034",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-034",
+      "measures": 40,
+      "notes": 172,
+      "beats": 120.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-035",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-035",
+      "measures": 32,
+      "notes": 163,
+      "beats": 128.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-036",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-036",
+      "measures": 32,
+      "notes": 168,
+      "beats": 128.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-037",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-037",
+      "measures": 40,
+      "notes": 171,
+      "beats": 120.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-039",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-039",
+      "measures": 16,
+      "notes": 95,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-040",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-040",
+      "measures": 24,
+      "notes": 184,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-041",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-041",
+      "measures": 32,
+      "notes": 238,
+      "beats": 128.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-042",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-042",
+      "measures": 24,
+      "notes": 120,
+      "beats": 72.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-043",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-043",
+      "measures": 24,
+      "notes": 152,
+      "beats": 96.0,
+      "repeatExpanded": true,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    },
+    {
+      "id": "beyer-op101-061",
+      "source": "https://ranote.zzxxccvv.com/en/s/beyer-op101-061",
+      "measures": 16,
+      "notes": 117,
+      "beats": 64.0,
+      "repeatExpanded": false,
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+    }
+  ]
+}

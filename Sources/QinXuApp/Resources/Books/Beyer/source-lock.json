@@ -1,0 +1,591 @@
+{
+  "version": 1,
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "inputs": {
+    "001-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-001/notes.json",
+      "sha256": "edeb920802480cff88620808e48849b3f0019a1306138f57e61f38d6fd3677ee",
+      "bytes": 74069
+    },
+    "001-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-001/score-1100.svg",
+      "sha256": "a54058de3059a614c67a79f416fd40684a5173f86157192020faecf681a68a5e",
+      "bytes": 552889
+    },
+    "001-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-001",
+      "sha256": "61ca9f5744774d96b90e642c4d401e13afbb69dd86555f407bcb50e8329a49f0",
+      "bytes": 16635
+    },
+    "002-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-002/notes.json",
+      "sha256": "6c9336ab763d3cab4e315a6e053a1c8f71977c50788dcee3499957fcec7125b2",
+      "bytes": 109630
+    },
+    "002-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-002/score-1100.svg",
+      "sha256": "2da5c2bfaae752a7e8cdd44e4e21d88a5755d5ec6ebcb3b246c760da3722bd3e",
+      "bytes": 676500
+    },
+    "002-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-002",
+      "sha256": "cbbf5ff94827018e9709b55d611ddaccd8362f3a6645808cd321db061d8a6f6f",
+      "bytes": 16940
+    },
+    "003-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-003/notes.json",
+      "sha256": "647e776d1c93ea8889ae55911a4d9934967f6429295e6d3b497e42537c0a7090",
+      "bytes": 9889
+    },
+    "003-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-003/score-1100.svg",
+      "sha256": "07add5ff5d556669cf7d735b11fd60b91b90f14a77cc9ec4ab941c7a41b5d581",
+      "bytes": 50792
+    },
+    "003-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-003",
+      "sha256": "f6933da3923ec724300e983414cd496250d6b60805846dd822f5904ecd7ef53d",
+      "bytes": 17019
+    },
+    "004-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-004/notes.json",
+      "sha256": "d562ff637ebd135eba5e7679e1cad473488c4c4a616cbad48916c38f35cdfb8a",
+      "bytes": 9912
+    },
+    "004-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-004/score-1100.svg",
+      "sha256": "8af6708fa9cae0ce994550d3298ddde4cade71a6b7c7fc07104027a72f4f70e1",
+      "bytes": 50133
+    },
+    "004-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-004",
+      "sha256": "ce750dced4231dc2052d93ff5fb3547f1b160fb83f3dd881d69bcfea96922766",
+      "bytes": 16961
+    },
+    "005-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-005/notes.json",
+      "sha256": "3b3fe434c5fb93741c94b3b5e83d022a1e18f20f4e59031541cd5962495c6993",
+      "bytes": 8353
+    },
+    "005-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-005/score-1100.svg",
+      "sha256": "7f8f5775358e95862fc13f3f7d49b5c08529ee1595fa6287c6bb0886662b1b81",
+      "bytes": 58424
+    },
+    "005-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-005",
+      "sha256": "9918c6655b273660974f4723f840722faa71bb3182913a52317147568ded3229",
+      "bytes": 16967
+    },
+    "006-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-006/notes.json",
+      "sha256": "f443d8df046c3ebf093da0621f645ce1de2a45840e148f12fad55aa5747897cd",
+      "bytes": 4977
+    },
+    "006-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-006/score-1100.svg",
+      "sha256": "ea1d8423eab2c0047488a7d60d9922138daa78ec38c2dadf34c5f8ffc619e4b4",
+      "bytes": 55384
+    },
+    "006-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-006",
+      "sha256": "4f717f5cae156b662fd922d3b95f45f36c4828a48112c5d5ed0c156416117741",
+      "bytes": 16920
+    },
+    "007-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-007/notes.json",
+      "sha256": "bc888c68c27673688a1daa2ce04b2ec1e3e4ca972db66378c7574e574ca01370",
+      "bytes": 4827
+    },
+    "007-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-007/score-1100.svg",
+      "sha256": "543fe13977e5f382159acc8cae651768a1e520abf027bcc92cfc8f265d37d7b4",
+      "bytes": 49399
+    },
+    "007-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-007",
+      "sha256": "2e21f9bcb8b5405bdf11a46390c7cb6118331441deb06cfb43e02f67e4c9a470",
+      "bytes": 16867
+    },
+    "008-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-008/notes.json",
+      "sha256": "cf96de118687f75468aea25d443d4572c37655661dc647f789dd43b5d5d04402",
+      "bytes": 21168
+    },
+    "008-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-008/score-1100.svg",
+      "sha256": "5d9d596a8908c400a7843a925b800a01813716bf188bfab38ced30763f770ca5",
+      "bytes": 101510
+    },
+    "008-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-008",
+      "sha256": "a76e3a64c70aca6a5e74651ce7786a2b52f023c43256a314e01537d90d8570fb",
+      "bytes": 17005
+    },
+    "009-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-009/notes.json",
+      "sha256": "6f00d61da481caaa04534db58b682d0dc15064d957e992622256478a799d0900",
+      "bytes": 25465
+    },
+    "009-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-009/score-1100.svg",
+      "sha256": "c6f3e707acdb1c280fb11d758cedc6528a8d1936e92f4266ce4e5c5701aa67ef",
+      "bytes": 149506
+    },
+    "009-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-009",
+      "sha256": "6121cdca5080de141505a7617a7e32064aba39133277eaca825f75043a3b3cef",
+      "bytes": 17012
+    },
+    "010-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-010/notes.json",
+      "sha256": "614f743a067e6d3a26641396f32b2f01a9629a139418bb2f35e91260b71f5a64",
+      "bytes": 13485
+    },
+    "010-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-010/score-1100.svg",
+      "sha256": "957ee4021b43726a245de98c62f1b5e5105b25a920fb3cc4fd2fd98f4178e5c3",
+      "bytes": 100756
+    },
+    "010-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-010",
+      "sha256": "4f93a741e18fb5170f5f6e396497b1a977674f4854d0ee961321256ad13657b0",
+      "bytes": 16920
+    },
+    "011-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-011/notes.json",
+      "sha256": "2c2e20d0d13800c3cb4a1ad347ac16367a8db193ab5fd8d86392f4ec78685472",
+      "bytes": 14351
+    },
+    "011-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-011/score-1100.svg",
+      "sha256": "56efcecfa58cbf3fc98d8f4e40253fb9cd00f102758ff94ed6074a6b75643247",
+      "bytes": 126721
+    },
+    "011-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-011",
+      "sha256": "daf0b5627087f4bb4f5bb55c98a0987bcecb71b44d9cc45015fd567db5b1c4f4",
+      "bytes": 16946
+    },
+    "012-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-012/notes.json",
+      "sha256": "dfefc9375c3c29d288b894d2df3306a02f4a7a73ddf0c4571f88b343b1fb8b49",
+      "bytes": 2343
+    },
+    "012-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-012/score-1100.svg",
+      "sha256": "5412fbc96b7de6a215764e2227b6e388433e8bc645d6cee64bdf7be925d7d414",
+      "bytes": 22920
+    },
+    "012-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-012",
+      "sha256": "c3d42f2516fa7d0d229c569568698b92517a30addf7e2f50b2db17502202a7c9",
+      "bytes": 16609
+    },
+    "013-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-013/notes.json",
+      "sha256": "16c0556e9894799fd6f597cf9606b7d24fb88a0dbdac0fa070c341cb6f571c39",
+      "bytes": 2340
+    },
+    "013-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-013/score-1100.svg",
+      "sha256": "ecff429b0b3e08dcf8a24ffae7f416efd76cb80b01e71c664b8d3023c0481dc8",
+      "bytes": 22315
+    },
+    "013-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-013",
+      "sha256": "13ffa3797ae9ff388fb0ca93ee536c4d19e061a2ba2c098376bd28f69b4bf19d",
+      "bytes": 16608
+    },
+    "014-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-014/notes.json",
+      "sha256": "6fdc836247d0483021e6274ebdbcd822a059ef244f054d9b9d0c9d8e52ecf10c",
+      "bytes": 3994
+    },
+    "014-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-014/score-1100.svg",
+      "sha256": "96270273fe57df39572721cfb1055f93de918322397f7a12bbc302896f0081c2",
+      "bytes": 24183
+    },
+    "014-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-014",
+      "sha256": "8984402b3610321eaaeb0be8123da527c1aad45242f5181ffecaa7fb0aa6e048",
+      "bytes": 16635
+    },
+    "016-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-016/notes.json",
+      "sha256": "6f82cda0debd3b8b22acaf7db7ce20ed3b97610cc15e0e898933e4c573375d7f",
+      "bytes": 5165
+    },
+    "016-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-016/score-1100.svg",
+      "sha256": "17a4cbf1322ef397ec98ac0ac7b55f2b5309317f0a46f98deec6595f5d1bed05",
+      "bytes": 40350
+    },
+    "016-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-016",
+      "sha256": "fe25fb96e43ebdbf0f6609a9bd4f2b804f49612dc9e9805bc951afbae3ffe7cd",
+      "bytes": 16761
+    },
+    "017-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-017/notes.json",
+      "sha256": "58b606ff7b28d001ca8acb73650b88a1aa9ab9c53b423d23032f88e013e9eee3",
+      "bytes": 7432
+    },
+    "017-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-017/score-1100.svg",
+      "sha256": "53d0d652e9665e55417d8a676b0736ff52c46b9a964c083989742638c1f4677e",
+      "bytes": 59874
+    },
+    "017-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-017",
+      "sha256": "5ab38df0416ae5d7651940fc4c2d300478f8de71d56a34aa89b5dea530d58c20",
+      "bytes": 16662
+    },
+    "018-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-018/notes.json",
+      "sha256": "1897f8ed2383844622c73b1f47bdb79f29feb7f2d962c701a443f6a446c64228",
+      "bytes": 7196
+    },
+    "018-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-018/score-1100.svg",
+      "sha256": "6d3dcf24f6d748984cf9283c181129d2444b41ce4c8094575d07e7e5c65756aa",
+      "bytes": 44678
+    },
+    "018-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-018",
+      "sha256": "db1998429932a124c909b4078b2d92925eda18f24f1ba863e85d33cce72de195",
+      "bytes": 16790
+    },
+    "020-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-020/notes.json",
+      "sha256": "acac8f6f1a76dddffcba8e677892838a3f145c8deb4d027d24d409c0bbebafff",
+      "bytes": 8467
+    },
+    "020-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-020/score-1100.svg",
+      "sha256": "cf691c64b55fa0369431a7ef3ae861ba01b18aa6a9dfb4a9105c6a879b779d5c",
+      "bytes": 46732
+    },
+    "020-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-020",
+      "sha256": "dd9c40bb01247915c19d147c7248fe9e60bbf836278db0005b601fa2842ac428",
+      "bytes": 16764
+    },
+    "021-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-021/notes.json",
+      "sha256": "7ccf8ab299cb822ddc1f6508fefb945b657cd23f5c57e2279221b99947a15591",
+      "bytes": 8414
+    },
+    "021-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-021/score-1100.svg",
+      "sha256": "398f158089c94ff526f3daa336fab6ddfbd486afac01eb6792dd960401ef31b0",
+      "bytes": 46285
+    },
+    "021-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-021",
+      "sha256": "1d6c26cb8f4f6051d33704eadd43cd309bc60660571781fe7c4d31b29b3d79cf",
+      "bytes": 16761
+    },
+    "022-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-022/notes.json",
+      "sha256": "558eda20cf24ee0c71579d3ace09e48cf14046009b87de4a18fe29ff2c843130",
+      "bytes": 9530
+    },
+    "022-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-022/score-1100.svg",
+      "sha256": "8d43e4d7aae91e38cac99f81f760808c4bd1801aab013382a2405147ad43c47b",
+      "bytes": 55352
+    },
+    "022-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-022",
+      "sha256": "1d6de93526460945443c0f6f11605973679cbde1c7b5193dab6c2b85c9010849",
+      "bytes": 16772
+    },
+    "024-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-024/notes.json",
+      "sha256": "bbddaf1bd673b5a9586ec5947e55e3af61c17ea4bcbd212b9cdd9f5f6835a398",
+      "bytes": 4708
+    },
+    "024-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-024/score-1100.svg",
+      "sha256": "b7d057daf8b271edf2fc1854e0878e87191015bd004e41f72cc5e3dc0760c74a",
+      "bytes": 36307
+    },
+    "024-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-024",
+      "sha256": "097896c7cfd869431ba952d124b0022451aa6fd17d9feab298ef26e0ce548195",
+      "bytes": 16672
+    },
+    "025-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-025/notes.json",
+      "sha256": "645d330c1e63a99cb5bce32b6b628004f2a08b800a44d5f6c8769f841c4aa371",
+      "bytes": 7697
+    },
+    "025-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-025/score-1100.svg",
+      "sha256": "6915c65c7b9763822712ffd87998ebb0eb438db864a6b3505d639c76f207cb28",
+      "bytes": 45100
+    },
+    "025-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-025",
+      "sha256": "040a36a817dd9f53bbe54edefb8759a706cf0778fdcdd3982aab348280a317e1",
+      "bytes": 16771
+    },
+    "026-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-026/notes.json",
+      "sha256": "50e95a7fa559d2ee84f3fa46c4de593076e11d87328caaddb48ef9755acabc51",
+      "bytes": 7973
+    },
+    "026-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-026/score-1100.svg",
+      "sha256": "2e435dbfa7c56d4a617270dbf16efc74e9b390b9fb5ef6fe7720e568fbae8ef3",
+      "bytes": 46470
+    },
+    "026-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-026",
+      "sha256": "f1476923ba45857855cd62ec2de96724c363d7c31eb26d7179cdcd3ee08f5a94",
+      "bytes": 16764
+    },
+    "027-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-027/notes.json",
+      "sha256": "a877cf40ca19755ea5b6671e9c7ea0a0fc93650da4fbe2daa825bafc47271323",
+      "bytes": 8580
+    },
+    "027-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-027/score-1100.svg",
+      "sha256": "24bfae6b2c7a0ff6930dd22094a52375ad77bf18ef0adf6c0b44ef8413924c44",
+      "bytes": 50907
+    },
+    "027-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-027",
+      "sha256": "2fab74b7d5156e8822521e181f1ca96897eacaf8db50bc61f53d8a68c944fe83",
+      "bytes": 16761
+    },
+    "028-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-028/notes.json",
+      "sha256": "43f6cd3f7c36c0e637fa49dbb380e67751387947c2aac69a751291d45c9c8be9",
+      "bytes": 5731
+    },
+    "028-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-028/score-1100.svg",
+      "sha256": "c448c0163ad2d525f39518e7461dbe35f2ac09d9972cd4b5d128aaf4d43bd8b4",
+      "bytes": 45485
+    },
+    "028-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-028",
+      "sha256": "fd1ef872baa9de51769594202f608047ae74d5a14b2f8c45bbe439abe60fc477",
+      "bytes": 16672
+    },
+    "030-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-030/notes.json",
+      "sha256": "75a492bd8dea3bdc8899a7ca837b284c3cfcf24a8b42b7a8a6afddbd1391b46f",
+      "bytes": 8643
+    },
+    "030-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-030/score-1100.svg",
+      "sha256": "3a17b788247b492dae03332d08648f0e51b929d23590d8e15016ea6deb2e0308",
+      "bytes": 47742
+    },
+    "030-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-030",
+      "sha256": "12a134e1c3af20adb586cdf7ccf6030691542a756335dd7915cd8061bc0058fc",
+      "bytes": 16771
+    },
+    "031-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-031/notes.json",
+      "sha256": "24c630add6a6b1a0236ef97d1e6a9cd0173c27007732719e6133a7140adba270",
+      "bytes": 9785
+    },
+    "031-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-031/score-1100.svg",
+      "sha256": "d9155177664907ea806df2b175595ca9f6515541177c97a13efbea26e1b02c77",
+      "bytes": 52437
+    },
+    "031-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-031",
+      "sha256": "31efb96ee21b01e3104e5b728d68ddf015445182994bd6e3e32da36ee3551440",
+      "bytes": 16771
+    },
+    "032-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-032/notes.json",
+      "sha256": "021eec60bef7da91e4d9e3fd0a2194eee66c6df540c48bbc54221836e54a6fd3",
+      "bytes": 30305
+    },
+    "032-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-032/score-1100.svg",
+      "sha256": "e76a8a3275ccac97e271308a99e182f553fd1b847024d26b5a6b7b619bb5d147",
+      "bytes": 152442
+    },
+    "032-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-032",
+      "sha256": "f60fecb64525de3e06b11a30ce49918e34f2c916c3eb07276d6dd32ef51656c7",
+      "bytes": 17043
+    },
+    "033-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-033/notes.json",
+      "sha256": "13f12497102acc2f8a41a3f0968791c8e3f09892869c5b2d30c5374a215f17d3",
+      "bytes": 15832
+    },
+    "033-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-033/score-1100.svg",
+      "sha256": "7dadf7dfcb538c65b94e64743514763aced147ba22abaac87080dcadb212c53d",
+      "bytes": 91421
+    },
+    "033-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-033",
+      "sha256": "ec44c69dda95c5b03d500d423b1a891599a897002f08ec887e6ccca0fa8bc3af",
+      "bytes": 17053
+    },
+    "034-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-034/notes.json",
+      "sha256": "fe1ad390675e09b39cc8d84c5ff103a116a5ed062214df4992adde92549a3ccc",
+      "bytes": 31228
+    },
+    "034-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-034/score-1100.svg",
+      "sha256": "800cd03cc9d3c896df59d7c2f0972647a4a105728ffeda54000c95ea90fc4bbe",
+      "bytes": 158672
+    },
+    "034-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-034",
+      "sha256": "18eeb1772f17c7a53f9ab4d765d342efd3c80e2a600253733c0f82a6edccd806",
+      "bytes": 17046
+    },
+    "035-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-035/notes.json",
+      "sha256": "64894acf2fbdf0b85738db21796f502365a0bcb22db9551d7a323ddace386f75",
+      "bytes": 10038
+    },
+    "035-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-035/score-1100.svg",
+      "sha256": "3fb9c2142ffa7ea97ca2a7aeb8a2732f1a5f319261b5faa4f41a88bccf6ef380",
+      "bytes": 55152
+    },
+    "035-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-035",
+      "sha256": "10093fb46924e38a1f9d90b541b731d59ec80fbd8abe92dbaac8e685666bb58b",
+      "bytes": 16764
+    },
+    "036-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-036/notes.json",
+      "sha256": "8f44e60967bf93b02b82d07922d7e2472fc1b29f8d90c4fdc6c79cc715162c8c",
+      "bytes": 10314
+    },
+    "036-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-036/score-1100.svg",
+      "sha256": "9f9fa40db70ed3dba96f86a80aa6f84442fd9e3141b0574265f520ac82146318",
+      "bytes": 55236
+    },
+    "036-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-036",
+      "sha256": "0386f26834f6f0c035ac88a169f5ce3f9a9bba8b1164a997273b88c9f8c038c2",
+      "bytes": 16764
+    },
+    "037-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-037/notes.json",
+      "sha256": "921c273a1f281855d7d73a1e9ded77b40e7952d0ee809097fb7af90745af68e2",
+      "bytes": 10739
+    },
+    "037-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-037/score-1100.svg",
+      "sha256": "d15f9f2e3afadc5ad5866455eae9fff56d6d5d492ca5fc67700abde186c81c7c",
+      "bytes": 62253
+    },
+    "037-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-037",
+      "sha256": "d9a87b158c241c2121619f694359db9678fd040db2caefb52a74ca0bd62ef889",
+      "bytes": 16762
+    },
+    "039-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-039/notes.json",
+      "sha256": "e72a291c02db1afa9f50ad8c3451fd144bab9a8e48cb930fdf801d47eae4cef9",
+      "bytes": 5332
+    },
+    "039-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-039/score-1100.svg",
+      "sha256": "77d28b96f879c92c667476587358e5943dac5e7920f77b6138e68e73452344b1",
+      "bytes": 48139
+    },
+    "039-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-039",
+      "sha256": "4810c5fa1283c18bb3aa9cd8ee8d95ea08b5d8112643663fe4ce747f04be450e",
+      "bytes": 16676
+    },
+    "040-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-040/notes.json",
+      "sha256": "ff2b0d0235b88a974658b1fe1dc9f564bad3e62221a2016415b7f13662d25101",
+      "bytes": 10184
+    },
+    "040-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-040/score-1100.svg",
+      "sha256": "4c49df90567279c20c05ba5a516618836ba5003cc6f152ff6424e74180818116",
+      "bytes": 57504
+    },
+    "040-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-040",
+      "sha256": "f4a6c3993d517b315facae5b4570fe97f17c34d7f3440fc707954e3ccd2aa8b2",
+      "bytes": 16774
+    },
+    "041-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-041/notes.json",
+      "sha256": "72c62e04f2aead5b2cdf8fa3a9434e98f143ca1f4b55b92e900f0928f7f2a25c",
+      "bytes": 27132
+    },
+    "041-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-041/score-1100.svg",
+      "sha256": "77a3e72dcbfeeb197905e5c1d8e99078c2973cd5ae01e84280b7293c5c2df676",
+      "bytes": 124917
+    },
+    "041-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-041",
+      "sha256": "26ee75ecd072f17e3063aaebb1553d5b3daeccb3c778c6f06bd82e9adc7f2a97",
+      "bytes": 17056
+    },
+    "042-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-042/notes.json",
+      "sha256": "d638724a47a23d8903d3b8707acae5fc8cdeaea3afc9819a156711617a835fb9",
+      "bytes": 16462
+    },
+    "042-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-042/score-1100.svg",
+      "sha256": "b5b925f1a075fe5ee4ac14bd0bc173b08cac157dec86267e27001a2086917083",
+      "bytes": 102229
+    },
+    "042-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-042",
+      "sha256": "c9394de38194121b3df71d44f15b15d83bcd2b1e58201440415a85d157ba2221",
+      "bytes": 17056
+    },
+    "043-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-043/notes.json",
+      "sha256": "def867b6f7724aaaf35c2eed18235848ec4cd744373ed3236c8691d66616ab8c",
+      "bytes": 21178
+    },
+    "043-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-043/score-1100.svg",
+      "sha256": "0075f8041c021ce564649fac495d0a581d5a78ddffc68d23ebb854fc595dd47f",
+      "bytes": 118075
+    },
+    "043-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-043",
+      "sha256": "a4bb3651ad1237e08b9d49357010c64dbbe50ce67ef2bd8abdc2fda21af7cd4b",
+      "bytes": 17053
+    },
+    "061-notes.json": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-061/notes.json",
+      "sha256": "e03a6c806f44ddbc0d7121b953b40350dd9a03b98314890aaa1fc4b7265529d0",
+      "bytes": 6969
+    },
+    "061-score.svg": {
+      "url": "https://ranote.zzxxccvv.com/scores/beyer-op101-061/score-1100.svg",
+      "sha256": "f201f9a6484a1c6b534be81d23f2153d672a89e1f1b352188efe016b2618b3bd",
+      "bytes": 62710
+    },
+    "061-page.html": {
+      "url": "https://ranote.zzxxccvv.com/en/s/beyer-op101-061",
+      "sha256": "585a663c7907e1f6f5abc05d156a6613b2f7d746a7fe47aa575f863bfc72e10f",
+      "bytes": 16671
+    }
+  }
+}

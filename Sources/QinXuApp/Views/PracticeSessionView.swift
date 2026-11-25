@@ -223,15 +223,22 @@ struct PracticeSessionView: View {
                     Label("键盘指引", systemImage: "pianokeys").font(.system(size: 13, weight: .medium))
                     Spacer()
                     Label("待弹", systemImage: "circle").foregroundStyle(QinXuTheme.teal)
-                    Label("按下", systemImage: "circle.fill").foregroundStyle(QinXuTheme.accent)
+                    Label("应保持", systemImage: "circle.fill").foregroundStyle(QinXuTheme.accent.opacity(0.5))
+                    Label(model.inputMode.isMicrophone ? "声音" : "按下", systemImage: "circle.fill")
+                        .foregroundStyle(QinXuTheme.accent)
                 }.font(.system(size: 11))
             }
-            PianoKeyboardView(expectedPitches: Set(model.engine.expectedNotes.map(\.midi)),
-                              heldPitches: model.engine.heldPitches, hand: model.hand,
+            PianoKeyboardView(pitchRange: PianoKeyboardRange.forScore(model.selectedScore, hand: model.hand),
+                              expectedPitches: Set(model.engine.expectedNotes.map(\.midi)),
+                              heldPitches: model.engine.heldPitches,
+                              sustainedPitches: model.sustainedPitches,
                               interactive: model.inputMode == .touch, press: model.press,
-                              release: model.release, compact: compact)
-            if !compact {
-                Text(model.inputMode == .touch ? "触屏按住可延音，松开即释放；按键暂不发声。" : "键盘显示待弹与已按下的音符。")
+                              release: model.release, representsSound: model.inputMode.isMicrophone, compact: compact)
+            if model.inputMode.isMicrophone {
+                Text(compact ? "绿色待弹 · 浅橙应保持 · 橙色声音；余音不是新的按键。" : "整首音域固定，可横向滑动。浅橙色延音按谱面时值提示；余音不是新的按键。")
+                    .font(.system(size: compact ? 9 : 11)).foregroundStyle(QinXuTheme.muted)
+            } else if !compact {
+                Text(model.inputMode == .touch ? "整首音域固定；可横向滑动。触屏按住可延音，松开即释放；按键暂不发声。" : "整首音域固定；可横向滑动。键盘显示待弹与已按下的音符。")
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
             }
         }

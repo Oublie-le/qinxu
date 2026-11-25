@@ -11,6 +11,7 @@ struct ScoreDetailView: View {
 
     private var isFavorite: Bool { model.favoriteScoreIDs.contains(score.id) }
     private var isOriginal: Bool { DemoScores.all.contains { $0.id == score.id } }
+    private var sourceTitle: String { BundledPracticeLibrary.ids.contains(score.id) ? "内置教材" : isOriginal ? "原创样谱" : "已导入" }
     private var hands: String {
         let right = score.notes.contains { $0.staff == 1 }
         let left = score.notes.contains { $0.staff == 2 }
@@ -104,7 +105,7 @@ struct ScoreDetailView: View {
                 }
                 HStack(spacing: 7) {
                     tag(hands, symbol: "hand.raised")
-                    tag(isOriginal ? "原创样谱" : "已导入", symbol: isOriginal ? "music.note" : "doc")
+                    tag(sourceTitle, symbol: isOriginal ? "music.note" : "doc")
                 }
             }
         }
@@ -115,7 +116,7 @@ struct ScoreDetailView: View {
         tag("\(score.beatsPerMeasure)/\(score.beatUnit) 拍", symbol: "timer")
         tag("\(Int(score.tempoBPM)) BPM", symbol: "metronome")
         tag(hands, symbol: "hand.raised")
-        tag(isOriginal ? "原创样谱" : "已导入", symbol: isOriginal ? "music.note" : "doc")
+        tag(sourceTitle, symbol: isOriginal ? "music.note" : "doc")
     }
 
     private func tag(_ title: String, symbol: String) -> some View {

@@ -13,8 +13,8 @@ struct BundledBook: Identifiable, Hashable {
     let sourceURL: URL
 
     static let beyer = BundledBook(
-        id: "beyer-op101", title: "拜厄 Op.101", composer: "Ferdinand Beyer",
-        edition: "Edition Peters · Adolf Ruthardt 编订 · 1895", pageCount: 88,
+        id: "beyer-op101", title: "拜厄钢琴基本教程", composer: "费迪南德·拜厄",
+        edition: "彼得斯出版社 · 1895 年公版", pageCount: 88,
         filename: "Beyer-Op101",
         sourceURL: URL(string: "https://commons.wikimedia.org/wiki/File:Vorschule_im_Klavierspiel,_Op.101_(IA_imslp-im-klavierspiel-op101-beyer-ferdinand).pdf")!
     )

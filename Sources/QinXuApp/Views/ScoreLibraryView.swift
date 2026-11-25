@@ -21,10 +21,11 @@ struct ScoreLibraryView: View {
             switch filter {
             case .all: break
             case .original: if !demoIDs.contains(score.id) { return false }
-            case .imported: if demoIDs.contains(score.id) { return false }
+            case .imported: if BundledPracticeLibrary.allBundledIDs.contains(score.id) { return false }
             case .favorites: if !model.favoriteScoreIDs.contains(score.id) { return false }
             case .books: return false
             }
+            if !favoritesOnly && filter == .all && text.isEmpty && BundledPracticeLibrary.ids.contains(score.id) { return false }
             return text.isEmpty || score.title.localizedStandardContains(text)
                 || score.composer.localizedStandardContains(text)
         }
@@ -52,7 +53,9 @@ struct ScoreLibraryView: View {
         .foregroundStyle(QinXuTheme.ink)
         .onChange(of: favoritesOnly) { _, _ in filter = .all }
         .sheet(item: $readingBook) { book in
-            BookReaderView(book: book, compact: compact)
+            BookPracticeView(book: book, compact: compact,
+                             onSelect: { id in readingBook = nil; onSelect(id) },
+                             onPractice: { id in readingBook = nil; onPractice(id) })
         }
     }
 
@@ -234,38 +237,39 @@ private struct BookLibraryCard: View {
                             .frame(width: 28, height: 28)
                             .background(QinXuTheme.paper, in: RoundedRectangle(cornerRadius: 7)).padding(4)
                     }
-                Text(book.title + " · 公版").font(.system(size: 12, weight: .medium)).lineLimit(1)
-                Label("\(book.pageCount) 页 · 阅读谱", systemImage: "doc.text")
+                Text(book.title).font(.system(size: 12, weight: .medium)).lineLimit(1)
+                Label("中文练习谱", systemImage: "music.note.list")
                     .font(.system(size: 10)).foregroundStyle(QinXuTheme.muted).lineLimit(1)
-                Text("暂不自动判音").font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
+                Text("\(BundledPracticeLibrary.beyer.scores.count) 项练习").font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("阅读：\(book.title)，公版，\(book.pageCount) 页，暂不自动判音")
+        .accessibilityLabel("打开教材：\(book.title)，中文练习谱，\(BundledPracticeLibrary.beyer.scores.count) 项练习")
         .accessibilityIdentifier("library.book." + book.id)
     }
 }
 
 private struct BookCoverView: View {
     let book: BundledBook
-    @State private var image: Image?
 
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                QinXuTheme.paper
-                if let image {
-                    image.resizable().scaledToFit()
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                } else {
-                    Image(systemName: "book.closed").font(.system(size: 24)).foregroundStyle(QinXuTheme.muted)
-                }
+            ZStack(alignment: .topLeading) {
+                Color(red: 0.88, green: 0.90, blue: 0.84)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("拜厄").font(.system(size: geometry.size.width < 100 ? 23 : 30, weight: .semibold, design: .serif))
+                    Text("钢琴基本教程").font(.system(size: geometry.size.width < 100 ? 8 : 11))
+                    Rectangle().fill(QinXuTheme.teal.opacity(0.3)).frame(height: 1).padding(.top, 4)
+                    Text("作品 101").font(.system(size: 9)).foregroundStyle(QinXuTheme.muted)
+                    Spacer(minLength: 4)
+                    Image(systemName: "pianokeys").font(.system(size: 21)).foregroundStyle(QinXuTheme.teal)
+                    Text("中文练习谱").font(.system(size: 9))
+                }.padding(geometry.size.width < 100 ? 10 : 14)
             }
+            .foregroundStyle(QinXuTheme.ink)
             .clipShape(RoundedRectangle(cornerRadius: 7))
             .overlay(RoundedRectangle(cornerRadius: 7).stroke(QinXuTheme.line, lineWidth: 1))
-        }
-        .task(id: book.id) { image = book.coverImage() }
-        .accessibilityHidden(true)
+        }.accessibilityHidden(true)
     }
 }
 

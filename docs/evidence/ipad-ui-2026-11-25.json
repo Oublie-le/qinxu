@@ -1,0 +1,49 @@
+{
+  "date": "2026-11-25",
+  "version": "0.1.0 development",
+  "device": {
+    "modelReportedByUser": "iPad (9th generation)",
+    "osReportedByUser": "iPadOS 18.0.1",
+    "execution": "Connected physical iPad, XCTest UI automation"
+  },
+  "sharedVerification": {
+    "coreTests": 65,
+    "appTests": 42,
+    "result": "passed",
+    "iosSimulatorTargetBuild": "passed"
+  },
+  "uiTests": {
+    "result": "Passed",
+    "totalTestCount": 6,
+    "passedTests": 6,
+    "failedTests": 0,
+    "skippedTests": 0
+  },
+  "localResultBundle": ".local-build/results/DeviceTextbooks.jYzHor/QinXu.xcresult",
+  "beyerManifestSHA256": "87c09288f880fd92af0283c7d69bc7a3cfa4030873fcc9468c10f046a85a8ea2",
+  "beyerLessonCount": 59,
+  "coverage": [
+    "Beyer lesson to touch C5 scoring and stable keyboard frame",
+    "Original PDF page navigation",
+    "Favorites and search with navigation pause",
+    "Empty history",
+    "Selection and rotation",
+    "Touch scoring, pause and restart"
+  ],
+  "normalLaunchAfterTesting": "devicectl success",
+  "strictCodeSignatureVerification": "passed",
+  "excluded": [
+    "Physical piano MIDI",
+    "Microphone note accuracy and pedal behavior",
+    "Physical microphone sustained-note experience",
+    "Complete textbook performance"
+  ],
+  "fullScreenCaptureFollowup": {
+    "result": "passed",
+    "testCount": 1,
+    "test": "testBeyerLessonOpensRealPracticeAndKeepsKeyboardGeometry",
+    "captureAPI": "XCUIScreen.main.screenshot",
+    "localResultBundle": ".local-build/results/DeviceCapture.V0Upmg/QinXu.xcresult",
+    "reason": "Application-frame captures had rotation cropping; full device captures inspected successfully."
+  }
+}

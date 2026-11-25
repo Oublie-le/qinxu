@@ -38,8 +38,9 @@ import QinXuCore
 
     @Test(arguments: [393, 834, 1194])
     func keyboardRendersExpectedAndHeldNotes(width: Int) throws {
-        let view = PianoKeyboardView(expectedPitches: [60, 64, 67], heldPitches: [64],
-                                     hand: .both, interactive: true, press: { _ in }, release: { _ in })
+        let view = PianoKeyboardView(pitchRange: 48...84, expectedPitches: [60, 64, 67], heldPitches: [64],
+                                     sustainedPitches: [60, 63],
+                                     interactive: true, press: { _ in }, release: { _ in })
             .frame(width: CGFloat(width), height: 124)
             .background(QinXuTheme.paper)
         try render(view, name: "keyboard-\(width)", width: width, height: 124)
@@ -62,6 +63,16 @@ import QinXuCore
             .frame(width: CGFloat(width - 63), height: CGFloat(height))
             .background(QinXuTheme.background)
         try render(detail, name: "detail-\(width)", width: width - 63, height: height)
+        model.selectScore("demo-chords")
+        model.togglePlayback()
+        for pitch in [48, 52, 55, 60] { model.press(pitch) }
+        for pitch in [48, 52, 55, 60] { model.release(pitch) }
+        #expect(model.sustainedPitches.contains(48))
+        #expect(model.engine.expectedNotes.map(\.midi) == [64])
+        try render(practice, name: "practice-sustain-\(width)", width: width - 63, height: height)
+        let lessons = BookPracticeView(book: .beyer, compact: compact, onSelect: { _ in }, onPractice: { _ in })
+            .frame(width: CGFloat(width - 63), height: CGFloat(height))
+        try render(lessons, name: "beyer-lessons-\(width)", width: width - 63, height: height)
     }
 
     @Test(arguments: [667, 1194])

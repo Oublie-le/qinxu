@@ -27,7 +27,7 @@ final class MIDIService: ObservableObject {
         guard deviceAccessEnabled else {
             status = "MIDI 设备访问已停用"; return
         }
-        let result = MIDIClientCreateWithBlock("QinXu" as CFString, &client) { [weak self] _ in
+        let result = MIDIClientCreateWithBlock("琴序" as CFString, &client) { [weak self] _ in
             Task { @MainActor in self?.refresh() }
         }
         guard result == noErr else { status = "MIDI 初始化失败（\(result)）"; return }
@@ -64,7 +64,7 @@ final class MIDIService: ObservableObject {
         var timebase = mach_timebase_info_data_t()
         mach_timebase_info(&timebase)
         let secondsPerTick = Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000
-        let result = MIDIInputPortCreateWithBlock(client, "Piano input" as CFString, &port) { [weak self] list, _ in
+        let result = MIDIInputPortCreateWithBlock(client, "钢琴输入" as CFString, &port) { [weak self] list, _ in
             // MIDIPacketList is variable length. Walk the original pointer, never a copied first packet.
             let offset = MemoryLayout<MIDIPacketList>.offset(of: \.packet)!
             var packet = UnsafeRawPointer(list).advanced(by: offset).assumingMemoryBound(to: MIDIPacket.self)

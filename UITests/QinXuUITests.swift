@@ -124,6 +124,8 @@ final class QinXuUITests: XCTestCase {
         let book = element("library.book.beyer-op101", in: app)
         XCTAssertTrue(book.waitForExistence(timeout: 10))
         book.tap()
+        XCTAssertTrue(element("textbook.title", in: app).waitForExistence(timeout: 10))
+        element("textbook.source", in: app).tap()
         XCTAssertTrue(element("book.title", in: app).waitForExistence(timeout: 10))
         XCTAssertFalse(element("book.unavailable", in: app).exists)
         let page = element("book.pageInput", in: app)
@@ -134,7 +136,28 @@ final class QinXuUITests: XCTestCase {
         expect(page, "value == %@", "1")
         capture(app, name: "beyer-original-book-reader")
         element("book.close", in: app).tap()
+        element("textbook.close", in: app).tap()
         expect(element("library.search", in: app), "hittable == true")
+    }
+
+    @MainActor
+    func testBeyerLessonOpensRealPracticeAndKeepsKeyboardGeometry() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.book.beyer-op101", in: app).tap()
+        let firstLesson = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "textbook.practice.")).firstMatch
+        XCTAssertTrue(firstLesson.waitForExistence(timeout: 10))
+        firstLesson.tap()
+        expect(element("practice.score.title", in: app), "label CONTAINS %@", "拜厄")
+        let c5 = element("keyboard.key.72", in: app)
+        reveal(c5, in: app, towardBottom: true)
+        let before = c5.frame
+        element("practice.play", in: app).tap()
+        c5.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
+        expect(element("practice.count.correct", in: app), "value == %@", "1")
+        XCTAssertEqual(c5.frame.minX, before.minX, accuracy: 1)
+        XCTAssertEqual(c5.frame.width, before.width, accuracy: 1)
+        capture(app, name: "beyer-chinese-lesson-real-practice")
     }
 
     @MainActor
@@ -190,7 +213,9 @@ final class QinXuUITests: XCTestCase {
 
     @MainActor
     private func capture(_ app: XCUIApplication, name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
+        // Capture the device surface, including rotation, rather than cropping
+        // an application frame whose orientation may differ from the image.
+        let attachment = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         attachment.name = name
         attachment.lifetime = .keepAlways
         add(attachment)

@@ -109,7 +109,7 @@ struct InputConnectionView: View {
             Text("在 iPad 上离线分析约 2 秒的音频窗口，仅用于识谱等待。首次反馈需等待缓冲，之后也有识别延迟；不评节奏或松键时长。请先不踩踏板，以较慢速度弹奏。")
             Text("使用 Spotify Basic Pitch 多音模型；不根据曲谱补出未听到的音。iPad 9 与电钢琴扬声器的准确率、延迟尚待实测。")
             if let inference = polyphonic.inferenceMilliseconds, let delay = polyphonic.analysisDelayMilliseconds {
-                Text("最近一次推理 \(Int(inference)) ms · 分析滞后 \(Int(delay)) ms")
+                Text("最近一次推理 \(Int(inference)) 毫秒 · 分析滞后 \(Int(delay)) 毫秒")
                     .monospacedDigit().accessibilityIdentifier("devices.polyphonicLatency")
             }
             if BasicPitchModel.resourceURL == nil {

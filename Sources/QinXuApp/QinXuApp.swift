@@ -24,6 +24,7 @@ struct QinXuApp: App {
     var body: some Scene {
         WindowGroup {
             PracticeHomeView(model: model)
+                .environment(\.locale, Locale(identifier: "zh_Hans_CN"))
                 .preferredColorScheme(.light)
                 #if os(macOS)
                 .frame(minWidth: 920, minHeight: 700)

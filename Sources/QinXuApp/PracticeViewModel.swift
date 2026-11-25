@@ -35,6 +35,7 @@ final class PracticeViewModel: ObservableObject {
     @Published var countdown: Int?
     @Published var metronomeEnabled = true
     @Published private(set) var isStartingInput = false
+    @Published private(set) var sustainedPitches: Set<Int> = []
     private var countdownEnd: TimeInterval?
     private var loopRestartAt: TimeInterval?
     private var sessionSaved = false
@@ -55,7 +56,7 @@ final class PracticeViewModel: ObservableObject {
         self.clock = clock
         self.metronome = Metronome(deviceAccessEnabled: deviceAccessEnabled)
         let library = storage.load()
-        let all = DemoScores.all + library.scores
+        let all = DemoScores.all + BundledPracticeLibrary.scores + library.scores
         scores = all
         let initial = all.first(where: { $0.id == library.lastScoreID }) ?? all[0]
         selectedScoreID = initial.id; tempo = initial.tempoBPM
@@ -69,7 +70,7 @@ final class PracticeViewModel: ObservableObject {
         let presentation = presentationStore.load()
         favoriteScoreIDs = presentation.snapshot.favoriteScoreIDs
         scoreCoverData = presentation.snapshot.scoreCoverData
-        let loadErrors = [library.error, presentation.error].compactMap { $0 }
+        let loadErrors = [library.error, presentation.error, BundledPracticeLibrary.beyer.error].compactMap { $0 }
         if !loadErrors.isEmpty { errorMessage = loadErrors.joined(separator: "\n") }
         midi.onEvent = { [weak self] event, time in
             guard let self, self.inputMode == .midi else { return }
@@ -87,7 +88,7 @@ final class PracticeViewModel: ObservableObject {
         midi.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         microphone.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         polyphonicMicrophone.$isActive.dropFirst().sink { [weak self] active in
-            guard let self, !active, self.inputMode == .microphonePolyphonic, self.engine.isRunning else { return }
+            guard let self, !active, self.inputMode == .microphonePolyphonic, self.isPlaying else { return }
             self.stopTransport()
         }.store(in: &cancellables)
         midi.$connected.dropFirst().sink { [weak self] connected in
@@ -146,6 +147,7 @@ final class PracticeViewModel: ObservableObject {
                                 measureRange: loopEnabled ? loopStart...loopEnd : nil,
                                 inputLagTolerance: inputMode == .microphonePolyphonic ? 3 : 0.25,
                                 evaluatesNoteDuration: inputMode != .microphonePolyphonic)
+        sustainedPitches = []
         sessionSaved = false; lastMetronomeBeat = nil
     }
 
@@ -222,8 +224,7 @@ final class PracticeViewModel: ObservableObject {
             var score = try MusicXMLParser().parse(data: data)
             // Each import is independent; imported notes keep their stable IDs within this score.
             score.id = UUID().uuidString
-            let demoIDs = Set(DemoScores.all.map(\.id))
-            let imported = scores.filter { !demoIDs.contains($0.id) }
+            let imported = scores.filter { !BundledPracticeLibrary.allBundledIDs.contains($0.id) }
             guard imported.count < 100 else { throw LibraryError.message("当前最多保存 100 首导入曲谱。") }
             // A failed disk write must not replace the current exercise with an unsaved import.
             try storage.save(scores: imported + [score], history: history, lastScoreID: score.id)
@@ -273,6 +274,7 @@ final class PracticeViewModel: ObservableObject {
         let now = clock()
         engine.pause(at: now)
         engine.receive(.allNotesOff, at: now)
+        sustainedPitches = []
         // Pausing on the final beat may complete the engine. Save it, but never auto-restart.
         finishIfNeeded(at: now, allowLoopRestart: false)
         microphone.stop()
@@ -281,13 +283,21 @@ final class PracticeViewModel: ObservableObject {
     }
 
     private func receive(_ event: NoteInput, at time: TimeInterval) {
-        guard countdownEnd == nil, loopRestartAt == nil else { return }
+        guard countdownEnd == nil else { return }
+        if loopRestartAt != nil, case .on(let pitch, let velocity) = event {
+            // Loop rests reject fresh attacks, but a velocity-zero release still
+            // needs to clear the physical/acoustic state shown by the keyboard.
+            if velocity <= 0 { engine.receive(.off(pitch: pitch), at: time) }
+            return
+        }
         engine.receive(event, at: time)
+        updateSustainGuidance(at: clock())
         finishIfNeeded(at: clock())
     }
 
     func tick() {
         let now = clock()
+        updateSustainGuidance(at: now)
         if let end = countdownEnd {
             if now >= end {
                 countdownEnd = nil; countdown = nil; lastMetronomeBeat = nil
@@ -308,6 +318,7 @@ final class PracticeViewModel: ObservableObject {
             loopRestartAt = nil
             engine.reset(); sessionSaved = false; lastMetronomeBeat = nil
             engine.start(at: now)
+            updateSustainGuidance(at: now)
         }
         if engine.isRunning {
             engine.tick(at: now)
@@ -322,13 +333,20 @@ final class PracticeViewModel: ObservableObject {
         finishIfNeeded(at: now)
     }
 
+    private func updateSustainGuidance(at time: TimeInterval) {
+        let next = engine.sustainedPitches(at: time)
+        if sustainedPitches != next { sustainedPitches = next }
+    }
+
     private func finishIfNeeded(at now: TimeInterval, allowLoopRestart: Bool = true) {
         guard engine.isFinished, !sessionSaved, engine.correctCount + engine.wrongCount + engine.missedCount > 0 else { return }
         sessionSaved = true
         history.insert(engine.summary(), at: 0)
         if history.count > 200 { history = Array(history.prefix(200)) }
         saveLibrary()
-        if loopEnabled && allowLoopRestart { loopRestartAt = now + 1 }
+        if loopEnabled && allowLoopRestart {
+            loopRestartAt = max(now + 1, engine.sustainGuidanceEndTime ?? now)
+        }
         else {
             metronome.stop()
             if inputMode == .microphone { microphone.stop() }
@@ -363,7 +381,7 @@ final class PracticeViewModel: ObservableObject {
 
     private func saveLibrary() {
         do {
-            try storage.save(scores: scores.filter { !DemoScores.all.map(\.id).contains($0.id) }, history: history, lastScoreID: selectedScoreID)
+            try storage.save(scores: scores.filter { !BundledPracticeLibrary.allBundledIDs.contains($0.id) }, history: history, lastScoreID: selectedScoreID)
         } catch { errorMessage = "保存练习数据失败：\(error.localizedDescription)" }
     }
 }

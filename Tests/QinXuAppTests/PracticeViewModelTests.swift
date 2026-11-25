@@ -158,6 +158,46 @@ import QinXuCore
         #expect(restored.selectedScoreID == model.selectedScoreID && restored.history.count == 1)
     }
 
+    @Test func waitingLoopKeepsFinalLongNoteUntilItsWrittenEnd() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        var long = score()
+        long.id = "long-loop"
+        long.notes = [.init(id: "whole", midi: 60, startBeat: 0, durationBeats: 4)]
+        long.measures = [.init(number: 1, startBeat: 0, durationBeats: 4)]
+        model.scores.append(long); model.selectScore(long.id)
+        model.loopEnabled = true; model.reconfigure(); model.togglePlayback()
+        clock.now = 0.1; model.press(60); model.release(60)
+        #expect(model.engine.isFinished && model.sustainedPitches == [60])
+        #expect(model.engine.heldPitches.isEmpty)
+        model.press(62)
+        #expect(model.engine.heldPitches.isEmpty && model.engine.wrongCount == 0)
+        clock.now = 2; model.tick()
+        #expect(model.engine.isFinished && model.sustainedPitches == [60])
+        clock.now = 4.1; model.tick()
+        #expect(model.engine.isRunning && !model.engine.isFinished)
+        #expect(model.sustainedPitches.isEmpty && model.engine.correctCount == 0)
+        #expect(model.history.count == 1)
+    }
+
+    @Test func microphoneStoppingDuringLoopTailCannotRestartTheEngine() throws {
+        let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
+        let clock = Clock(), model = try makeModel(in: folder, clock: clock)
+        var long = score()
+        long.id = "microphone-long-loop"
+        long.notes = [.init(id: "whole", midi: 60, startBeat: 0, durationBeats: 4)]
+        model.scores.append(long); model.selectScore(long.id)
+        model.loopEnabled = true; model.setInputMode(.microphonePolyphonic)
+        model.engine.start(at: 0)
+        clock.now = 0.1
+        model.polyphonicMicrophone.onEvent?(.on(pitch: 60, velocity: 80), 0.1)
+        #expect(model.engine.isFinished && model.isPlaying)
+        model.polyphonicMicrophone.stop()
+        #expect(!model.isPlaying && model.sustainedPitches.isEmpty)
+        clock.now = 10; model.tick()
+        #expect(!model.engine.isRunning)
+    }
+
     @Test func failedImportWritePreservesCurrentSelectionAndSession() throws {
         let folder = directory(); defer { try? FileManager.default.removeItem(at: folder) }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

@@ -29,6 +29,9 @@ public struct PracticeEngine {
     private var pedalDown = false
     private var candidates: [Int: Candidate] = [:]
     private var durationChecks: [Int: DurationCheck] = [:]
+    // A visual reminder of the written duration, independent from key release,
+    // acoustic decay and which onset the waiting evaluator expects next.
+    private var holdGuideEnds: [Int: Double] = [:]
     private let onsetWindow: Double = 0.30
     private let maximumInputLag: Double
     private let evaluatesNoteDuration: Bool
@@ -89,6 +92,19 @@ public struct PracticeEngine {
         return groups.first { $0.contains { !isResolved($0) } } ?? []
     }
 
+    /// Uses the same capture clock as evaluation. A buffered microphone result
+    /// must not restart a whole note's written duration when it is delivered.
+    public func sustainedPitches(at time: TimeInterval) -> Set<Int> {
+        guard time.isFinite, let start = runStartTime, time >= start else { return [] }
+        let elapsed = runStartElapsed + time - start
+        return Set(holdGuideEnds.filter { $0.value > elapsed + 0.000001 }.map(\.key))
+    }
+
+    public var sustainGuidanceEndTime: TimeInterval? {
+        guard let start = runStartTime, let end = holdGuideEnds.values.max() else { return nil }
+        return start + end - runStartElapsed
+    }
+
     public mutating func start(at time: TimeInterval) {
         guard time.isFinite, !isFinished, !isRunning else { return }
         lastTime = time
@@ -106,6 +122,7 @@ public struct PracticeEngine {
         candidates.removeAll()
         // A hold interrupted by a pause has no meaningful duration verdict.
         durationChecks.removeAll()
+        holdGuideEnds.removeAll()
         runStartTime = nil
         if !isFinished { feedback = "已暂停，继续后从当前位置练习" }
     }
@@ -152,6 +169,7 @@ public struct PracticeEngine {
             heldPitches.removeAll()
             candidates.removeAll()
             durationChecks.removeAll()
+            holdGuideEnds.removeAll()
             pedalDown = false
         case .off(let pitch):
             heldPitches.remove(pitch)
@@ -186,6 +204,7 @@ public struct PracticeEngine {
         heldPitches.removeAll()
         candidates.removeAll()
         durationChecks.removeAll()
+        holdGuideEnds.removeAll()
         pedalDown = false
         correctCount = 0
         wrongCount = 0
@@ -237,6 +256,7 @@ public struct PracticeEngine {
             guard let candidate = candidates[pitch] else { continue }
             let beats = notes.filter { $0.midi == pitch }.map(\.durationBeats).max() ?? 0
             let check = DurationCheck(onset: candidate.onset, expected: beats * 60 / tempoBPM, usedPedal: candidate.usedPedal)
+            holdGuideEnds[pitch] = candidate.onset + check.expected
             if let release = candidate.release { reportDuration(pitch: pitch, check: check, releasedAt: release) }
             else { durationChecks[pitch] = check }
         }
@@ -280,6 +300,7 @@ public struct PracticeEngine {
         correctCount += sameOnset.count
         durationChecks[pitch] = DurationCheck(onset: inputSeconds,
             expected: (sameOnset.map(\.durationBeats).max() ?? 0) * 60 / tempoBPM, usedPedal: pedalDown)
+        holdGuideEnds[pitch] = inputSeconds + (sameOnset.map(\.durationBeats).max() ?? 0) * 60 / tempoBPM
         feedback = verdict == .early ? "音高正确，起音稍早" : (verdict == .late ? "音高正确，起音稍晚" : "音高与起音正确")
     }
 

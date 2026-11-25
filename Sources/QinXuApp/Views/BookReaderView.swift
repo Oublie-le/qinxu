@@ -58,13 +58,14 @@ struct BookReaderView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(book.title + " · 公版").font(.system(size: compact ? 16 : 20, weight: .semibold))
                     .accessibilityIdentifier("book.title")
-                Text("阅读谱，暂不自动判音").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
+                Text("原版扫描谱，暂不自动判音").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
             }
             Spacer(minLength: 8)
             Menu {
                 Text(book.composer)
                 Text(book.edition)
-                Text("88 页 · 德 / 英 / 法文旧版")
+                Text("\(book.pageCount) 页 · 德文、英文、法文旧版")
+                Text("原版扫描页尚未译成中文")
                 Text("公版原谱，不是上海音乐出版社版本")
                 Link("查看来源与公版说明", destination: book.sourceURL)
             } label: {
