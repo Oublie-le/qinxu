@@ -79,7 +79,7 @@ xcodebuild -project QinXu.xcodeproj -scheme QinXu \
   -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
 ```
 
-2026-11-25 本轮 `verify.sh --require-ios` 通过 **154 项测试（91 项核心、63 项应用）**、iOS Simulator 目标构建及工程生成一致性检查。此前 iPad 的 11 条 UI 路径均有通过证据：首轮 9 过/2 失败，修正测试等待和过时文案后两项定向复测通过；原始失败记录保留。本轮新增全局节拍器和应用图标的真机复查尚待设备重新连接。这些结果不代替实琴准确率、物理麦克风长音或节拍声学验收，完整记录见 [docs/STATUS.md](docs/STATUS.md)。
+2026-11-26 开发预览验证：`verify.sh --require-ios` **154 项通过（91 核心、63 应用）**，iOS Simulator 构建通过；本机 iPhone 完整 **12/12 UI 测试通过**。实体 iPad 的 12 条路径均有通过证据（首轮 10/12，修正后定向 2/2），已恢复正常曲库启动。远程共享验证与 iPad 12/12 通过，iPhone 11/12，单项搜索等待超时仍在复核；`main` 暂保留此前基线。完整结果和实际边界见 [docs/STATUS.md](docs/STATUS.md)。
 
 只有 Command Line Tools 时，验证脚本会明确标记 iOS 构建为 SKIP；加 `--require-ios` 则缺少 Xcode 也会返回失败。CI 配置在 `.github/workflows/verify.yml`：执行共享代码测试和 iOS 编译，并分别在 iPhone、iPad 模拟器执行 UI 测试；结果与截图保存在每次运行的附件中。实际验收结果见 `docs/STATUS.md`。
 

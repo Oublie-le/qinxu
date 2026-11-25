@@ -1,0 +1,165 @@
+{
+  "date": "2026-11-25",
+  "version": "0.1.0 development",
+  "scope": "Global metronome configuration, native UI and local device verification; source-only development preview",
+  "sharedVerification": {
+    "command": "bash scripts/verify.sh --require-ios",
+    "coreTests": 91,
+    "appTests": 63,
+    "totalTests": 154,
+    "result": "passed",
+    "iosSimulatorTargetBuild": "passed",
+    "projectAndResourcesCheck": "passed",
+    "localLog": "/private/tmp/qinxu-ad6fe09-verify.log",
+    "commit": "ad6fe09"
+  },
+  "localIPadSimulator": {
+    "initial": {
+      "result": "Failed",
+      "totalTestCount": 12,
+      "passedTests": 10,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "localResultBundle": ".local-build/results/iPad.xkL1yA/QinXu.xcresult"
+    },
+    "targetedRetry": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "localResultBundle": ".local-build/results/SimulatorGlobalRetry.HabPMD/QinXu.xcresult"
+    },
+    "uniqueUITestPathsWithPassingEvidence": 12
+  },
+  "physicalIPad": {
+    "modelReportedByUser": "iPad (9th generation)",
+    "osReportedByUser": "iPadOS 18.0.1",
+    "initial": {
+      "result": "Failed",
+      "totalTestCount": 12,
+      "passedTests": 10,
+      "failedTests": 2,
+      "skippedTests": 0,
+      "localResultBundle": ".local-build/results/DeviceGlobal.bxx16Z/QinXu.xcresult"
+    },
+    "targetedRetry": {
+      "result": "Passed",
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "skippedTests": 0,
+      "localResultBundle": ".local-build/results/DeviceGlobalRetry.ogz2iJ/QinXu.xcresult"
+    },
+    "uniqueUITestPathsWithPassingEvidence": 12,
+    "strictCodeSignatureVerification": "passed",
+    "normalUserDataLaunchAfterTesting": "devicectl success",
+    "localLaunchEvidence": "/private/tmp/qinxu-ad6fe09-launch.json",
+    "finalInstalledCodeCommit": "ad6fe09",
+    "finalSignedBuild": "passed",
+    "finalInstall": "devicectl success"
+  },
+  "globalUITestCorrections": [
+    "Correct accessibility root identification for the settings sheet",
+    "Replace slider-position assumptions with deterministic controls/current values"
+  ],
+  "newDeviceUICoverage": [
+    "Save 3/4, quarter-note 90 BPM and eighth-note clicks",
+    "Preserve global settings and independent visual metronome across two score selections and navigation",
+    "Relaunch with the same UUID-scoped test store preserves settings without automatically starting playback"
+  ],
+  "initialRemoteCI": {
+    "commit": "a8a1ef2",
+    "url": "https://github.com/Oublie-le/qinxu/actions/runs/45644502880",
+    "sharedVerification": "success",
+    "ipadUI": {
+      "totalTestCount": 12,
+      "passedTests": 10,
+      "failedTests": 2
+    },
+    "iphoneUI": {
+      "totalTestCount": 12,
+      "passedTests": 8,
+      "failedTests": 4
+    },
+    "currentRevisionVerdict": "Not established by this earlier run"
+  },
+  "iphoneTargetedFollowup": {
+    "intermediateAttempt": {
+      "result": "Failed",
+      "totalTestCount": 2,
+      "passedTests": 0,
+      "failedTests": 2,
+      "localLog": "/private/tmp/qinxu-iphone-detail-fixed.log",
+      "cause": "Combining cover accessibility children changed the score card Button exposure; library readiness assertions failed"
+    },
+    "latestAttempt": {
+      "result": "Passed",
+      "localLog": "/private/tmp/qinxu-iphone-detail-final.log",
+      "change": "Removed the cover accessibilityElement(children: .ignore) modifier",
+      "observedCompletedTests": [
+        {
+          "name": "testLibrarySelectionAndLandscapeLayout",
+          "result": "Passed"
+        },
+        {
+          "name": "testSavedMeasureCanResumeThroughScoreDetail",
+          "result": "Passed"
+        }
+      ],
+      "totalTestCount": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "localResultBundle": ".local-build/results/iPhoneDetailFinal.tctunl/QinXu.xcresult"
+    },
+    "tests": [
+      "testLibrarySelectionAndLandscapeLayout",
+      "testSavedMeasureCanResumeThroughScoreDetail"
+    ]
+  },
+  "correctedRemoteCI": {
+    "commit": "ad6fe09f07520788bb4f91ac53b782212532816f",
+    "url": "https://github.com/Oublie-le/qinxu/actions/runs/45649432371",
+    "attempt": 1,
+    "result": "failure",
+    "sharedTests": 154,
+    "sharedVerification": "success",
+    "ipadUI": {
+      "totalTestCount": 12,
+      "passedTests": 12,
+      "failedTests": 0
+    },
+    "iphoneUI": {
+      "totalTestCount": 12,
+      "passedTests": 11,
+      "failedTests": 1,
+      "failure": "testFavoriteSearchAndNavigationPausesPractice: 8-second wait for a score card to disappear after search input timed out; no final search value captured, cause not established"
+    },
+    "failedJobRetry": "Requested once; result pending at development-preview publication"
+  },
+  "excluded": [
+    "Physical-piano microphone accuracy and latency",
+    "Physical MIDI timing",
+    "Audible metronome, acoustic timing and audio-route measurements",
+    "Physical key-release or pedal assessment",
+    "Home-screen icon visual acceptance"
+  ],
+  "privacy": "Only sanitized outcomes and repository-relative result paths are recorded; device identifiers, signing profiles, accounts and process details are excluded.",
+  "screenshotsInspected": [
+    "Physical iPad global settings after process relaunch",
+    "Physical iPad cross-score metronome controls",
+    "667/1194-point global settings, library and session shared-view renders"
+  ],
+  "updatedDate": "2026-11-26",
+  "localIPhoneFull": {
+    "commit": "ad6fe09f07520788bb4f91ac53b782212532816f",
+    "result": "Passed",
+    "totalTestCount": 12,
+    "passedTests": 12,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "localResultBundle": ".local-build/results/iPhone.tWpxHC/QinXu.xcresult",
+    "localLog": "/private/tmp/qinxu-ad6fe09-iphone-full.log"
+  },
+  "releaseGate": "Development preview from codex branch. Main remains at the previously verified baseline while the remaining remote iPhone discrepancy is checked."
+}
