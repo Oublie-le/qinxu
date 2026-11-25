@@ -1,9 +1,25 @@
 import SwiftUI
+import QinXuCore
 
 @main
 struct QinXuApp: App {
-    @StateObject private var model = PracticeViewModel()
+    @StateObject private var model: PracticeViewModel
     @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+            // Each test launch has a new local store and never opens a MIDI/audio device.
+            let file = FileManager.default.temporaryDirectory
+                .appendingPathComponent("QinXu-UI-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("library.json")
+            _model = StateObject(wrappedValue: PracticeViewModel(
+                storage: LocalLibraryStore(url: file), deviceAccessEnabled: false))
+            return
+        }
+        #endif
+        _model = StateObject(wrappedValue: PracticeViewModel())
+    }
 
     var body: some Scene {
         WindowGroup {

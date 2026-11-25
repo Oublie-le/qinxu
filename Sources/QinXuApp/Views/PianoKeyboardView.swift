@@ -49,29 +49,70 @@ private struct PianoTouchKey: View {
         if expected { return black ? QinXuTheme.teal.opacity(0.7) : Color(red: 0.77, green: 0.88, blue: 0.81) }
         return black ? QinXuTheme.navy : .white
     }
-    var body: some View {
-        RoundedRectangle(cornerRadius: black ? 4 : 5).fill(color)
-            .overlay(RoundedRectangle(cornerRadius: black ? 4 : 5).stroke(black ? Color.black.opacity(0.25) : QinXuTheme.line, lineWidth: 1))
-            .overlay(alignment: .bottom) {
-                if expected || held || pitch % 12 == 0 {
-                    Text(NoteNames.name(pitch)).font(.system(size: black ? 7 : 9, weight: .medium, design: .monospaced))
-                        .foregroundStyle(black || held || touching ? .white.opacity(0.9) : QinXuTheme.muted)
-                        .padding(.bottom, black ? 7 : 10)
-                }
-            }
+    private var keyShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: black ? 4 : 5)
+    }
+    private var borderColor: Color { black ? Color.black.opacity(0.25) : QinXuTheme.line }
+    private var labelColor: Color { black || held || touching ? Color.white.opacity(0.9) : QinXuTheme.muted }
+    private var accessibleName: String {
+        NoteNames.name(pitch) + (expected ? "，待弹" : "") + (held ? "，按下" : "")
+    }
+    private var accessibleValue: String {
+        held || touching ? "已按下" : (expected ? "待弹" : "未按下")
+    }
+
+    @ViewBuilder private var noteLabel: some View {
+        if expected || held || pitch % 12 == 0 {
+            Text(NoteNames.name(pitch))
+                .font(.system(size: black ? 7 : 9, weight: .medium, design: .monospaced))
+                .foregroundStyle(labelColor)
+                .padding(.bottom, black ? 7 : 10)
+        }
+    }
+
+    private var keySurface: some View {
+        keyShape.fill(color)
+            .overlay(keyShape.stroke(borderColor, lineWidth: 1))
+            .overlay(alignment: .bottom) { noteLabel }
             .padding(.horizontal, black ? 0 : 0.5)
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 0)
-                .onChanged { _ in if interactive && !touching { touching = true; press(pitch) } }
-                .onEnded { _ in if touching { touching = false; release(pitch) } })
-            .onChange(of: interactive) { _, value in if !value && touching { touching = false; release(pitch) } }
-            .onDisappear { if touching { touching = false; release(pitch) } }
-            .accessibilityLabel(NoteNames.name(pitch) + (expected ? "，待弹" : "") + (held ? "，按下" : ""))
-            .accessibilityHint(interactive ? "按住弹奏，松开释放" : "切换触屏模式后可弹奏")
-            .accessibilityAction {
-                guard interactive else { return }
-                press(pitch)
-                Task { @MainActor in try? await Task.sleep(nanoseconds: 250_000_000); release(pitch) }
+    }
+
+    private var inputGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                if interactive && !touching { touching = true; press(pitch) }
             }
+            .onEnded { _ in releaseTouch() }
+    }
+
+    private var interactiveSurface: some View {
+        keySurface.gesture(inputGesture)
+            .onChange(of: interactive) { _, value in if !value { releaseTouch() } }
+            .onDisappear { releaseTouch() }
+    }
+
+    var body: some View {
+        interactiveSurface
+            .accessibilityElement(children: .ignore)
+            .accessibilityIdentifier("keyboard.key.\(pitch)")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityValue(accessibleValue)
+            .accessibilityLabel(accessibleName)
+            .accessibilityHint(interactive ? "按住弹奏，松开释放" : "切换触屏模式后可弹奏")
+            .accessibilityAction { playAccessibleNote() }
+    }
+
+    private func releaseTouch() {
+        if touching { touching = false; release(pitch) }
+    }
+
+    private func playAccessibleNote() {
+        guard interactive else { return }
+        press(pitch)
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            release(pitch)
+        }
     }
 }

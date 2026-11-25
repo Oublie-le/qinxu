@@ -1,5 +1,9 @@
 name: Verify QinXu
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
@@ -8,7 +12,31 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Report toolchain
+        run: |
+          xcodebuild -version
+          swift --version
       - name: Test and build iOS Simulator
         run: bash scripts/verify.sh --require-ios
       - name: Build macOS preview
         run: bash scripts/build-macos.sh
+  ios-ui:
+    needs: verify
+    runs-on: macos-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [iPhone, iPad]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test on iOS Simulator
+        run: bash scripts/test-ios.sh '${{ matrix.device }}'
+      - name: Save UI test results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-tests-${{ matrix.device }}
+          path: .local-build/results/
+          include-hidden-files: true
+          retention-days: 14

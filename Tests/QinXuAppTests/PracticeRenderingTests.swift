@@ -64,9 +64,11 @@ import QinXuCore
                                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
             context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
         }
-        let darkPixels = stride(from: 0, to: pixels.count, by: 4).filter {
-            pixels[$0] < 160 && pixels[$0 + 1] < 180 && pixels[$0 + 2] < 180 && pixels[$0 + 3] > 200
-        }.count
+        var darkPixels = 0
+        for index in stride(from: 0, to: pixels.count, by: 4) {
+            let darkRGB = pixels[index] < UInt8(160) && pixels[index + 1] < UInt8(180) && pixels[index + 2] < UInt8(180)
+            if darkRGB && pixels[index + 3] > UInt8(200) { darkPixels += 1 }
+        }
         // Catches views that render a blank frame because scroll/Canvas layout collapsed.
         #expect(darkPixels > 100)
 

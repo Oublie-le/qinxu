@@ -34,6 +34,7 @@ struct PracticeHomeView: View {
                         .frame(maxWidth: 1280)
                         .frame(maxWidth: .infinity)
                     }
+                    .accessibilityIdentifier("practice.scroll")
                 }
             }
             .background(QinXuTheme.background)
@@ -54,7 +55,7 @@ struct PracticeHomeView: View {
         }) {
             NavigationStack {
                 libraryPanel
-                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { showingLibrary = false } } }
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { showingLibrary = false }.accessibilityIdentifier("library.close") } }
             }
             .presentationDetents([.large])
         }
@@ -67,7 +68,7 @@ struct PracticeHomeView: View {
         HStack {
             if !wide {
                 Button { showingLibrary = true } label: { Image(systemName: "sidebar.left").font(.system(size: 19)) }
-                    .buttonStyle(.plain).accessibilityLabel("打开曲谱库")
+                    .buttonStyle(.plain).accessibilityLabel("打开曲谱库").accessibilityIdentifier("library.open")
             }
             Text("练习室").font(.system(size: 14, weight: .semibold))
             Spacer()
@@ -75,6 +76,7 @@ struct PracticeHomeView: View {
                 .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
             Button { showingHistory = true } label: { Label("练习记录", systemImage: "clock.arrow.circlepath") }
                 .buttonStyle(.plain).font(.system(size: 12, weight: .medium))
+                .accessibilityIdentifier("history.open")
         }
         .foregroundStyle(QinXuTheme.ink)
         .padding(.horizontal, 28).frame(height: 64)
@@ -116,6 +118,7 @@ struct PracticeHomeView: View {
                                 .padding(13).frame(maxWidth: .infinity, alignment: .leading)
                                 .background(score.id == model.selectedScoreID ? Color.white.opacity(0.10) : Color.clear, in: RoundedRectangle(cornerRadius: 12))
                             }.buttonStyle(.plain)
+                                .accessibilityIdentifier("library.score." + score.id)
                         }
                     }
                 }
@@ -145,12 +148,12 @@ struct PracticeHomeView: View {
             SectionEyebrow(text: "YOUR DAILY PIANO PRACTICE")
             ViewThatFits(in: .horizontal) {
                 HStack(alignment: .firstTextBaseline) {
-                    Text(model.selectedScore.title).font(.system(size: 32, weight: .medium, design: .serif))
+                    Text(model.selectedScore.title).font(.system(size: 32, weight: .medium, design: .serif)).accessibilityIdentifier("practice.score.title")
                     Spacer(minLength: 14)
                     pieceMetadata
                 }
                 VStack(alignment: .leading, spacing: 9) {
-                    Text(model.selectedScore.title).font(.system(size: 27, weight: .medium, design: .serif))
+                    Text(model.selectedScore.title).font(.system(size: 27, weight: .medium, design: .serif)).accessibilityIdentifier("practice.score.title")
                     pieceMetadata
                 }
             }
@@ -204,10 +207,11 @@ struct PracticeHomeView: View {
     private var playControls: some View {
         HStack(spacing: 8) {
             Button { model.restart() } label: { Image(systemName: "arrow.counterclockwise") }
-                .buttonStyle(QuietButtonStyle()).accessibilityLabel("从头再练")
+                .buttonStyle(QuietButtonStyle()).accessibilityLabel("从头再练").accessibilityIdentifier("practice.restart")
             Button { model.togglePlayback() } label: {
                 Label(model.isPlaying ? "暂停" : (model.engine.isFinished ? "再练一次" : "开始练习"), systemImage: model.isPlaying ? "pause.fill" : "play.fill")
             }.buttonStyle(QuietButtonStyle(prominent: true))
+                .accessibilityIdentifier("practice.play")
         }
     }
 
@@ -293,7 +297,7 @@ struct PracticeHomeView: View {
                 if let countdown = model.countdown {
                     Text("预备 · \(countdown)").font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(QinXuTheme.teal)
                 } else {
-                    Text(model.engine.feedback).font(.system(size: 13, weight: .medium))
+                    Text(model.engine.feedback).font(.system(size: 13, weight: .medium)).accessibilityIdentifier("practice.feedback")
                 }
                 if !model.engine.expectedNotes.isEmpty {
                     Text("当前音符  " + model.engine.expectedNotes.map { note in
@@ -302,6 +306,7 @@ struct PracticeHomeView: View {
                         return "\(note.name) · \(beats) 拍 ≈ \(seconds) 秒"
                     }.joined(separator: "；"))
                         .font(.system(size: 11, design: .monospaced)).foregroundStyle(QinXuTheme.muted)
+                        .accessibilityIdentifier("practice.expected")
                 }
             }
         }
@@ -309,17 +314,21 @@ struct PracticeHomeView: View {
 
     private var counters: some View {
         HStack(spacing: 16) {
-            counter("正确", count: model.engine.correctCount, color: QinXuTheme.teal)
-            counter("错音", count: model.engine.wrongCount, color: QinXuTheme.wrong)
-            counter("漏音", count: model.engine.missedCount, color: QinXuTheme.muted)
+            counter("正确", identifier: "practice.count.correct", count: model.engine.correctCount, color: QinXuTheme.teal)
+            counter("错音", identifier: "practice.count.wrong", count: model.engine.wrongCount, color: QinXuTheme.wrong)
+            counter("漏音", identifier: "practice.count.missed", count: model.engine.missedCount, color: QinXuTheme.muted)
         }
     }
 
-    private func counter(_ title: String, count: Int, color: Color) -> some View {
+    private func counter(_ title: String, identifier: String, count: Int, color: Color) -> some View {
         HStack(spacing: 5) {
             Text("\(count)").font(.system(size: 18, weight: .medium, design: .serif)).monospacedDigit().foregroundStyle(color)
             Text(title).font(.system(size: 10)).foregroundStyle(QinXuTheme.muted)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(String(count))
+        .accessibilityIdentifier(identifier)
     }
 
     private var keyboardCard: some View {
@@ -415,7 +424,7 @@ private struct PracticeHistoryView: View {
                     if history.isEmpty {
                         VStack(spacing: 14) {
                             Image(systemName: "clock.arrow.circlepath").font(.system(size: 35)).foregroundStyle(QinXuTheme.teal)
-                            Text("练习会留下足迹").font(.system(size: 22, weight: .medium, design: .serif))
+                            Text("练习会留下足迹").font(.system(size: 22, weight: .medium, design: .serif)).accessibilityIdentifier("history.empty")
                             Text("完成一轮练习后，在这里查看真实的练习记录。")
                                 .font(.system(size: 13)).foregroundStyle(QinXuTheme.muted)
                         }.frame(maxWidth: .infinity).padding(.vertical, 90)
@@ -446,7 +455,7 @@ private struct PracticeHistoryView: View {
             }
             .background(QinXuTheme.background).foregroundStyle(QinXuTheme.ink)
             .navigationTitle("练习记录")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.accessibilityIdentifier("history.close") } }
         }.frame(minWidth: 340, minHeight: 440)
     }
 }
