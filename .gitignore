@@ -12,6 +12,7 @@ __pycache__/
 *.pyc
 Sources/QinXuApp/Resources/Books/*.pdf
 Sources/QinXuApp/Resources/Fonts/*.otf
+Sources/QinXuApp/Resources/Piano.sf2
 
 # Downloaded model, reconstructed and verified by scripts/fetch-basic-pitch.py.
 Sources/QinXuApp/Resources/BasicPitch.mlpackage/

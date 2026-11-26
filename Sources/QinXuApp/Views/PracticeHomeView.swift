@@ -186,12 +186,14 @@ struct PracticeHomeView: View {
     }
 
     private func navigate(_ next: QinXuSection) {
+        model.stopAudition()
         if section == .practice && next != .practice { model.pausePractice() }
         if next != .practice { immersivePractice = false }
         detailScoreID = nil
         section = next
     }
     private func practice(_ id: String) {
+        model.stopAudition()
         if model.selectedScoreID != id { model.selectScore(id) }
         detailScoreID = nil
         section = .practice

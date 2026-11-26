@@ -12,6 +12,9 @@ struct PracticeSessionView: View {
     @State private var showingSettings = false
     @State private var showingModeHelp = false
     @State private var openMetronomeAfterSettings = false
+    private var auditionIsOpen: Bool {
+        model.auditionScoreID == model.selectedScoreID && model.auditionPhase != .idle
+    }
     private var displayedBeatsPerQuarter: Double { Double(model.selectedScore.beatUnit) / 4 }
     private var meterDiffers: Bool {
         model.metronomeSettings.beatsPerMeasure != model.selectedScore.beatsPerMeasure
@@ -19,7 +22,10 @@ struct PracticeSessionView: View {
     }
 
     private var currentMeasure: Int {
-        model.engine.expectedNotes.first?.measure
+        if auditionIsOpen {
+            return model.selectedScore.measures.last(where: { $0.startBeat <= model.auditionBeat })?.number ?? 1
+        }
+        return model.engine.expectedNotes.first?.measure
             ?? model.selectedScore.measures.last(where: { $0.startBeat <= model.engine.currentBeat })?.number
             ?? 1
     }
@@ -56,6 +62,9 @@ struct PracticeSessionView: View {
         }
         .background(QinXuTheme.background)
         .foregroundStyle(QinXuTheme.ink)
+        .onDisappear {
+            if model.auditionScoreID == model.selectedScoreID { model.stopAudition() }
+        }
         .sheet(isPresented: $showingSettings, onDismiss: {
             if openMetronomeAfterSettings {
                 openMetronomeAfterSettings = false
@@ -93,6 +102,7 @@ struct PracticeSessionView: View {
                 }
             }
             Spacer(minLength: 6)
+            ScoreAuditionControls(model: model, score: model.selectedScore, identifier: "practice.audition")
             if compact && !immersive {
                 Button { showingSettings = true } label: {
                     Label("\(model.mode.title) · \(model.hand.title)", systemImage: "slider.horizontal.3")
@@ -192,10 +202,13 @@ struct PracticeSessionView: View {
             .padding(.horizontal, compact ? 12 : 20).padding(.top, compact ? 8 : 15)
             }
 
-            if model.selectedScore.notes.contains(where: { model.hand.includes(staff: $0.staff) }) {
-                PracticeScoreView(score: model.selectedScore, hand: model.hand,
-                                  currentBeat: model.engine.currentBeat, expectedNotes: model.engine.expectedNotes,
-                                  verdicts: model.engine.verdicts, active: model.isPlaying, compact: compact)
+            if auditionIsOpen || model.selectedScore.notes.contains(where: { model.hand.includes(staff: $0.staff) }) {
+                PracticeScoreView(score: model.selectedScore, hand: auditionIsOpen ? .both : model.hand,
+                                  currentBeat: auditionIsOpen ? model.auditionBeat : model.engine.currentBeat,
+                                  expectedNotes: auditionIsOpen ? [] : model.engine.expectedNotes,
+                                  verdicts: auditionIsOpen ? [:] : model.engine.verdicts,
+                                  active: auditionIsOpen ? model.auditionPhase == .playing : model.isPlaying,
+                                  compact: compact)
             } else {
                 VStack(spacing: 8) {
                     Image(systemName: "music.note").font(.system(size: 24))
@@ -211,12 +224,31 @@ struct PracticeSessionView: View {
 
     private var feedback: some View {
         VStack(alignment: .leading, spacing: compact ? 2 : 8) {
-            HStack(alignment: .center, spacing: 12) { feedbackText; Spacer(minLength: 6); counters }
-            sustainStrip
+            if auditionIsOpen {
+                auditionFeedback
+            } else {
+                HStack(alignment: .center, spacing: 12) { feedbackText; Spacer(minLength: 6); counters }
+                sustainStrip
+            }
         }
         .padding(.horizontal, compact ? 10 : 16).padding(.vertical, compact ? 3 : 8)
         .frame(maxWidth: .infinity, minHeight: compact ? 60 : 106, maxHeight: compact ? 60 : 106, alignment: .topLeading)
         .background(QinXuTheme.sage, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var auditionFeedback: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            switch model.auditionPhase {
+            case .idle, .preparing: Label("准备试听…", systemImage: "hourglass")
+            case .playing: Label("正在试听", systemImage: "headphones")
+            case .paused: Label("试听已暂停", systemImage: "pause.fill")
+            }
+            Text("第 \(currentMeasure) / \(model.selectedScore.measures.count) 小节")
+                .monospacedDigit().foregroundStyle(QinXuTheme.muted)
+                .accessibilityIdentifier("practice.audition.measure")
+        }
+        .font(.system(size: compact ? 11 : 13))
+        .accessibilityIdentifier("practice.audition.status")
     }
 
     private var feedbackText: some View {
@@ -319,13 +351,15 @@ struct PracticeSessionView: View {
                 }.font(.system(size: 11))
             }
             PianoKeyboardView(pitchRange: PianoKeyboardRange.forScore(model.selectedScore, hand: model.hand),
-                              expectedPitches: Set(model.engine.expectedNotes.map(\.midi)),
-                              heldPitches: model.engine.heldPitches,
-                              sustainedPitches: model.sustainedPitches,
-                              sustainSeconds: Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingSeconds) }),
-                              sustainFractions: Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingFraction) }),
+                              expectedPitches: auditionIsOpen ? [] : Set(model.engine.expectedNotes.map(\.midi)),
+                              heldPitches: auditionIsOpen ? [] : model.engine.heldPitches,
+                              sustainedPitches: auditionIsOpen ? [] : model.sustainedPitches,
+                              sustainSeconds: auditionIsOpen ? [:] : Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingSeconds) }),
+                              sustainFractions: auditionIsOpen ? [:] : Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingFraction) }),
                               interactive: model.inputMode == .touch, press: model.press,
                               release: model.release, representsSound: model.inputMode.isMicrophone, compact: compact)
+                .allowsHitTesting(!auditionIsOpen)
+                .accessibilityHidden(auditionIsOpen)
         }
     }
 

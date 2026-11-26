@@ -54,7 +54,8 @@ resource_builds = []
 for name, file_type in [("Assets.xcassets", "folder.assetcatalog"),
                         ("BasicPitch.mlpackage", "folder"), ("Books", "folder"), ("Fonts", "folder"),
                         ("BasicPitch-LICENSE.txt", "text"), ("BasicPitch-NOTICE.txt", "text"),
-                        ("SheetMusic-LICENSE.txt", "text")]:
+                        ("SheetMusic-LICENSE.txt", "text"), ("Piano.sf2", "file"),
+                        ("PianoSoundFont-SOURCE.txt", "text")]:
     relative = "Sources/QinXuApp/Resources/" + name
     resource_ref = obj("resource:" + name, f'isa = PBXFileReference; lastKnownFileType = {file_type}; path = {q(relative)}; sourceTree = SOURCE_ROOT;')
     refs.append(resource_ref)

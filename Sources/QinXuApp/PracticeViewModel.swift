@@ -45,6 +45,11 @@ final class PracticeViewModel: ObservableObject {
     @Published private(set) var practiceStartMeasure = 1
     @Published private(set) var isStartingInput = false
     @Published private(set) var sustainedPitches: Set<Int> = []
+    @Published private(set) var auditionPhase: ScoreAuditionPhase = .idle
+    @Published private(set) var auditionBeat = 0.0
+    private(set) var auditionScoreID: String?
+    private var auditionPlayer: ScoreAuditionPlayer?
+    private var auditionPreparation: Task<Void, Never>?
     private var countdownEnd: TimeInterval?
     private var loopRestartAt: TimeInterval?
     private var sessionSaved = false
@@ -217,6 +222,7 @@ final class PracticeViewModel: ObservableObject {
 
     func togglePlayback() {
         if isPlaying { stopTransport(); return }
+        stopAudition()
         if loopEnabled, let issue = PracticeTiming.loopStartIssue(score: selectedScore, hand: hand, startMeasure: loopStart) {
             errorMessage = issue; return
         }
@@ -344,10 +350,68 @@ final class PracticeViewModel: ObservableObject {
     func pausePractice() { stopTransport() }
     func suspendForBackground() { stopTransport(stopIndependentMetronome: true) }
 
+    func toggleAudition(score: PianoScore) {
+        if auditionScoreID == score.id {
+            switch auditionPhase {
+            case .playing:
+                guard let auditionPlayer else { stopAudition(); return }
+                auditionBeat = min(auditionPlayer.currentBeat, auditionPlayer.plan.durationBeats)
+                auditionPlayer.stop()
+                auditionPhase = .paused
+                return
+            case .paused:
+                guard let auditionPlayer else { stopAudition(); return }
+                do {
+                    try auditionPlayer.play(from: auditionBeat)
+                    auditionPhase = .playing
+                } catch { reportAuditionFailure(error) }
+                return
+            case .preparing:
+                return
+            case .idle:
+                break
+            }
+        }
+        stopTransport(stopIndependentMetronome: true)
+        auditionScoreID = score.id
+        auditionPhase = .preparing
+        auditionPreparation = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled else { return }
+            defer { self.auditionPreparation = nil }
+            do {
+                let plan = try ScorePlaybackPlan(score: score)
+                guard let bank = ScoreAuditionPlayer.soundBankURL else {
+                    throw LibraryError.message("钢琴音色资源缺失，请重新安装琴序。")
+                }
+                let player = try ScoreAuditionPlayer(plan: plan, bankURL: bank)
+                try player.play(from: 0)
+                self.auditionPlayer = player
+                self.auditionPhase = .playing
+            } catch { self.reportAuditionFailure(error) }
+        }
+    }
+
+    func stopAudition() {
+        guard auditionPhase != .idle else { return }
+        auditionPreparation?.cancel()
+        auditionPreparation = nil
+        auditionPlayer?.stop()
+        auditionPlayer = nil
+        auditionScoreID = nil
+        auditionBeat = 0
+        auditionPhase = .idle
+    }
+
+    private func reportAuditionFailure(_ error: Error) {
+        stopAudition()
+        errorMessage = "无法试听曲谱。\(error.localizedDescription)"
+    }
+
     private func stopTransport(stopIndependentMetronome: Bool = false) {
         guard !stoppingTransport else { return }
         stoppingTransport = true
         defer { stoppingTransport = false }
+        stopAudition()
         transitionID += 1
         countdownEnd = nil; countdown = nil; loopRestartAt = nil; isStartingInput = false; reportDueAt = nil
         let now = clock()
@@ -363,7 +427,7 @@ final class PracticeViewModel: ObservableObject {
     }
 
     private func receive(_ event: NoteInput, at time: TimeInterval) {
-        guard countdownEnd == nil else { return }
+        guard countdownEnd == nil, auditionPhase == .idle else { return }
         if loopRestartAt != nil, case .on(let pitch, let velocity) = event {
             // Loop rests reject fresh attacks, but a velocity-zero release still
             // needs to clear the physical/acoustic state shown by the keyboard.
@@ -379,6 +443,10 @@ final class PracticeViewModel: ObservableObject {
 
     func tick() {
         let now = clock()
+        if auditionPhase == .playing, let auditionPlayer {
+            if !auditionPlayer.isOutputRunning || auditionPlayer.reachedEnd { stopAudition() }
+            else { auditionBeat = min(auditionPlayer.currentBeat, auditionPlayer.plan.durationBeats) }
+        }
         updateSustainGuidance(at: now)
         if let end = countdownEnd {
             if now >= end {
@@ -505,6 +573,7 @@ final class PracticeViewModel: ObservableObject {
     }
 
     func toggleMetronome() {
+        stopAudition()
         if metronomeRunning {
             metronomeFollowsPractice = false; stopMetronome()
         } else {

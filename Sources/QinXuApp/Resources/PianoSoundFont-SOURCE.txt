@@ -1,0 +1,10 @@
+Upright Piano KW, compact SoundFont, version 2019-07-03
+
+Source: FreePats
+https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html#UprightKW
+
+The original samples were recorded on a Kawai upright piano by Gonzalo and Roberto.
+FreePats dedicates the sound bank to the public domain under CC0 1.0 Universal.
+https://creativecommons.org/publicdomain/zero/1.0/
+
+scripts/fetch-piano-soundfont.py prepares the pinned resource as Piano.sf2.

@@ -75,6 +75,53 @@ final class QinXuUITests: XCTestCase {
     }
 
     @MainActor
+    func testScoreAuditionPausesResumesStopsAndKeepsPracticeSeparate() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.score.demo-melody", in: app).tap()
+        let detailAudition = element("detail.audition", in: app)
+        expect(detailAudition, "label CONTAINS %@", "试听")
+        detailAudition.tap()
+        expect(detailAudition, "label CONTAINS %@", "暂停试听")
+        expect(element("detail.audition.measure", in: app), "label MATCHES %@", "第 [2-8] 小节")
+        capture(app, name: "score-detail-playing")
+
+        detailAudition.tap()
+        expect(detailAudition, "label CONTAINS %@", "继续试听")
+        detailAudition.tap()
+        expect(detailAudition, "label CONTAINS %@", "暂停试听")
+        element("detail.audition.stop", in: app).tap()
+        expect(detailAudition, "label == %@", "试听")
+        expect(element("detail.audition.measure", in: app), "exists == false")
+
+        element("detail.practice", in: app).tap()
+        let practiceAudition = element("practice.audition", in: app)
+        let play = element("practice.play", in: app)
+        let correct = element("practice.count.correct", in: app)
+        expect(correct, "value == %@", "0")
+        practiceAudition.tap()
+        expect(practiceAudition, "label CONTAINS %@", "暂停试听")
+        expect(element("practice.audition.status", in: app), "exists == true")
+        expect(correct, "exists == false")
+        expect(play, "label CONTAINS %@", "开始练习")
+        capture(app, name: "practice-score-audition")
+
+        play.tap()
+        expect(practiceAudition, "label == %@", "试听")
+        expect(play, "label CONTAINS %@", "暂停")
+        expect(correct, "value == %@", "0")
+        expect(element("practice.expected", in: app), "label CONTAINS %@", "C4")
+        play.tap()
+
+        practiceAudition.tap()
+        expect(practiceAudition, "label CONTAINS %@", "暂停试听")
+        element("library.open", in: app).tap()
+        element("practice.open", in: app).tap()
+        expect(practiceAudition, "label == %@", "试听")
+        expect(correct, "value == %@", "0")
+    }
+
+    @MainActor
     func testFreshHistoryHasEmptyStateAndCanBeDismissed() {
         let app = launchFreshApp()
         defer { app.terminate() }

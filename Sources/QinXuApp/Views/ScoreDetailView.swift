@@ -12,6 +12,7 @@ struct ScoreDetailView: View {
     private var isFavorite: Bool { model.favoriteScoreIDs.contains(score.id) }
     private var isOriginal: Bool { DemoScores.all.contains { $0.id == score.id } }
     private var sourceTitle: String { BundledPracticeLibrary.ids.contains(score.id) ? "内置教材" : isOriginal ? "原创样谱" : "已导入" }
+    private var auditionIsOpen: Bool { model.auditionScoreID == score.id && model.auditionPhase != .idle }
     private var checkpoint: PracticeCheckpoint? {
         guard let value = model.progress(for: score.id), !value.isCompleted else { return nil }
         return value
@@ -37,6 +38,9 @@ struct ScoreDetailView: View {
         }
         .foregroundStyle(QinXuTheme.ink)
         .accessibilityIdentifier("detail.scroll")
+        .onDisappear {
+            if model.auditionScoreID == score.id { model.stopAudition() }
+        }
     }
 
     private var heading: some View {
@@ -80,6 +84,7 @@ struct ScoreDetailView: View {
                     .buttonStyle(QuietButtonStyle(prominent: true))
                     .accessibilityIdentifier("detail.practice")
             }
+            ScoreAuditionControls(model: model, score: score, identifier: "detail.audition")
             Button { model.toggleFavorite(score.id) } label: {
                 Image(systemName: isFavorite ? "bookmark.fill" : "bookmark")
             }
@@ -163,10 +168,17 @@ struct ScoreDetailView: View {
             HStack {
                 Label("曲谱预览", systemImage: "doc.text").font(.system(size: 12, weight: .medium))
                 Spacer()
+                if auditionIsOpen {
+                    let measure = score.measures.last(where: { $0.startBeat <= model.auditionBeat })?.number ?? 1
+                    Text("第 \(measure) 小节").font(.system(size: 11)).monospacedDigit()
+                        .foregroundStyle(QinXuTheme.teal)
+                        .accessibilityIdentifier("detail.audition.measure")
+                }
                 Text("简化练习谱").font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
             }.padding(.horizontal, compact ? 12 : 20).padding(.top, compact ? 10 : 18)
-            PracticeScoreView(score: score, hand: .both, currentBeat: 0,
-                              expectedNotes: [], verdicts: [:], active: false, compact: compact)
+            PracticeScoreView(score: score, hand: .both, currentBeat: auditionIsOpen ? model.auditionBeat : 0,
+                              expectedNotes: [], verdicts: [:], active: auditionIsOpen && model.auditionPhase == .playing,
+                              compact: compact)
         }
         .padding(.bottom, 8)
         .background(QinXuTheme.paper, in: RoundedRectangle(cornerRadius: 16))
@@ -182,5 +194,43 @@ struct ScoreDetailView: View {
         }
         .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct ScoreAuditionControls: View {
+    @ObservedObject var model: PracticeViewModel
+    let score: PianoScore
+    let identifier: String
+
+    private var phase: ScoreAuditionPhase {
+        model.auditionScoreID == score.id ? model.auditionPhase : .idle
+    }
+
+    private var label: (title: String, icon: String) {
+        switch phase {
+        case .idle: return ("试听", "headphones")
+        case .preparing: return ("准备试听…", "hourglass")
+        case .playing: return ("暂停试听", "pause.fill")
+        case .paused: return ("继续试听", "play.fill")
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button { model.toggleAudition(score: score) } label: {
+                Label(label.title, systemImage: label.icon)
+            }
+            .buttonStyle(QuietButtonStyle())
+            .disabled(phase == .preparing)
+            .accessibilityLabel(label.title)
+            .accessibilityIdentifier(identifier)
+            if phase != .idle {
+                Button { model.stopAudition() } label: { Image(systemName: "stop.fill") }
+                    .buttonStyle(QuietButtonStyle())
+                    .accessibilityLabel("停止试听")
+                    .accessibilityIdentifier(identifier + ".stop")
+            }
+        }
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
