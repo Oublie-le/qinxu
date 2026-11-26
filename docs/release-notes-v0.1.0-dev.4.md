@@ -13,6 +13,6 @@
 
 首次克隆或下载源码后，先运行 `bash scripts/prepare-resources.sh`，获取并校验固定版本的模型、Bravura 字体和公版 PDF。个人签名可通过 `scripts/configure-ios-signing.py` 写入被 Git 忽略的本地配置，凭证不进入仓库。Mac 应用仅作共享代码开发预览。
 
-验证：本机 **154 项自动测试、iOS Simulator 构建、iPhone 完整 12/12 UI 测试通过**；目标实体 iPad 的 12 条路径均有通过证据（首轮 10/12，修正后定向 2/2），签名、安装和正常数据模式启动通过。[远程检查](https://github.com/Oublie-le/qinxu/actions/runs/45649432371)的共享验证与 iPad 12/12 通过，iPhone 11/12；唯一搜索等待超时在本机未复现，正在单独复核。因此本次为开发分支的预览发布，`main` 暂保留此前验证基线。原始失败与复测均保留记录。
+验证：本机 **154 项自动测试、iOS Simulator 构建、iPhone 完整 12/12 UI 测试通过**；目标实体 iPad 的 12 条路径均有通过证据（首轮 10/12，修正后定向 2/2），签名、安装和正常数据模式启动通过。[远程检查](https://github.com/Oublie-le/qinxu/actions/runs/45649432371)的共享验证与 iPad 12/12 通过，iPhone 首次 11/12。搜索等待超时后，iPhone 作业重跑 12/12 通过。[重跑结果](https://github.com/Oublie-le/qinxu/actions/runs/45649432371/attempts/2)。
 
 具体构建步骤见[README](https://github.com/Oublie-le/qinxu/blob/v0.1.0-dev.4/README.md)；实际执行过的构建、自动测试和 iPad UI 结果见[验证记录](https://github.com/Oublie-le/qinxu/blob/v0.1.0-dev.4/docs/STATUS.md)。这些记录不替代实琴 MIDI、多音准确率或节拍声学/路由验收；多音的实录结果与限制见[实验说明](https://github.com/Oublie-le/qinxu/blob/v0.1.0-dev.4/docs/POLYPHONIC_MICROPHONE.md)。

@@ -135,7 +135,15 @@
       "failedTests": 1,
       "failure": "testFavoriteSearchAndNavigationPausesPractice: 8-second wait for a score card to disappear after search input timed out; no final search value captured, cause not established"
     },
-    "failedJobRetry": "Requested once; result pending at development-preview publication"
+    "failedJobRetry": {
+      "attempt": 2,
+      "url": "https://github.com/Oublie-le/qinxu/actions/runs/45649432371/attempts/2",
+      "jobId": 139340122203,
+      "workflowResult": "success",
+      "totalTestCount": 12,
+      "passedTests": 12,
+      "failedTests": 0
+    }
   },
   "excluded": [
     "Physical-piano microphone accuracy and latency",
@@ -160,6 +168,5 @@
     "skippedTests": 0,
     "localResultBundle": ".local-build/results/iPhone.tWpxHC/QinXu.xcresult",
     "localLog": "/private/tmp/qinxu-ad6fe09-iphone-full.log"
-  },
-  "releaseGate": "Development preview from codex branch. Main remains at the previously verified baseline while the remaining remote iPhone discrepancy is checked."
+  }
 }
