@@ -69,6 +69,8 @@ final class PracticeViewModel: ObservableObject {
     private let presentationStore: ScorePresentationStore
     private let progressStore: PracticeProgressStore
     private let metronomeSettingsStore: MetronomeSettingsStore
+    let catalog: LibraryCatalogController
+    let documentLibrary: ImportedDocumentLibrary
     private var transitionID = 0
 
     init(storage: LocalLibraryStore = LocalLibraryStore(),
@@ -78,12 +80,14 @@ final class PracticeViewModel: ObservableObject {
         self.presentationStore = ScorePresentationStore(libraryURL: storage.url)
         self.progressStore = PracticeProgressStore(libraryURL: storage.url)
         self.metronomeSettingsStore = MetronomeSettingsStore(libraryURL: storage.url)
+        self.catalog = LibraryCatalogController(libraryURL: storage.url)
+        self.documentLibrary = ImportedDocumentLibrary(libraryURL: storage.url)
         self.clock = clock
         self.metronome = Metronome(deviceAccessEnabled: deviceAccessEnabled, clock: clock)
         let globalSettings = metronomeSettingsStore.load()
         metronomeSettings = globalSettings.settings
         let library = storage.load()
-        let all = DemoScores.all + BundledPracticeLibrary.scores + library.scores
+        let all = DemoScores.all + BundledCollections.scores + BundledPracticeLibrary.scores + library.scores
         scores = all
         let initial = all.first(where: { $0.id == library.lastScoreID }) ?? all[0]
         selectedScoreID = initial.id; tempo = globalSettings.settings.quarterBPM
@@ -100,8 +104,11 @@ final class PracticeViewModel: ObservableObject {
         scoreCoverData = presentation.snapshot.scoreCoverData
         let progress = progressStore.load()
         checkpoints = progress.checkpoints
-        let loadErrors = [library.error, presentation.error, progress.error, globalSettings.error, BundledPracticeLibrary.beyer.error].compactMap { $0 }
+        let loadErrors = [library.error, presentation.error, progress.error, globalSettings.error,
+                          BundledPracticeLibrary.beyer.error, catalog.errorMessage, documentLibrary.errorMessage].compactMap { $0 }
         if !loadErrors.isEmpty { errorMessage = loadErrors.joined(separator: "\n") }
+        catalog.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
+        documentLibrary.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         midi.onEvent = { [weak self] event, time in
             guard let self, self.inputMode == .midi else { return }
             self.receive(event, at: time)
@@ -288,13 +295,7 @@ final class PracticeViewModel: ObservableObject {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
         do {
-            let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-            guard size <= 5_000_000 else { throw LibraryError.message("曲谱超过 5 MB，请选择较小的 MusicXML 文件。") }
-            // Bound the actual read too: file metadata can be absent or change before reading.
-            let handle = try FileHandle(forReadingFrom: url)
-            defer { try? handle.close() }
-            let data = try handle.read(upToCount: 5_000_001) ?? Data()
-            guard data.count <= 5_000_000 else { throw LibraryError.message("曲谱超过 5 MB，请选择较小的 MusicXML 文件。") }
+            let data = try StructuredScoreImport.xmlData(from: url)
             var score = try MusicXMLParser().parse(data: data)
             // Each import is independent; imported notes keep their stable IDs within this score.
             score.id = UUID().uuidString

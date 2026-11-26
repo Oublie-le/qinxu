@@ -27,13 +27,47 @@ public struct ScoreNote: Identifiable, Codable, Equatable, Sendable {
     public var name: String { NoteNames.name(midi) }
 }
 
+/// A clef locates written pitches; it never changes staff/hand assignment or MIDI pitch.
+public enum ScoreClef: String, Codable, Equatable, Sendable {
+    case treble, bass
+    public var bottomLineDiatonic: Int { self == .treble ? 30 : 18 } // E4 / G2
+    public var title: String { self == .treble ? "高音谱号" : "低音谱号" }
+    public func staffSteps(for note: ScoreNote) -> Int { note.diatonicPitch - bottomLineDiatonic }
+}
+
+extension ScoreNote {
+    /// C0 = 0; one step is one staff line/space, independent of accidentals.
+    public var diatonicPitch: Int {
+        if let offset = ["C": 0, "D": 1, "E": 2, "F": 3, "G": 4, "A": 5, "B": 6][step.uppercased()] {
+            return octave * 7 + offset
+        }
+        return (midi / 12 - 1) * 7 + [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][((midi % 12) + 12) % 12]
+    }
+}
+
 public struct ScoreMeasure: Identifiable, Codable, Equatable, Sendable {
     public var number: Int
     public var startBeat: Double
     public var durationBeats: Double
+    public var upperClef: ScoreClef
+    public var lowerClef: ScoreClef
     public var id: Int { number }
-    public init(number: Int, startBeat: Double, durationBeats: Double) {
+    public init(number: Int, startBeat: Double, durationBeats: Double,
+                upperClef: ScoreClef = .treble, lowerClef: ScoreClef = .bass) {
         self.number = number; self.startBeat = startBeat; self.durationBeats = durationBeats
+        self.upperClef = upperClef; self.lowerClef = lowerClef
+    }
+    public func clef(for staff: Int) -> ScoreClef { staff == 2 ? lowerClef : upperClef }
+
+    private enum CodingKeys: String, CodingKey { case number, startBeat, durationBeats, upperClef, lowerClef }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        number = try values.decode(Int.self, forKey: .number)
+        startBeat = try values.decode(Double.self, forKey: .startBeat)
+        durationBeats = try values.decode(Double.self, forKey: .durationBeats)
+        // Existing user libraries used the fixed treble/bass rendering. Keep them readable.
+        upperClef = try values.decodeIfPresent(ScoreClef.self, forKey: .upperClef) ?? .treble
+        lowerClef = try values.decodeIfPresent(ScoreClef.self, forKey: .lowerClef) ?? .bass
     }
 }
 
@@ -54,6 +88,12 @@ public struct PianoScore: Identifiable, Codable, Equatable, Sendable {
     }
     public var durationBeats: Double {
         max(measures.map { $0.startBeat + $0.durationBeats }.max() ?? 0, notes.map { $0.startBeat + $0.durationBeats }.max() ?? 0)
+    }
+    public func clef(for staff: Int, inMeasure number: Int) -> ScoreClef {
+        if number > 0, number <= measures.count, measures[number - 1].number == number {
+            return measures[number - 1].clef(for: staff)
+        }
+        return measures.first(where: { $0.number == number })?.clef(for: staff) ?? (staff == 2 ? .bass : .treble)
     }
 }
 

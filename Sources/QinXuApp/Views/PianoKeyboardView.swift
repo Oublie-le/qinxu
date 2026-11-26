@@ -44,7 +44,10 @@ struct PianoKeyboardView: View {
     let release: (Int) -> Void
     var representsSound = false
     var compact: Bool = false
-    private var keyHeight: CGFloat { compact ? 58 : 122 }
+    private var keyHeight: CGFloat {
+        if compact { return interactive ? 52 : 44 }
+        return interactive ? 86 : 66
+    }
     private var whites: [Int] { pitchRange.filter { !isBlack($0) } }
     private func isBlack(_ pitch: Int) -> Bool { [1, 3, 6, 8, 10].contains(pitch % 12) }
     var body: some View {
@@ -58,7 +61,7 @@ struct PianoKeyboardView: View {
                         }
                     }
                     ForEach(pitchRange.filter(isBlack), id: \.self) { pitch in
-                        key(pitch, black: true).frame(width: width * 0.59, height: compact ? 36 : 76)
+                        key(pitch, black: true).frame(width: width * 0.59, height: (keyHeight * 0.62).rounded())
                             .offset(x: CGFloat(whites.filter { $0 < pitch }.count) * width - width * 0.295)
                     }
                 }.frame(width: CGFloat(whites.count) * width, height: keyHeight + 2)

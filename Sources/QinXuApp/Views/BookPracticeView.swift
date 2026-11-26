@@ -6,16 +6,18 @@ struct BookPracticeView: View {
     let compact: Bool
     let onSelect: (String) -> Void
     let onPractice: (String) -> Void
+    var filterScore: (PianoScore) -> Bool = { _ in true }
     @Environment(\.dismiss) private var dismiss
     @State private var showingSource = false
     @State private var query = ""
 
     private var catalogue: BundledPracticeLibrary.Catalogue { BundledPracticeLibrary.beyer }
     private var lessons: [PianoScore] {
-        catalogue.scores.filter { query.isEmpty || $0.title.localizedStandardContains(query) }
+        catalogue.scores.filter { filterScore($0) && (query.isEmpty || $0.title.localizedStandardContains(query)) }
     }
 
     var body: some View {
+        let sourcePages = Dictionary(uniqueKeysWithValues: catalogue.lessons.map { ($0.id, $0.sourcePage) })
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Button { dismiss() } label: { Image(systemName: "xmark").frame(width: 36, height: 36) }
@@ -24,7 +26,7 @@ struct BookPracticeView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(book.title).font(.system(size: compact ? 18 : 23, weight: .semibold))
                         .accessibilityIdentifier("textbook.title")
-                    Text("中文练习谱 · \(catalogue.scores.count) 项练习")
+                    Text("中文练习 · \(catalogue.scores.count) 项 · 作品 101")
                         .font(.system(size: 12)).foregroundStyle(QinXuTheme.teal)
                 }
                 Spacer(minLength: 4)
@@ -33,10 +35,11 @@ struct BookPracticeView: View {
                     Text("录谱：RANOTE · CC BY 4.0")
                     Text("琴序：中文目录与练习数据转换")
                     Link("录谱来源与许可", destination: URL(string: "https://ranote.zzxxccvv.com/en/book/beyer")!)
+                    Link("上海音乐出版社拜厄版本", destination: URL(string: "https://www.smph.cn/NewsDetails.aspx?id=545")!)
                     Button("查看公版原书（外文）") { showingSource = true }
                 } label: { Image(systemName: "info.circle").frame(width: 36, height: 36) }
                     .accessibilityLabel("教材版本与来源")
-                Button { showingSource = true } label: { Label("原书", systemImage: "book") }
+                Button { showingSource = true } label: { Label("外文原书", systemImage: "book") }
                     .buttonStyle(QuietButtonStyle())
                     .accessibilityLabel("查看公版外文原书")
                     .accessibilityIdentifier("textbook.source")
@@ -47,7 +50,7 @@ struct BookPracticeView: View {
                     .textFieldStyle(.plain).padding(10)
                     .background(QinXuTheme.paper, in: RoundedRectangle(cornerRadius: 8))
                     .accessibilityIdentifier("textbook.search")
-                Text("选择课次即可分手练习或识音；主题、变奏分段列出。目录仅包含已核对的练习。")
+                Text("点课次看谱，点「练习」开始弹奏。原书页码可用于对照指法和教师伴奏。")
                     .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                 if let error = catalogue.error {
                     Text(error).font(.system(size: 13)).foregroundStyle(QinXuTheme.wrong)
@@ -65,8 +68,12 @@ struct BookPracticeView: View {
                                     VStack(alignment: .leading, spacing: 5) {
                                         Text(score.title.replacingOccurrences(of: "拜厄 · ", with: ""))
                                             .font(.system(size: 15, weight: .medium))
-                                        Text("\(score.measures.count) 小节 · \(score.beatsPerMeasure)/\(score.beatUnit) 拍")
-                                            .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
+                                        HStack(spacing: 8) {
+                                            Text("\(score.measures.count) 小节 · \(score.beatsPerMeasure)/\(score.beatUnit) 拍")
+                                            if let page = sourcePages[score.id] {
+                                                Text("原书第 \(page) 页")
+                                            }
+                                        }.font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                                     }
                                     Spacer()
                                 }.contentShape(Rectangle())
@@ -86,7 +93,8 @@ struct BookPracticeView: View {
         .foregroundStyle(QinXuTheme.ink).background(QinXuTheme.background)
         .sheet(isPresented: $showingSource) { BookReaderView(book: book, compact: compact) }
         #if os(macOS)
-        .frame(minWidth: 560, minHeight: 440)
+        .frame(minWidth: 560, minHeight: compact ? 320 : 440)
         #endif
     }
+
 }

@@ -98,10 +98,12 @@ def decode_score(number, files):
     engraving = {}
     visible_student_ids = set()
     clefs = {}
+    clefs_by_measure = {}
     meter_by_measure = {}
     meter = None
     for measure_index, measure in enumerate(x for x in root.iter() if cls(x) == "measure"):
         next_meter = None
+        next_clefs = {}
         staves = [x for x in measure if cls(x) == "staff"]
         for visual_index, staff_element in enumerate(staves, 1):
             # Empty staves are suppressed after the first system. Their visual
@@ -123,15 +125,25 @@ def decode_score(number, files):
             if len(ys) != 5:
                 raise ValueError("Missing five staff lines")
             half_space = (ys[-1] - ys[0]) / 8
+            head_xs = [float(re.search(r"translate\(([-\d.]+),", x.get("transform"))[1])
+                       for x in staff_element.iter() if x.tag.endswith("use") and glyph(x).startswith("E0A")]
             for element in staff_element:
                 if cls(element) == "clef":
                     codes = [glyph(x) for x in element.iter() if x.tag.endswith("use")]
                     if codes == ["E050"]:
-                        clefs[staff] = 4 * 7 + 2  # E4 on bottom line of G2 clef
+                        new_clef = 4 * 7 + 2  # E4 on bottom line of G2 clef
                     elif codes == ["E062"]:
-                        clefs[staff] = 2 * 7 + 4  # G2 on bottom line of F4 clef
+                        new_clef = 2 * 7 + 4  # G2 on bottom line of F4 clef
                     else:
                         raise ValueError(f"Unsupported source clef {codes}")
+                    clef_x = min(float(re.search(r"translate\(([-\d.]+),", x.get("transform"))[1])
+                                 for x in element.iter() if x.tag.endswith("use"))
+                    if head_xs and clef_x > max(head_xs):
+                        next_clefs[staff] = new_clef  # courtesy clef at system end
+                    elif head_xs and clef_x > min(head_xs):
+                        raise ValueError("Mid-measure source clef change requires separate verification")
+                    else:
+                        clefs[staff] = new_clef
                 if cls(element) == "meterSig":
                     codes = [glyph(x) for x in element.iter() if x.tag.endswith("use")]
                     if codes == ["E08A"]:
@@ -191,6 +203,10 @@ def decode_score(number, files):
         if meter is None:
             raise ValueError("Missing source meter")
         meter_by_measure[measure.get("id")] = meter
+        if set(clefs) != {1, 2}:
+            raise ValueError("Missing source student clefs")
+        clefs_by_measure[measure.get("id")] = dict(clefs)
+        clefs.update(next_clefs)
         if next_meter is not None:
             meter = next_meter
     if student_ids != visible_student_ids:
@@ -215,6 +231,7 @@ def decode_score(number, files):
         start = rational(original["q"])
         end = rational(playback["measures"][index + 1]["q"] if index + 1 < len(playback["measures"]) else playback["end"])
         measures.append({**original, "start": start, "length": end - start, "meter": meter_by_measure[original["id"]],
+                         "clefs": clefs_by_measure[original["id"]],
                          "notes": [note for note in notes if note["m"] == index]})
     return playback["bpm"], measures, source_page
 
@@ -266,15 +283,20 @@ def encode_lesson(number, label, measures, bpm):
         length = measure["length"]
         if length != Fraction(meter[0] * 4, meter[1]):
             element.set("implicit", "yes")
-        if index == 0:
+        previous_clefs = measures[index - 1]["clefs"] if index else {}
+        changed_staves = [staff for staff in (1, 2) if previous_clefs.get(staff) != measure["clefs"][staff]]
+        if index == 0 or changed_staves:
             attributes = sub(element, "attributes")
-            sub(attributes, "divisions", 96)
-            time = sub(attributes, "time")
-            sub(time, "beats", meter[0]); sub(time, "beat-type", meter[1])
-            sub(attributes, "staves", 2)
-            for staff, sign, line in [(1, "G", 2), (2, "F", 4)]:
+            if index == 0:
+                sub(attributes, "divisions", 96)
+                time = sub(attributes, "time")
+                sub(time, "beats", meter[0]); sub(time, "beat-type", meter[1])
+                sub(attributes, "staves", 2)
+            for staff in changed_staves:
+                sign, line = {30: ("G", 2), 18: ("F", 4)}[measure["clefs"][staff]]
                 clef = sub(attributes, "clef", number=str(staff))
                 sub(clef, "sign", sign); sub(clef, "line", line)
+        if index == 0:
             sub(sub(element, "direction"), "sound", tempo=str(bpm))
         for staff in (1, 2):
             if staff == 2:
@@ -329,14 +351,17 @@ def build(fetch=False):
             output[filename] = xml
             repeated = len({m["id"] for m in selected}) != len(selected)
             notes = ["仅学生声部；教师伴奏不计入练习。" if number < 12 else "双手学生练习谱。",
-                     "中文重排保留音高、记谱时值与左右手；指法、力度与连奏线请参照公版原页。",
+                     "中文重排保留原谱谱号、音高、记谱时值与左右手；指法、力度与连奏线请参照公版原页。",
                      "默认速度供练习调整，不代表原书标注的唯一速度。"]
             if repeated:
                 notes.append("原谱反复已按公开演奏顺序展开，小节编号为展开后的连续编号。")
             lessons.append({"id": identifier, "title": title, "filename": filename, "sourcePage": source_page, "notes": notes})
             evidence.append({"id": identifier, "source": files["page.html"][1], "measures": len(selected),
                              "notes": sum(len(m["notes"]) for m in selected), "beats": float(sum(m["length"] for m in selected)),
-                             "repeatExpanded": repeated, "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"})
+                             "repeatExpanded": repeated, "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+                             "clefsAtStart": [{30: "G2", 18: "F4"}[selected[0]["clefs"][s]] for s in (1, 2)],
+                             "clefChangeMeasures": [i + 1 for i in range(1, len(selected))
+                                                    if selected[i]["clefs"] != selected[i - 1]["clefs"]]})
     output["manifest.json"] = (json.dumps({"version": 1, "lessons": lessons}, ensure_ascii=False, indent=2) + "\n").encode()
     output["source-lock.json"] = (json.dumps({"version": 1, "license": LICENSE, "inputs": locks}, indent=2) + "\n").encode()
     output["verification.json"] = (json.dumps({"version": 1, "lessons": evidence}, ensure_ascii=False, indent=2) + "\n").encode()

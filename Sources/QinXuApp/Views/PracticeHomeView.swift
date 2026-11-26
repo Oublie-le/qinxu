@@ -33,19 +33,12 @@ struct PracticeHomeView: View {
         .tint(QinXuTheme.accent)
         .foregroundStyle(QinXuTheme.ink)
         .preferredColorScheme(.light)
-        .fileImporter(isPresented: $model.isImporting, allowedContentTypes: [.xml, .data], allowsMultipleSelection: false) { result in
-            switch result {
-            case .success(let urls):
-                if let url = urls.first {
-                    let oldIDs = Set(model.scores.map(\.id))
-                    model.importScore(from: url)
-                    if !oldIDs.contains(model.selectedScoreID) {
-                        detailScoreID = model.selectedScoreID
-                        section = .library
-                    }
-                }
-            case .failure(let error): model.errorMessage = error.localizedDescription
-            }
+        .sheet(isPresented: $model.isImporting) {
+            LibraryImportView(model: model, onScoreImported: { id in
+                detailScoreID = id; section = .library
+            }, onDocumentImported: { _ in
+                detailScoreID = nil; section = .library
+            })
         }
         .alert("暂时无法完成", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("知道了", role: .cancel) { model.errorMessage = nil }

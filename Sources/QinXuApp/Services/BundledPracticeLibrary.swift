@@ -23,8 +23,8 @@ enum BundledPracticeLibrary {
 
     static let beyer = loadBeyer()
     static var scores: [PianoScore] { beyer.scores }
-    static var ids: Set<String> { Set(scores.map(\.id)) }
-    static var allBundledIDs: Set<String> { ids.union(DemoScores.all.map(\.id)) }
+    static let ids = Set(scores.map(\.id))
+    static let allBundledIDs = ids.union(DemoScores.all.map(\.id)).union(BundledCollections.scores.map(\.id))
 
     private static func loadBeyer() -> Catalogue {
         #if SWIFT_PACKAGE

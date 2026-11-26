@@ -9,7 +9,9 @@ extension PracticeRenderingTests {
     @Test(arguments: [667, 1194])
     func notationGlyphsAndRhythmsRenderAtPhoneAndTabletWidths(width: Int) throws {
         #expect(NotationFont.isAvailable)
-        for (name, score) in [("rhythm", DemoScores.all[2]), ("glyphs", notationFixture())] {
+        let beyer = try #require(BundledPracticeLibrary.scores.first(where: { $0.id == "beyer-op101-002-theme" }))
+        for (name, score) in [("rhythm", DemoScores.all[2]), ("glyphs", notationFixture()),
+                              ("beyer-double-treble", beyer), ("clef-change", clefChangeFixture())] {
             let scoreView = PracticeScoreView(score: score, hand: .both, currentBeat: 0,
                                               expectedNotes: Array(score.notes.filter { $0.startBeat == 0 }),
                                               verdicts: [:], active: true, compact: width == 667)
@@ -18,6 +20,16 @@ extension PracticeRenderingTests {
                 .background(QinXuTheme.paper)
             try render(view, name: "notation-\(name)-\(width)", width: width, height: height)
         }
+    }
+
+    private func clefChangeFixture() -> PianoScore {
+        PianoScore(id: "clef-change-fixture", title: "双高音与小节换谱号", notes: [
+            .init(id: "upper-1", midi: 72, startBeat: 0, durationBeats: 4, staff: 1, measure: 1, step: "C", octave: 5),
+            .init(id: "lower-1", midi: 60, startBeat: 0, durationBeats: 4, staff: 2, measure: 1, step: "C", octave: 4),
+            .init(id: "upper-2", midi: 74, startBeat: 4, durationBeats: 4, staff: 1, measure: 2, step: "D", octave: 5),
+            .init(id: "lower-2", midi: 60, startBeat: 4, durationBeats: 4, staff: 2, measure: 2, step: "C", octave: 4)
+        ], measures: [.init(number: 1, startBeat: 0, durationBeats: 4, lowerClef: .treble),
+                      .init(number: 2, startBeat: 4, durationBeats: 4)])
     }
 
     private func notationFixture() -> PianoScore {

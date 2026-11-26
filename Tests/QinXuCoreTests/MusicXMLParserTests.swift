@@ -160,6 +160,62 @@ import Testing
         rejects(document("<measure number=\"1\">\(clef)\(note(duration: "4"))</measure>"), containing: "高音谱号")
     }
 
+    @Test func bothTrebleClefsKeepWrittenPitchAndLeftHandAssignment() throws {
+        let bothTreble = attributes.replacingOccurrences(of: "<sign>F</sign><line>4</line>", with: "<sign>G</sign><line>2</line>")
+        let imported = try parse(document("<measure number=\"1\">\(bothTreble)\(note(duration: "4", staff: 2))</measure>"))
+        let lowerNote = try #require(imported.notes.first)
+        #expect(imported.measures[0].upperClef == .treble && imported.measures[0].lowerClef == .treble)
+        #expect(lowerNote.staff == 2 && lowerNote.midi == 60 && lowerNote.octave == 4)
+        #expect(PracticeHand.left.includes(staff: lowerNote.staff) && !PracticeHand.right.includes(staff: lowerNote.staff))
+        #expect(imported.clef(for: 2, inMeasure: 1).staffSteps(for: lowerNote) == -2)
+        #expect(ScoreClef.bass.staffSteps(for: lowerNote) == 10)
+        #expect(try JSONDecoder().decode(PianoScore.self, from: JSONEncoder().encode(imported)) == imported)
+        var sameSound = imported; sameSound.measures[0].lowerClef = .bass
+        #expect(PracticeCheckpoint.fingerprint(for: sameSound) == PracticeCheckpoint.fingerprint(for: imported))
+        var engine = PracticeEngine(score: imported, hand: .left)
+        engine.start(at: 0); engine.receive(.on(pitch: 60, velocity: 90), at: 0)
+        #expect(engine.correctCount == 1 && engine.isFinished)
+    }
+
+    @Test func measureBoundaryClefChangesPersistAndUnsupportedClefsAreRejected() throws {
+        let change = "<attributes><clef number=\"2\"><sign>G</sign><line>2</line></clef></attributes>"
+        let imported = try parse(document("<measure number=\"1\">\(attributes)\(note(duration: "4"))</measure>"
+            + "<measure number=\"2\">\(change)\(note(duration: "4", octave: 5, staff: 2))</measure>"
+            + "<measure number=\"3\">\(note("D", duration: "4", octave: 5, staff: 2))</measure>"))
+        #expect(imported.measures.map(\.lowerClef) == [.bass, .treble, .treble])
+        #expect(imported.notes.map(\.midi) == [60, 72, 74])
+        rejects(document("<measure number=\"1\">\(attributes)\(note())\(change)\(note(duration: "3"))</measure>"), containing: "小节中途换谱号")
+        let octave = attributes.replacingOccurrences(of: "<line>2</line>", with: "<line>2</line><clef-octave-change>-1</clef-octave-change>")
+        rejects(document("<measure number=\"1\">\(octave)\(note(duration: "4"))</measure>"), containing: "八度移位")
+        let duplicate = attributes.replacingOccurrences(of: "</attributes>", with: "<clef number=\"1\"><sign>F</sign><line>4</line></clef></attributes>")
+        rejects(document("<measure number=\"1\">\(duplicate)\(note(duration: "4"))</measure>"), containing: "多个谱号")
+    }
+
+    @Test func oldLibraryWithoutClefsMigratesWithoutLosingNotesOrHistory() throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let originalScore = DemoScores.all[1]
+        let summary = PracticeEngine(score: originalScore).summary()
+        let legacy = directory.appendingPathComponent("PianoPractice/library.json")
+        try LocalLibraryStore(url: legacy).save(scores: [originalScore], history: [summary], lastScoreID: originalScore.id)
+        var object = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: legacy)) as? [String: Any])
+        var scores = try #require(object["scores"] as? [[String: Any]])
+        var measures = try #require(scores[0]["measures"] as? [[String: Any]])
+        for index in measures.indices { measures[index].removeValue(forKey: "upperClef"); measures[index].removeValue(forKey: "lowerClef") }
+        scores[0]["measures"] = measures; object["scores"] = scores
+        let oldBytes = try JSONSerialization.data(withJSONObject: object)
+        try oldBytes.write(to: legacy)
+        let store = LocalLibraryStore(baseDirectory: directory)
+        let migrated = store.load()
+        #expect(migrated.error == nil && migrated.scores == [originalScore] && migrated.history == [summary])
+        #expect(migrated.lastScoreID == originalScore.id)
+        #expect(try Data(contentsOf: legacy) == oldBytes)
+        #expect(try Data(contentsOf: store.url) == oldBytes)
+        var preserved = originalScore; preserved.measures[0].lowerClef = .treble
+        try store.save(scores: [preserved], history: migrated.history, lastScoreID: preserved.id)
+        #expect(store.load().scores == [preserved] && store.load().history == [summary])
+    }
+
     @Test func testNonFiniteDurationsAndOutOfRangePitchAreRejected() {
         for invalid in ["0", "-1", "nan", "inf", "1e999"] {
             rejects(document("<measure number=\"1\">\(attributes)\(note(duration: invalid))</measure>"), containing: "时值")

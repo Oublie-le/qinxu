@@ -4,6 +4,19 @@ import QinXuCore
 @testable import QinXuApp
 
 @Suite @MainActor struct BundledPracticeLibraryTests {
+    @Test func beyerClefsFollowPinnedSourceWithoutChangingTheHands() throws {
+        let scores = BundledPracticeLibrary.scores
+        #expect(scores.filter { $0.measures.first?.lowerClef == .treble }.count == 45)
+        for id in ["beyer-op101-002-theme", "beyer-op101-012", "beyer-op101-043"] {
+            let score = try #require(scores.first(where: { $0.id == id }))
+            #expect(score.measures.allSatisfy { $0.upperClef == .treble && $0.lowerClef == .treble })
+            #expect(score.notes.contains { $0.staff == 2 })
+        }
+        for id in ["beyer-op101-001-theme", "beyer-op101-061"] {
+            let score = try #require(scores.first(where: { $0.id == id }))
+            #expect(score.measures.allSatisfy { $0.upperClef == .treble && $0.lowerClef == .bass })
+        }
+    }
     @Test func bundledLessonsParseAndUseChineseTitles() throws {
         let catalogue = BundledPracticeLibrary.beyer
         #expect(catalogue.error == nil)

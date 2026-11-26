@@ -111,6 +111,8 @@ private final class ScoreBuilder {
     var denominator = 4
     var hasTime = false
     var staffCount = 1
+    var upperClef: ScoreClef = .treble
+    var lowerClef: ScoreClef = .bass
     var tempo: Double?
     var notes: [ScoreNote] = []
     var measures: [ScoreMeasure] = []
@@ -142,7 +144,8 @@ private final class ScoreBuilder {
         var start = 0.0
         for (index, measure) in sourceMeasures.enumerated() {
             let length = try readMeasure(measure, number: index + 1, start: start, isFirst: index == 0, isLast: index == sourceMeasures.count - 1)
-            measures.append(ScoreMeasure(number: index + 1, startBeat: start, durationBeats: length))
+            measures.append(ScoreMeasure(number: index + 1, startBeat: start, durationBeats: length,
+                                         upperClef: upperClef, lowerClef: lowerClef))
             start += length
             guard start <= 64_000 else { throw error("曲谱总时长超过当前版本限制。") }
         }
@@ -278,14 +281,25 @@ private final class ScoreBuilder {
             guard beforeContent, atStart || (hasTime && beats == numerator && unit == denominator) else { throw error("暂不支持曲中变拍号。") }
             numerator = beats; denominator = unit; hasTime = true
         }
+        var declaredStaves: Set<Int> = []
         for clef in node.all("clef") {
             let staff = try integer(clef.attributes["number"] ?? "1", label: "谱号编号", range: 1...staffCount)
-            let expectedSign = staff == 1 ? "G" : "F"
-            let expectedLine = staff == 1 ? "2" : "4"
-            guard clef.value("sign") == expectedSign, clef.value("line") == expectedLine,
-                  (clef.value("clef-octave-change") ?? "0") == "0" else {
-                throw error("当前谱面仅支持第一谱表高音谱号、第二谱表低音谱号，且不带八度移位。")
+            try requireSingletons(clef, names: ["sign", "line", "clef-octave-change"])
+            guard declaredStaves.insert(staff).inserted, clef.attributes["additional"] != "yes" else {
+                throw error("暂不支持同一谱表同时使用多个谱号。")
             }
+            let parsed: ScoreClef
+            switch (clef.value("sign"), clef.value("line")) {
+            case ("G", "2"): parsed = .treble
+            case ("F", "4"): parsed = .bass
+            default: throw error("当前谱面仅支持第二线高音谱号、第四线低音谱号。")
+            }
+            guard (clef.value("clef-octave-change") ?? "0") == "0" else {
+                throw error("暂不支持带八度移位的谱号。")
+            }
+            let previous = staff == 1 ? upperClef : lowerClef
+            guard beforeContent || previous == parsed else { throw error("暂不支持小节中途换谱号，请在小节边界更换。") }
+            if staff == 1 { upperClef = parsed } else { lowerClef = parsed }
         }
     }
 

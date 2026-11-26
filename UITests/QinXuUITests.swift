@@ -152,12 +152,45 @@ final class QinXuUITests: XCTestCase {
         let c5 = element("keyboard.key.72", in: app)
         reveal(c5, in: app, towardBottom: true)
         let before = c5.frame
+        XCTAssertLessThan(before.height, 100)
         element("practice.play", in: app).tap()
         c5.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
         expect(element("practice.count.correct", in: app), "value == %@", "1")
         XCTAssertEqual(c5.frame.minX, before.minX, accuracy: 1)
         XCTAssertEqual(c5.frame.width, before.width, accuracy: 1)
         capture(app, name: "beyer-chinese-lesson-real-practice")
+    }
+
+    @MainActor
+    func testBundledPopCollectionOpensAndPlaysAGroupedScore() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.filter.collections", in: app).tap()
+        let collection = element("library.collection.bundled-pop-piano", in: app)
+        XCTAssertTrue(collection.waitForExistence(timeout: 10))
+        XCTAssertFalse(element("library.score.pop-window-rain", in: app).exists)
+        collection.tap()
+        expect(element("collection.title", in: app), "label == %@", "流行钢琴")
+        let practice = element("collection.practice.pop-window-rain", in: app)
+        XCTAssertTrue(practice.waitForExistence(timeout: 10))
+        practice.tap()
+        expect(element("practice.score.title", in: app), "label == %@", "窗边的雨")
+        expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
+        capture(app, name: "bundled-pop-collection-practice")
+    }
+
+    @MainActor
+    func testImportSeparatesPracticeScoresFromReadingDocuments() {
+        let app = launchFreshApp()
+        defer { app.terminate() }
+        element("library.import", in: app).tap()
+        XCTAssertTrue(element("import.title", in: app).waitForExistence(timeout: 8))
+        XCTAssertTrue(element("import.score", in: app).exists)
+        XCTAssertTrue(element("import.pdf", in: app).exists)
+        XCTAssertTrue(element("import.images", in: app).exists)
+        capture(app, name: "score-and-reading-import-choices")
+        element("import.close", in: app).tap()
+        expect(element("library.search", in: app), "hittable == true")
     }
 
     @MainActor

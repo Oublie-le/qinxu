@@ -13,15 +13,18 @@ struct PracticeScoreView: View {
     private var leadingWidth: CGFloat { compact ? 88 : 104 }
     private var currentMeasure: Int { expectedNotes.first?.measure ?? score.measures.last(where: { $0.startBeat <= currentBeat })?.number ?? 1 }
     private var trebleBottom: CGFloat {
-        max(compact ? 66 : 115, (compact ? 34 : 58) + CGFloat((score.notes.filter { $0.staff != 2 }.map(diatonic).max() ?? 38) - 30) * 5)
+        max(compact ? 66 : 115, (compact ? 34 : 58) + CGFloat(score.notes.filter { $0.staff != 2 }.map(staffSteps).max() ?? 8) * 5)
     }
     private var bassBottom: CGFloat {
-        let trebleLow = score.notes.filter { $0.staff != 2 }.map(diatonic).min() ?? 30
-        let bassHigh = score.notes.filter { $0.staff == 2 }.map(diatonic).max() ?? (compact ? 22 : 26)
-        return max(trebleBottom + (compact ? 66 : 120), trebleBottom + CGFloat(30 - trebleLow) * 5 + (compact ? 32 : 65) + CGFloat(bassHigh - 18) * 5)
+        let upperLow = score.notes.filter { $0.staff != 2 }.map(staffSteps).min() ?? 0
+        let lowerHigh = score.notes.filter { $0.staff == 2 }.map(staffSteps).max() ?? (compact ? 4 : 8)
+        let doubleTreble = score.measures.contains { $0.upperClef == .treble && $0.lowerClef == .treble }
+        // The Bravura treble glyph is about 70 points tall at this staff size.
+        let minimumGap: CGFloat = compact ? (doubleTreble ? 78 : 66) : 120
+        return max(trebleBottom + minimumGap, trebleBottom - CGFloat(upperLow) * 5 + (compact ? 32 : 65) + CGFloat(lowerHigh) * 5)
     }
     var preferredHeight: CGFloat {
-        bassBottom + max(0, CGFloat(18 - (score.notes.filter { $0.staff == 2 }.map(diatonic).min() ?? 18)) * 5) + (compact ? 32 : 55)
+        bassBottom + max(0, -CGFloat(score.notes.filter { $0.staff == 2 }.map(staffSteps).min() ?? 0) * 5) + (compact ? 32 : 55)
     }
     private var height: CGFloat { preferredHeight }
 
@@ -36,7 +39,7 @@ struct PracticeScoreView: View {
                             let spacing = spacing(for: measure)
                             Canvas { context, size in drawMeasure(context, measure: measure, spacing: spacing, size: size) }
                                 .frame(width: spacing.width, height: height).id(measure.number)
-                                .accessibilityLabel("第\(measure.number)小节")
+                                .accessibilityLabel("第\(measure.number)小节，上谱表\(measure.upperClef.title)，下谱表\(measure.lowerClef.title)")
                         }
                     }
                 }
@@ -74,12 +77,23 @@ struct PracticeScoreView: View {
                                              d: -(bassBottom - top) / bounds.height, tx: 5, ty: bassBottom)
             if let path = brace.copy(using: &transform) { context.fill(Path(path), with: .color(QinXuTheme.ink)) }
         }
-        NotationFont.draw(.trebleClef, in: context, at: CGPoint(x: 26, y: trebleBottom - 10), color: QinXuTheme.ink)
-        NotationFont.draw(.bassClef, in: context, at: CGPoint(x: 26, y: bassBottom - 30), color: QinXuTheme.ink)
+        drawClef(score.measures.first?.upperClef ?? .treble, staff: 1, x: 26, in: context)
+        drawClef(score.measures.first?.lowerClef ?? .bass, staff: 2, x: 26, in: context)
         for bottom in [trebleBottom, bassBottom] {
             NotationFont.drawTimeNumber(score.beatsPerMeasure, in: context, centeredAt: CGPoint(x: leadingWidth - 18, y: bottom - 30), color: QinXuTheme.ink)
             NotationFont.drawTimeNumber(score.beatUnit, in: context, centeredAt: CGPoint(x: leadingWidth - 18, y: bottom - 10), color: QinXuTheme.ink)
         }
+    }
+
+    private func drawClef(_ clef: ScoreClef, staff: Int, x: CGFloat, in context: GraphicsContext) {
+        let bottom = staff == 2 ? bassBottom : trebleBottom
+        NotationFont.draw(clef == .treble ? .trebleClef : .bassClef, in: context,
+                          at: CGPoint(x: x, y: bottom - (clef == .treble ? 10 : 30)), color: QinXuTheme.ink)
+    }
+
+    private func changedClefStaves(in measure: ScoreMeasure) -> [Int] {
+        guard let previous = score.measures.first(where: { $0.number == measure.number - 1 }) else { return [] }
+        return [1, 2].filter { previous.clef(for: $0) != measure.clef(for: $0) }
     }
 
     private func drawLines(_ context: GraphicsContext, width: CGFloat, from start: CGFloat = 0) {
@@ -97,6 +111,9 @@ struct PracticeScoreView: View {
             context.fill(Path(roundedRect: CGRect(x: 1, y: 12, width: size.width - 2, height: height - 35), cornerRadius: 9), with: .color(QinXuTheme.accent.opacity(0.045)))
         }
         drawLines(context, width: size.width)
+        for staff in changedClefStaves(in: measure) {
+            drawClef(measure.clef(for: staff), staff: staff, x: 14, in: context)
+        }
         context.draw(Text(String(measure.number)).font(.system(size: 10, design: .serif)).foregroundStyle(QinXuTheme.muted), at: CGPoint(x: 13, y: 17))
         let finalBar = measure.number == score.measures.last?.number
         let barX = size.width - (finalBar ? 6 : 1)
@@ -149,7 +166,8 @@ struct PracticeScoreView: View {
                            accidentals: [String: Int], forcedDown: Bool?) {
         guard let first = notes.first else { return }
         let bottom = first.staff == 2 ? bassBottom : trebleBottom
-        let middle = first.staff == 2 ? 22 : 34
+        let clef = score.clef(for: first.staff, inMeasure: first.measure)
+        let middle = clef.bottomLineDiatonic + 4
         let sorted = notes.sorted { diatonic($0) < diatonic($1) }
         let down = forcedDown ?? ((diatonic(sorted.first!) + diatonic(sorted.last!)) >= middle * 2)
         let notation = DurationNotation(beats: first.durationBeats)
@@ -161,7 +179,7 @@ struct PracticeScoreView: View {
             let pitch = diatonic(note)
             displaced = lastPitch.map { abs(pitch - $0) <= 1 && !displaced } ?? false
             let shift: CGFloat = displaced ? (width - 1.2) * (down ? -1 : 1) : 0
-            let y = bottom - CGFloat(pitch - (note.staff == 2 ? 18 : 30)) * 5
+            let y = bottom - CGFloat(staffSteps(note)) * 5
             heads.append(Head(note: note, origin: CGPoint(x: x - width / 2 + shift, y: y), width: width, color: noteColor(note)))
             lastPitch = pitch
         }
@@ -244,8 +262,10 @@ struct PracticeScoreView: View {
         return [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0][((note.midi % 12) + 12) % 12]
     }
     private func diatonic(_ note: ScoreNote) -> Int {
-        if let offset = ["C": 0, "D": 1, "E": 2, "F": 3, "G": 4, "A": 5, "B": 6][note.step.uppercased()] { return note.octave * 7 + offset }
-        return (note.midi / 12 - 1) * 7 + [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][((note.midi % 12) + 12) % 12]
+        note.diatonicPitch
+    }
+    private func staffSteps(_ note: ScoreNote) -> Int {
+        score.clef(for: note.staff, inMeasure: note.measure).staffSteps(for: note)
     }
 
     private struct DurationNotation {
@@ -294,7 +314,7 @@ struct PracticeScoreView: View {
         let beats = Set(notes.map(\.startBeat) + [measure.startBeat, measure.startBeat + measure.durationBeats]).sorted()
         let naturalWidth: CGFloat = compact ? 230 : 285
         let minimumSpacing: CGFloat = notes.contains { !DurationNotation(beats: $0.durationBeats).isExact } ? 44 : 30
-        var positions: [CGFloat] = [42]
+        var positions: [CGFloat] = [changedClefStaves(in: measure).isEmpty ? 42 : 78]
         for index in 1..<beats.count {
             let fraction = (beats[index] - beats[index - 1]) / max(0.01, measure.durationBeats)
             positions.append(positions.last! + max(minimumSpacing, CGFloat(fraction) * (naturalWidth - 64)))

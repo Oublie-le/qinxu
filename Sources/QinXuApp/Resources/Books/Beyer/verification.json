@@ -8,7 +8,12 @@
       "notes": 8,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v01",
@@ -17,7 +22,12 @@
       "notes": 15,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v02",
@@ -26,7 +36,12 @@
       "notes": 16,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v03",
@@ -35,7 +50,12 @@
       "notes": 16,
       "beats": 24.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v04",
@@ -44,7 +64,12 @@
       "notes": 20,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v05",
@@ -53,7 +78,12 @@
       "notes": 21,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v06",
@@ -62,7 +92,12 @@
       "notes": 20,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v07",
@@ -71,7 +106,12 @@
       "notes": 20,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v08",
@@ -80,7 +120,12 @@
       "notes": 23,
       "beats": 24.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v09",
@@ -89,7 +134,12 @@
       "notes": 30,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v10",
@@ -98,7 +148,12 @@
       "notes": 23,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v11",
@@ -107,7 +162,12 @@
       "notes": 28,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-001-v12",
@@ -116,7 +176,12 @@
       "notes": 28,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-theme",
@@ -125,7 +190,12 @@
       "notes": 16,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v01",
@@ -134,7 +204,12 @@
       "notes": 28,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v02",
@@ -143,7 +218,12 @@
       "notes": 31,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v03",
@@ -152,7 +232,12 @@
       "notes": 39,
       "beats": 48.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v04",
@@ -161,7 +246,12 @@
       "notes": 27,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v05",
@@ -170,7 +260,12 @@
       "notes": 58,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v06",
@@ -179,7 +274,12 @@
       "notes": 28,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v07",
@@ -188,7 +288,12 @@
       "notes": 41,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-002-v08",
@@ -197,7 +302,12 @@
       "notes": 63,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-003",
@@ -206,7 +316,12 @@
       "notes": 34,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-004",
@@ -215,7 +330,12 @@
       "notes": 42,
       "beats": 48.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-005",
@@ -224,7 +344,12 @@
       "notes": 46,
       "beats": 48.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-006",
@@ -233,7 +358,12 @@
       "notes": 38,
       "beats": 36.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-007",
@@ -242,7 +372,12 @@
       "notes": 51,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-008",
@@ -251,7 +386,12 @@
       "notes": 122,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-009",
@@ -260,7 +400,12 @@
       "notes": 191,
       "beats": 144.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-010",
@@ -269,7 +414,12 @@
       "notes": 86,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-011",
@@ -278,7 +428,12 @@
       "notes": 90,
       "beats": 72.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-012",
@@ -287,7 +442,12 @@
       "notes": 38,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-013",
@@ -296,7 +456,12 @@
       "notes": 38,
       "beats": 32.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-014",
@@ -305,7 +470,12 @@
       "notes": 66,
       "beats": 48.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-016",
@@ -314,7 +484,12 @@
       "notes": 80,
       "beats": 48.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-017",
@@ -323,7 +498,12 @@
       "notes": 121,
       "beats": 96.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-018",
@@ -332,7 +512,12 @@
       "notes": 117,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-020",
@@ -341,7 +526,12 @@
       "notes": 140,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-021",
@@ -350,7 +540,12 @@
       "notes": 139,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-022",
@@ -359,7 +554,12 @@
       "notes": 159,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-024",
@@ -368,7 +568,12 @@
       "notes": 79,
       "beats": 48.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-025",
@@ -377,7 +582,12 @@
       "notes": 126,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-026",
@@ -386,7 +596,12 @@
       "notes": 131,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-027",
@@ -395,7 +610,12 @@
       "notes": 142,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-028",
@@ -404,7 +624,12 @@
       "notes": 95,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-030",
@@ -413,7 +638,12 @@
       "notes": 143,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-031",
@@ -422,7 +652,12 @@
       "notes": 164,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-032",
@@ -431,7 +666,12 @@
       "notes": 164,
       "beats": 120.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-033",
@@ -440,7 +680,12 @@
       "notes": 130,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-034",
@@ -449,7 +694,12 @@
       "notes": 172,
       "beats": 120.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-035",
@@ -458,7 +708,12 @@
       "notes": 163,
       "beats": 128.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-036",
@@ -467,7 +722,12 @@
       "notes": 168,
       "beats": 128.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-037",
@@ -476,7 +736,12 @@
       "notes": 171,
       "beats": 120.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-039",
@@ -485,7 +750,12 @@
       "notes": 95,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-040",
@@ -494,7 +764,12 @@
       "notes": 184,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-041",
@@ -503,7 +778,12 @@
       "notes": 238,
       "beats": 128.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-042",
@@ -512,7 +792,12 @@
       "notes": 120,
       "beats": 72.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-043",
@@ -521,7 +806,12 @@
       "notes": 152,
       "beats": 96.0,
       "repeatExpanded": true,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "G2"
+      ],
+      "clefChangeMeasures": []
     },
     {
       "id": "beyer-op101-061",
@@ -530,7 +820,12 @@
       "notes": 117,
       "beats": 64.0,
       "repeatExpanded": false,
-      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)"
+      "notationDurationSource": "SVG notehead + augmentation dots + flags (not playback d)",
+      "clefsAtStart": [
+        "G2",
+        "F4"
+      ],
+      "clefChangeMeasures": []
     }
   ]
 }

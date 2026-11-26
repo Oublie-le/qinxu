@@ -50,7 +50,7 @@ struct PracticeSessionView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 0) {
                 feedback.padding(.horizontal, compact ? 8 : 20).padding(.top, compact ? 2 : 4)
-                keyboard.padding(.horizontal, compact ? 8 : 20).padding(.top, compact ? 2 : 8)
+                keyboard.padding(.horizontal, compact ? 8 : 20).padding(.top, compact ? 2 : 5)
                 transport
             }.background(QinXuTheme.paper)
         }
@@ -307,8 +307,8 @@ struct PracticeSessionView: View {
     }
 
     private var keyboard: some View {
-        VStack(alignment: .leading, spacing: compact ? 4 : 12) {
-            if !compact {
+        VStack(alignment: .leading, spacing: 5) {
+            if !compact && !immersive {
                 HStack {
                     Label("键盘指引", systemImage: "pianokeys").font(.system(size: 13, weight: .medium))
                     Spacer()
@@ -326,15 +326,6 @@ struct PracticeSessionView: View {
                               sustainFractions: Dictionary(uniqueKeysWithValues: model.sustainGuidance.map { ($0.pitch, $0.remainingFraction) }),
                               interactive: model.inputMode == .touch, press: model.press,
                               release: model.release, representsSound: model.inputMode.isMicrophone, compact: compact)
-            if !compact && !immersive {
-                if model.inputMode.isMicrophone {
-                    Text("浅橙与倒计时表示谱面要求；橙色声音可能包含余音，不代表琴键仍按着。")
-                        .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                } else {
-                Text(model.inputMode == .touch ? "整首音域固定；可横向滑动。触屏按住可延音，松开即释放；按键暂不发声。" : "整首音域固定；可横向滑动。键盘显示待弹与已按下的音符。")
-                    .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-                }
-            }
         }
     }
 

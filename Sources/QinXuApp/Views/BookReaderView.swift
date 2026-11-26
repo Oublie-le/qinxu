@@ -119,7 +119,7 @@ struct BookReaderView: View {
     }
 }
 
-private struct BookPDFView {
+struct BookPDFView {
     let document: PDFDocument
     @Binding var pageIndex: Int
     let fitsWidth: Bool
