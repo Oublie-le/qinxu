@@ -14,7 +14,7 @@ struct ImportedReadingDocument: Identifiable, Codable, Equatable, Sendable {
     var formatTitle: String { kind == .pdf ? "PDF" : "图片教材" }
 }
 
-/// File copies live independently from MusicXML and never become evaluated notes.
+/// Reading assets are stored separately from structured practice scores.
 struct ImportedDocumentStore: Sendable {
     static let maximumPDFBytes = 100_000_000
     static let maximumImageBytes = 20_000_000
@@ -92,6 +92,22 @@ struct ImportedDocumentStore: Sendable {
         let resource = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
         guard resource.isRegularFile == true, resource.isSymbolicLink != true else { throw failure("阅读资料文件缺失或不可读取，请重新导入。") }
         return url
+    }
+
+    func imagePage(for document: ImportedReadingDocument, pageIndex: Int, maximumPixelSize: Int = 3_200) throws -> CGImage {
+        guard document.kind == .images else { throw failure("这份阅读资料不是图片。") }
+        let url = try fileURL(for: document, pageIndex: pageIndex)
+        let data = try StructuredScoreImport.boundedData(from: url, limit: Self.maximumImageBytes)
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maximumPixelSize
+        ]
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else {
+            throw failure("无法打开第 \(pageIndex + 1) 页图片，请重新导入。")
+        }
+        return image
     }
 
     private func install(_ document: ImportedReadingDocument, writeAssets: (URL) throws -> Void) throws -> ImportedReadingDocument {

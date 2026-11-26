@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import CoreGraphics
 
 @MainActor
 final class ImportedDocumentLibrary: ObservableObject {
@@ -39,5 +40,14 @@ final class ImportedDocumentLibrary: ObservableObject {
 
     func fileURL(for document: ImportedReadingDocument, pageIndex: Int = 0) throws -> URL {
         try store.fileURL(for: document, pageIndex: pageIndex)
+    }
+
+    func imagePreview(for document: ImportedReadingDocument, pageIndex: Int) throws -> CGImage {
+        try store.imagePage(for: document, pageIndex: pageIndex, maximumPixelSize: 1_200)
+    }
+
+    func convertScore(for document: ImportedReadingDocument, pages: ClosedRange<Int>) async throws -> PDFScoreConversionResult {
+        let title = document.title + " · 第\(pages.lowerBound)–\(pages.upperBound)页"
+        return try await PDFScoreConverter.convert(document: document, store: store, pages: pages, title: title)
     }
 }

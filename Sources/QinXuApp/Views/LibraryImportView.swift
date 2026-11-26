@@ -36,7 +36,7 @@ struct LibraryImportView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     importChoice("可判音曲谱", detail: "MusicXML / XML / MXL · 导入后检查音高与时值", symbol: "music.note.list", kind: .score)
                     importChoice("PDF 乐谱", detail: "阅读、跟拍，也可在阅读页尝试转 MXL", symbol: "doc.richtext", kind: .pdf)
-                    importChoice("图片教材", detail: "从“文件”多选单页图片，确认顺序后保存成册", symbol: "photo.on.rectangle.angled", kind: .images)
+                    importChoice("图片教材", detail: "从“文件”选择谱页图片，可排序成册和转 MXL", symbol: "photo.on.rectangle.angled", kind: .images)
                     if !sources.isEmpty {
                         Divider()
                         TextField("资料名称", text: $title).textFieldStyle(.roundedBorder)
@@ -92,7 +92,7 @@ struct LibraryImportView: View {
                     .foregroundStyle(QinXuTheme.muted)
                 Link("下载示例：欢乐颂（MXL）", destination: URL(string: "https://musetrainer.github.io/library/scores/Ode_to_Joy_Easy_variation.mxl")!)
                 Link("MusicXML 曲谱目录", destination: URL(string: "https://www.musicxml.com/music-in-musicxml/")!)
-                Text("手头只有 PDF 时，在阅读页点「PDF 转 MXL」，选页并核对识别谱，再导出或导入练习。")
+                Text("手头有 PDF 或图片谱时，在阅读页点「转 MXL」，核对识别谱后可导出或导入练习。")
                     .foregroundStyle(QinXuTheme.muted)
             }
             .font(.system(size: 12))

@@ -15,6 +15,7 @@ struct PDFScoreConversionView: View {
     @State private var previewPage: Int
     @State private var originalPDF: PDFDocument?
     @State private var originalImage: Image?
+    @State private var originalLoadError: String?
     @State private var showOriginal = false
     @State private var result: PDFScoreConversionResult?
     @State private var conversionTask: Task<Void, Never>?
@@ -51,7 +52,7 @@ struct PDFScoreConversionView: View {
                     VStack(alignment: .leading, spacing: compact ? 12 : 18) {
                         pageSelection
                         if isConverting { conversionProgress }
-                        if let message {
+                        if let message = message ?? originalLoadError {
                             Label(message, systemImage: "exclamationmark.circle")
                                 .font(.system(size: 12)).foregroundStyle(QinXuTheme.wrong)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -69,7 +70,7 @@ struct PDFScoreConversionView: View {
             }
         }
         .background(QinXuTheme.background).foregroundStyle(QinXuTheme.ink).tint(QinXuTheme.accent)
-        .onAppear(perform: loadOriginal)
+        .onAppear(perform: refreshOriginalImage)
         .onDisappear(perform: cancelConversion)
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { cancelConversion() }
@@ -77,7 +78,6 @@ struct PDFScoreConversionView: View {
         .onChange(of: firstPage) { _, value in
             clearResult()
             previewPage = value
-            refreshOriginalImage()
         }
         .onChange(of: lastPage) { _, _ in clearResult() }
         .onChange(of: previewPage) { _, _ in refreshOriginalImage() }
@@ -97,7 +97,7 @@ struct PDFScoreConversionView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Label("PDF 转 MXL（实验）", systemImage: "doc.text.viewfinder")
+            Label(document.kind == .pdf ? "PDF 转 MXL（实验）" : "图片转 MXL（实验）", systemImage: "doc.text.viewfinder")
                 .font(.system(size: compact ? 16 : 20, weight: .semibold))
                 .accessibilityIdentifier("pdfConversion.title")
             Spacer(minLength: 4)
@@ -127,7 +127,7 @@ struct PDFScoreConversionView: View {
                     .accessibilityIdentifier("pdfConversion.lastPage")
                 }.font(.system(size: 12)).disabled(isConverting)
                 HStack(spacing: 12) {
-                    Text(pageIssue ?? "共 \(document.pageCount) 页，每次最多 \(PDFScoreConverter.maximumPages) 页；原 PDF 保留。")
+                    Text(pageIssue ?? "共 \(document.pageCount) 页，每次最多 \(PDFScoreConverter.maximumPages) 页。")
                         .font(.system(size: 11)).foregroundStyle(pageIssue == nil ? QinXuTheme.muted : QinXuTheme.wrong)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("pdfConversion.pageRange")
@@ -136,7 +136,7 @@ struct PDFScoreConversionView: View {
                         Label(result == nil ? "开始转换" : "重新转换", systemImage: "viewfinder")
                     }
                     .buttonStyle(QuietButtonStyle(prominent: true))
-                    .disabled(isConverting || pageIssue != nil || originalPDF == nil)
+                    .disabled(isConverting || pageIssue != nil || originalImage == nil)
                     .accessibilityIdentifier("pdfConversion.start")
                 }
                 Text("在本机识别。转换可能遗漏或认错音符，导入判音前请对照原谱检查。")
@@ -164,7 +164,8 @@ struct PDFScoreConversionView: View {
                 .accessibilityIdentifier("pdfConversion.review")
             Text("\(result.score.measures.count) 小节 · \(result.score.notes.count) 个音符")
                 .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
-            Text("反复、跳转、延长记号和八度线可能漏识别。请逐小节与原谱核对，含这些记号的谱页适合跟拍阅读。")
+                .accessibilityIdentifier("pdfConversion.scoreSummary")
+            Text("反复、跳转、连线、延长记号和八度线可能漏识别。请逐小节与原谱核对。")
                 .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                 .fixedSize(horizontal: false, vertical: true)
             if !result.diagnostics.isEmpty {
@@ -209,7 +210,7 @@ struct PDFScoreConversionView: View {
                 originalImage.resizable().scaledToFit()
                     .frame(maxWidth: .infinity).frame(maxHeight: compact ? 320 : 520)
                     .background(Color.white)
-                    .accessibilityLabel("原 PDF 第 \(previewPage) 页")
+                    .accessibilityLabel("原谱第 \(previewPage) 页")
                     .accessibilityIdentifier("pdfConversion.original")
             }
         }
@@ -245,30 +246,35 @@ struct PDFScoreConversionView: View {
         .background(QinXuTheme.paper).overlay(alignment: .top) { Divider() }
     }
 
-    private func loadOriginal() {
-        guard originalPDF == nil else { return }
-        do {
-            let url = try model.documentLibrary.fileURL(for: document)
-            guard let pdf = PDFDocument(url: url), !pdf.isLocked, pdf.pageCount == document.pageCount else {
-                throw CocoaError(.fileReadCorruptFile)
-            }
-            originalPDF = pdf
-            refreshOriginalImage()
-        } catch { message = "原 PDF 无法打开：\(error.localizedDescription)" }
-    }
-
     private func refreshOriginalImage() {
-        guard let page = originalPDF?.page(at: previewPage - 1) else { originalImage = nil; return }
-        let thumbnail = page.thumbnail(of: CGSize(width: 900, height: 1200), for: .cropBox)
-        #if os(iOS)
-        originalImage = Image(uiImage: thumbnail)
-        #else
-        originalImage = Image(nsImage: thumbnail)
-        #endif
+        originalImage = nil
+        originalLoadError = nil
+        do {
+            switch document.kind {
+            case .images:
+                let thumbnail = try model.documentLibrary.imagePreview(for: document, pageIndex: previewPage - 1)
+                originalImage = Image(thumbnail, scale: 1, label: Text("原谱"))
+            case .pdf:
+                if originalPDF == nil {
+                    let url = try model.documentLibrary.fileURL(for: document)
+                    guard let pdf = PDFDocument(url: url), !pdf.isLocked, pdf.pageCount == document.pageCount else {
+                        throw CocoaError(.fileReadCorruptFile)
+                    }
+                    originalPDF = pdf
+                }
+                guard let page = originalPDF?.page(at: previewPage - 1) else { throw CocoaError(.fileReadCorruptFile) }
+                let thumbnail = page.thumbnail(of: CGSize(width: 900, height: 1200), for: .cropBox)
+                #if os(iOS)
+                originalImage = Image(uiImage: thumbnail)
+                #else
+                originalImage = Image(nsImage: thumbnail)
+                #endif
+            }
+        } catch { originalLoadError = "无法打开原谱第 \(previewPage) 页。\(error.localizedDescription)" }
     }
 
     private func startConversion() {
-        guard !isConverting, pageIssue == nil else { return }
+        guard !isConverting, pageIssue == nil, originalImage != nil else { return }
         clearResult()
         let pages = firstPage...lastPage
         let id = UUID()
@@ -276,14 +282,11 @@ struct PDFScoreConversionView: View {
         isConverting = true
         conversionTask = Task {
             do {
-                let url = try model.documentLibrary.fileURL(for: document)
-                let title = document.title + " · 第\(pages.lowerBound)–\(pages.upperBound)页"
-                let converted = try await PDFScoreConverter.convert(pdfURL: url, pages: pages, title: title)
+                let converted = try await model.documentLibrary.convertScore(for: document, pages: pages)
                 try Task.checkCancellation()
                 guard attemptID == id else { return }
                 result = converted
                 previewPage = pages.lowerBound
-                refreshOriginalImage()
             } catch is CancellationError {
                 // Cancellation is an action, not a failed-score warning.
             } catch {

@@ -192,9 +192,8 @@ final class QinXuUITests: XCTestCase {
         reveal(help, in: app, towardBottom: true, scrollIdentifier: "import.scroll")
         help.tap()
         let localConversionHelp = app.staticTexts.matching(NSPredicate(
-            format: "label CONTAINS %@ AND label CONTAINS %@", "阅读页", "PDF 转 MXL")).firstMatch
-        XCTAssertTrue(localConversionHelp.waitForExistence(timeout: 8), "PDF 帮助应指向本机阅读页转换入口")
-        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Audiveris")).firstMatch.exists)
+            format: "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", "阅读页", "图片谱", "转 MXL")).firstMatch
+        XCTAssertTrue(localConversionHelp.waitForExistence(timeout: 8), "图片谱帮助应指向本机阅读页转换入口")
         capture(app, name: "score-and-reading-import-choices")
         element("import.close", in: app).tap()
         expect(element("library.search", in: app), "hittable == true")
@@ -309,6 +308,54 @@ final class QinXuUITests: XCTestCase {
         expect(readerPage, "value == %@", "2")
         element("document.reader.close", in: app).tap()
         expect(element("library.search", in: app), "hittable == true")
+    }
+
+    @MainActor
+    func testImportedImageConvertsCurrentPageAndEntersPractice() {
+        let app = launchFreshApp(additionalArguments: ["--ui-test-reading-images"])
+        defer { app.terminate() }
+        element("library.filter.books", in: app).tap()
+        let booklet = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "library.document.")).firstMatch
+        XCTAssertTrue(booklet.waitForExistence(timeout: 10))
+        booklet.tap()
+        expect(element("document.reader.title", in: app), "label == %@", "图片识谱测试谱")
+
+        element("document.reader.next", in: app).tap()
+        let readerPage = element("document.reader.pageInput", in: app)
+        expect(readerPage, "value == %@", "2")
+        let convert = element("document.reader.convert", in: app)
+        expect(convert, "enabled == true")
+        convert.tap()
+        expect(element("pdfConversion.title", in: app), "label CONTAINS %@", "图片转 MXL")
+        expect(app.steppers.matching(identifier: "pdfConversion.firstPage").firstMatch, "value == %@", "2")
+        expect(app.steppers.matching(identifier: "pdfConversion.lastPage").firstMatch, "value == %@", "2")
+        let start = element("pdfConversion.start", in: app)
+        expect(start, "enabled == true")
+        start.tap()
+
+        let review = element("pdfConversion.review", in: app)
+        let failure = element("pdfConversion.message", in: app)
+        let finished = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            review.exists || failure.exists
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [finished], timeout: 120), .completed, "单页图片识谱应返回结果")
+        XCTAssertTrue(review.exists, failure.exists ? failure.label : "应显示识别谱核对界面")
+        expect(element("pdfConversion.scoreSummary", in: app), "label == %@", "2 小节 · 8 个音符")
+
+        XCTAssertFalse(element("pdfConversion.saved", in: app).exists, "只有用户确认后才保存练习谱")
+        XCTAssertTrue(element("pdfConversion.export", in: app).exists)
+        element("pdfConversion.import", in: app).tap()
+        expect(element("pdfConversion.saved", in: app), "label == %@", "已加入曲库")
+        capture(app, name: "image-conversion-imported")
+
+        element("pdfConversion.close", in: app).tap()
+        expect(readerPage, "value == %@", "2")
+        element("document.reader.close", in: app).tap()
+        let practice = element("practice.open", in: app)
+        expect(practice, "hittable == true")
+        practice.tap()
+        expect(element("practice.score.title", in: app), "label CONTAINS %@", "图片识谱测试谱")
+        expect(element("practice.play", in: app), "label CONTAINS %@", "开始练习")
     }
 
     @MainActor

@@ -25,6 +25,14 @@ struct QinXuApp: App {
                     _ = try? store.importPDF(from: resource, title: "读谱练习测试谱")
                 }
             }
+            #if os(iOS)
+            if ProcessInfo.processInfo.arguments.contains("--ui-test-reading-images") {
+                let store = ImportedDocumentStore(libraryURL: file)
+                if store.load().documents.isEmpty {
+                    try? UITestImageScoreFixture.importPages(into: store)
+                }
+            }
+            #endif
             _model = StateObject(wrappedValue: PracticeViewModel(
                 storage: LocalLibraryStore(url: file), deviceAccessEnabled: false))
             return

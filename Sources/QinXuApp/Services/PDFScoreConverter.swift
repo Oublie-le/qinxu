@@ -1,4 +1,5 @@
 import Foundation
+import CoreGraphics
 import PDFKit
 import QinXuCore
 import SheetMusicCore
@@ -16,21 +17,48 @@ enum PDFScoreConverter {
 
     /// Page numbers are one-based, as shown in the reader.
     static func convert(pdfURL: URL, pages: ClosedRange<Int>, title: String) async throws -> PDFScoreConversionResult {
-        try await PDFScoreRecognition.shared.convert(pdfURL: pdfURL, pages: pages, title: title)
+        try await PDFScoreRecognition.shared.convert(source: .pdf(pdfURL), pages: pages, title: title)
+    }
+
+    static func convert(document: ImportedReadingDocument, store: ImportedDocumentStore,
+                        pages: ClosedRange<Int>, title: String) async throws -> PDFScoreConversionResult {
+        try validateSelection(pages, pageCount: document.pageCount)
+        switch document.kind {
+        case .pdf:
+            let url = try store.fileURL(for: document)
+            return try await convert(pdfURL: url, pages: pages, title: title)
+        case .images:
+            return try await PDFScoreRecognition.shared.convert(source: .images(document, store), pages: pages, title: title)
+        }
+    }
+
+    fileprivate static func validateSelection(_ pages: ClosedRange<Int>, pageCount: Int) throws {
+        guard pages.lowerBound > 0, pages.upperBound <= pageCount, pages.count <= maximumPages else {
+            throw ConversionFailure("请在曲谱范围内选取 1–\(maximumPages) 页。")
+        }
     }
 }
 
 private actor PDFScoreRecognition {
+    enum Source: Sendable {
+        case pdf(URL)
+        case images(ImportedReadingDocument, ImportedDocumentStore)
+    }
+
     static let shared = PDFScoreRecognition()
     private static let renderDPI = 300.0
     private static let maxPixels = 14_000_000.0
 
     // A single worker keeps an immediate retry from running two expensive
     // PDF/Core ML passes side by side after the first request was cancelled.
-    func convert(pdfURL: URL, pages: ClosedRange<Int>, title: String) throws -> PDFScoreConversionResult {
+    func convert(source: Source, pages: ClosedRange<Int>, title: String) throws -> PDFScoreConversionResult {
         try Task.checkCancellation()
         return try autoreleasepool {
-            let pdf = try selectedPages(pdfURL: pdfURL, pages: pages)
+            let pdf: Data
+            switch source {
+            case let .pdf(url): pdf = try selectedPages(pdfURL: url, pages: pages)
+            case let .images(document, store): pdf = try selectedImages(document, store: store, pages: pages)
+            }
             let observations = RecognitionObservations()
             var options = PDFImportOptions()
             options.omrRenderDPI = Self.renderDPI
@@ -60,6 +88,7 @@ private actor PDFScoreRecognition {
             let xml = try RecognizedScoreMusicXML.encode(recognized, title: title)
             let score = try MusicXMLParser().parse(data: xml)
             let archive = try PDFScoreMXLArchive.make(musicXML: xml)
+            try Task.checkCancellation()
             return PDFScoreConversionResult(archive: archive, score: score, diagnostics: observations.messages)
         }
     }
@@ -68,10 +97,7 @@ private actor PDFScoreRecognition {
         guard let document = PDFDocument(url: pdfURL), !document.isLocked else {
             throw ConversionFailure("无法打开这份 PDF，请检查文件是否损坏或加密。")
         }
-        guard pages.lowerBound > 0, pages.upperBound <= document.pageCount,
-              pages.count <= PDFScoreConverter.maximumPages else {
-            throw ConversionFailure("请在 PDF 范围内选取 1–\(PDFScoreConverter.maximumPages) 页。")
-        }
+        try PDFScoreConverter.validateSelection(pages, pageCount: document.pageCount)
         let selected = PDFDocument()
         for number in pages {
             try Task.checkCancellation()
@@ -92,6 +118,31 @@ private actor PDFScoreRecognition {
             throw ConversionFailure("所选页面无法读取。")
         }
         return data
+    }
+
+    private func selectedImages(_ document: ImportedReadingDocument, store: ImportedDocumentStore,
+                                pages: ClosedRange<Int>) throws -> Data {
+        let data = NSMutableData()
+        guard let consumer = CGDataConsumer(data: data),
+              let pdf = CGContext(consumer: consumer, mediaBox: nil, nil) else {
+            throw ConversionFailure("无法准备图片识谱，请重试。")
+        }
+        for number in pages {
+            try Task.checkCancellation()
+            try autoreleasepool {
+                let image = try store.imagePage(for: document, pageIndex: number - 1)
+                let pointsPerPixel = 72.0 / Self.renderDPI
+                var box = CGRect(x: 0, y: 0, width: Double(image.width) * pointsPerPixel,
+                                 height: Double(image.height) * pointsPerPixel)
+                let bounds = Data(bytes: &box, count: MemoryLayout<CGRect>.size)
+                pdf.beginPDFPage([kCGPDFContextMediaBox: bounds] as CFDictionary)
+                pdf.interpolationQuality = .none
+                pdf.draw(image, in: box)
+                pdf.endPDFPage()
+            }
+        }
+        pdf.closePDF()
+        return data as Data
     }
 }
 

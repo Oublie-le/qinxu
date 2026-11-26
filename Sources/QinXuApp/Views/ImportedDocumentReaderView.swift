@@ -33,14 +33,12 @@ struct ImportedDocumentReaderView: View {
                         .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                 }
                 Spacer(minLength: 4)
-                if document.kind == .pdf {
-                    Button { showingConversion = true } label: {
-                        Label("转 MXL", systemImage: "doc.text.viewfinder")
-                    }
-                    .buttonStyle(QuietButtonStyle()).disabled(displayedPDF == nil)
-                    .accessibilityLabel("PDF 转 MXL，实验功能")
-                    .accessibilityIdentifier("document.reader.convert")
+                Button { showingConversion = true } label: {
+                    Label("转 MXL", systemImage: "doc.text.viewfinder")
                 }
+                .buttonStyle(QuietButtonStyle()).disabled(displayedPDF == nil)
+                .accessibilityLabel("转 MXL，实验功能")
+                .accessibilityIdentifier("document.reader.convert")
             }.padding(.horizontal, compact ? 12 : 20).padding(.vertical, 8)
             Divider()
             if let displayedPDF {

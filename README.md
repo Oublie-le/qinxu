@@ -11,7 +11,7 @@
 - 拜厄 Op.101 中文重排练习谱：59 项练习覆盖 39 首原曲，可从教材目录进入分手练习和判音；第 1、2 首的主题与变奏分别列出。它不是出版社中文版，也不是完整 106 首，准确范围与来源见[教材资源说明](Sources/QinXuApp/Resources/Books/Beyer/README.txt)。
 - 保留公版拜厄完整 88 页外文 PDF（Peters/Ruthardt 1895 年版），供阅读和对照；PDF 本身不作为自动判音数据。用户没有小汤纸书，上海版小汤 1/2/3 的完整电子谱仍未取得、未内置，查询记录见[教材资源核验](docs/TEXTBOOK_SOURCES.md)。
 - 曲谱页「导入」支持 MusicXML（`.musicxml`、`.xml`、`.mxl`）、PDF 和图片。导入 PDF 或图片后，可在谱页用全局节拍器跟拍和翻页。多张图片可排序成册。
-- 在导入的 PDF 阅读页点「PDF 转 MXL」，选取 1–4 页，在 iPad 本机生成识别草稿。对照原谱核对音高、时值、谱号与小节后，可保存 MXL 到「文件」，也可导入曲库判音。识谱为实验功能，优先使用清晰、连续的单钢琴五线谱。
+- 在导入的 PDF 或图片阅读页点「转 MXL」，选取 1–4 页，在 iPad 本机生成识别草稿。对照原谱核对音高、时值、谱号与小节后，可保存 MXL 到「文件」，也可导入曲库判音。识谱为实验功能，适合清晰、连续的单钢琴五线谱。
 - 曲库分为教材、曲集和单曲。可自建曲集，把导入的曲谱和阅读谱归在一起，并按作者、难度和风格筛选。「流行钢琴」内置 5 首原创短曲，「熟悉的旋律」内置 3 首公版主题改编。
 - 使用 Bravura 音乐字体 glyph 的简化双谱表、当前音符和屏幕琴键高亮；不宣称出版级刻谱。
 - 原生 Core MIDI 输入，设备选择、刷新，Note On/Off、延音踏板。
@@ -102,12 +102,12 @@ bash scripts/test-ios.sh iPad
 - 内置拜厄覆盖第 1–14、16–18、20–22、24–28、30–37、39–43、61 首；第 1、2 首按主题与变奏拆分，共 59 项。仅提取学生声部，部分反复按已核验的演奏顺序展开；未收入的课程及原因见[资源说明](Sources/QinXuApp/Resources/Books/Beyer/README.txt)。
 - 音高由 MusicXML 的 `step / alter / octave` 决定，不会把调号再次叠加。
 - 谱面是练习用简化排版，不是原谱的出版级复刻；调号、连线、力度、连梁和部分文字会简化。复杂节奏显示以拍数标注辅助理解。
-- PDF 和图片可归档及跟拍练习。PDF 转 MXL 尝试读取矢量谱或清晰扫描谱。草稿须经对照，并通过练习谱解析后才能保存。判音目前不支持曲中反复跳转、装饰音、变速或变拍、移调或八度线、小节中途换谱号和多乐器合奏。MusicXML 解析不加载外部 DTD。
+- PDF 和图片可归档、跟拍练习或识谱转 MXL。PDF 支持尝试读取矢量谱或扫描谱，图片可从「文件」选择 JPG、PNG 或 HEIC。草稿须经对照，并通过练习谱解析后才能保存。判音目前不支持曲中反复跳转、装饰音、变速或变拍、移调或八度线、小节中途换谱号和多乐器合奏。MusicXML 解析不加载外部 DTD。
 - 结构化曲谱上限为 5 MB 的 MusicXML、1000 小节、20000 个起音音符。`.mxl` 压缩包上限为 20 MB。本地最多保存 100 首导入练习谱和最近 200 次完成记录。
 
 要试一次判音导入，可以下载已经通过琴序解析的 [欢乐颂简易版 MXL](https://musetrainer.github.io/library/scores/Ode_to_Joy_Easy_variation.mxl) 或 [生日快乐 C 大调 MXL](https://musetrainer.github.io/library/scores/Happy_Birthday_To_You_C_Major.mxl)，存到「文件」，再选「曲谱 → 导入 → 可判音曲谱」。找其他曲子时可搜索「曲名 + 钢琴 + MusicXML」或浏览 [MusicXML 曲谱目录](https://www.musicxml.com/music-in-musicxml/)。平台和曲目可提供的下载格式不同。
 
-已有 `.mscz` 时，在 MuseScore Studio 打开后用「文件 → 导出 → MusicXML」。手上只有 PDF 时，可在电脑用 Audiveris 识谱和导出 MXL。核对原谱的音高、左右手、休止和时值，再导入判音。琴序的导入校验可以发现不支持的谱式，识错但格式合法的音符仍需人工发现。[MuseScore 导出说明](https://handbook.musescore.org/file-management/working-with-musicxml-files) · [Audiveris 手册](https://audiveris.github.io/audiveris/_pages/handbook/)
+已有 `.mscz` 时，在 MuseScore Studio 打开后用「文件 → 导出 → MusicXML」。PDF 或图片可以在琴序阅读页转 MXL。核对原谱的音高、左右手、休止和时值，再导入判音。琴序的导入校验可以发现不支持的谱式，识错但格式合法的音符仍需人工发现。[MuseScore 导出说明](https://handbook.musescore.org/file-management/working-with-musicxml-files)
 
 ## 判定边界
 

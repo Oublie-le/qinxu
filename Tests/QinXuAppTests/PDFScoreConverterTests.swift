@@ -1,11 +1,13 @@
 import Foundation
 import CoreGraphics
 import CoreText
+import ImageIO
 import PDFKit
 import Testing
 import QinXuCore
 import SheetMusicCore
 import SheetMusicPDF
+import UniformTypeIdentifiers
 @testable import QinXuApp
 
 @Suite(.serialized) @MainActor struct PDFScoreConverterTests {
@@ -149,6 +151,28 @@ import SheetMusicPDF
         return folder
     }
 
+    private func rasterImage(_ page: CGPDFPage) throws -> CGImage {
+        let bounds = page.getBoxRect(.mediaBox), scale = 300.0 / 72.0
+        let width = Int(ceil(bounds.width * scale)), height = Int(ceil(bounds.height * scale))
+        let bitmap = try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
+            bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        bitmap.setFillColor(CGColor(gray: 1, alpha: 1))
+        bitmap.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        bitmap.scaleBy(x: scale, y: scale)
+        bitmap.translateBy(x: -bounds.minX, y: -bounds.minY)
+        bitmap.drawPDFPage(page)
+        return try #require(bitmap.makeImage())
+    }
+
+    private func writePNG(of pdf: Data, to url: URL) throws {
+        let provider = try #require(CGDataProvider(data: pdf as CFData))
+        let page = try #require(CGPDFDocument(provider)?.page(at: 1))
+        let image = try rasterImage(page)
+        let destination = try #require(CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, nil)
+        try #require(CGImageDestinationFinalize(destination))
+    }
+
     /// The new PDF contains only one raster image per page: no hidden vector
     /// notation or OCR text survives to let the vector importer answer for OMR.
     private func rasterOnlyPDF(_ vector: Data) throws -> Data {
@@ -158,17 +182,8 @@ import SheetMusicPDF
         let target = try #require(CGContext(consumer: consumer, mediaBox: nil, nil))
         for index in 1...original.numberOfPages {
             let page = try #require(original.page(at: index))
-            let bounds = page.getBoxRect(.mediaBox), scale = 300.0 / 72.0
-            let width = Int(ceil(bounds.width * scale)), height = Int(ceil(bounds.height * scale))
-            let bitmap = try #require(CGContext(data: nil, width: width, height: height, bitsPerComponent: 8,
-                bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
-            bitmap.setFillColor(CGColor(gray: 1, alpha: 1))
-            bitmap.fill(CGRect(x: 0, y: 0, width: width, height: height))
-            bitmap.scaleBy(x: scale, y: scale)
-            bitmap.translateBy(x: -bounds.minX, y: -bounds.minY)
-            bitmap.drawPDFPage(page)
-            let image = try #require(bitmap.makeImage())
-            var box = CGRect(origin: .zero, size: bounds.size)
+            let image = try rasterImage(page)
+            var box = CGRect(origin: .zero, size: page.getBoxRect(.mediaBox).size)
             let boxData = Data(bytes: &box, count: MemoryLayout<CGRect>.size)
             target.beginPDFPage([kCGPDFContextMediaBox: boxData] as CFDictionary)
             target.draw(image, in: box)
@@ -208,6 +223,22 @@ import SheetMusicPDF
         let result = try await PDFScoreConverter.convert(pdfURL: source, pages: 1...1, title: "原创双手测试")
         try assertExpected(result)
         #expect(try Data(contentsOf: source) == data)
+    }
+
+    @Test func importedImagePageConvertsToMXLWithoutChangingTheAlbum() async throws {
+        let folder = try temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let blank = folder.appendingPathComponent("blank.png"), sheet = folder.appendingPathComponent("score.png")
+        try writePNG(of: blankPDF(size: CGSize(width: 60, height: 60)), to: blank)
+        try writePNG(of: knownGrandStaffPDF(), to: sheet)
+        let store = ImportedDocumentStore(libraryURL: folder.appendingPathComponent("library.json"))
+        let album = try store.importImages(from: [blank, sheet], title: "图片谱")
+        let pages = try (0..<album.pageCount).map { try store.fileURL(for: album, pageIndex: $0) }
+        let before = try pages.map { try Data(contentsOf: $0) }
+        let result = try await PDFScoreConverter.convert(document: album, store: store, pages: 2...2, title: "原创双手测试")
+        try assertExpected(result)
+        #expect(store.load().documents == [album])
+        #expect(try pages.map { try Data(contentsOf: $0) } == before)
     }
 
     private func blankPDF(pages: Int = 1, size: CGSize = CGSize(width: 595, height: 842)) throws -> Data {
