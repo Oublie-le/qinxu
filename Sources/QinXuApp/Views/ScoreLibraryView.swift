@@ -120,7 +120,7 @@ struct ScoreLibraryView: View {
                              filterScore: { matches(.score($0.id), ignoringQuery: titleMatches) })
         }
         .sheet(item: $readingDocument) { document in
-            ImportedDocumentReaderView(library: model.documentLibrary, document: document, compact: compact)
+            ImportedDocumentReaderView(model: model, document: document, compact: compact)
         }
         .sheet(item: $selectedCollection) { collection in
             let titleMatches = text.isEmpty || collection.title.localizedStandardContains(text) || collection.subtitle.localizedStandardContains(text)

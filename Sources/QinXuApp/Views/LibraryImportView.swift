@@ -35,7 +35,7 @@ struct LibraryImportView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     importChoice("可判音曲谱", detail: "MusicXML / XML / MXL · 导入后检查音高与时值", symbol: "music.note.list", kind: .score)
-                    importChoice("PDF 阅读资料", detail: "本地保存与翻页，不自动识谱或判音", symbol: "doc.richtext", kind: .pdf)
+                    importChoice("PDF 乐谱", detail: "翻页、跟节拍弹奏。音符识别需先转成 MusicXML。", symbol: "doc.richtext", kind: .pdf)
                     importChoice("图片教材", detail: "从“文件”多选单页图片，确认顺序后保存成册", symbol: "photo.on.rectangle.angled", kind: .images)
                     if !sources.isEmpty {
                         Divider()
@@ -64,6 +64,7 @@ struct LibraryImportView: View {
                             .accessibilityIdentifier("import.document.save")
                     }
                     if busy { ProgressView("正在处理本地文件…") }
+                    if sources.isEmpty { scoreFormatHelp }
                 }.padding(16).frame(maxWidth: 680).frame(maxWidth: .infinity)
             }.accessibilityIdentifier("import.scroll")
         }
@@ -82,6 +83,24 @@ struct LibraryImportView: View {
         #if os(macOS)
         .frame(minWidth: 560, minHeight: 400)
         #endif
+    }
+
+    private var scoreFormatHelp: some View {
+        DisclosureGroup("哪里找 MusicXML？") {
+            VStack(alignment: .leading, spacing: 9) {
+                Text("搜「曲名 + 钢琴 + MusicXML」，找 .musicxml 或 .mxl。已有 .mscz 时，用 MuseScore Studio 打开，选「文件 → 导出 → MusicXML」。")
+                    .foregroundStyle(QinXuTheme.muted)
+                Link("下载示例：欢乐颂（MXL）", destination: URL(string: "https://musetrainer.github.io/library/scores/Ode_to_Joy_Easy_variation.mxl")!)
+                Link("MusicXML 曲谱目录", destination: URL(string: "https://www.musicxml.com/music-in-musicxml/")!)
+                Text("手头只有 PDF 时，可在电脑用 Audiveris 识谱并导出 MXL。对照原谱核对音高和节奏后，再导入琴序判音。")
+                    .foregroundStyle(QinXuTheme.muted)
+                Link("Audiveris 识谱说明", destination: URL(string: "https://audiveris.github.io/audiveris/_pages/handbook/")!)
+            }
+            .font(.system(size: 12))
+            .padding(.top, 8)
+        }
+        .font(.system(size: 13, weight: .medium))
+        .accessibilityIdentifier("import.musicXMLHelp")
     }
 
     private func importChoice(_ name: String, detail: String, symbol: String, kind selectedKind: Kind) -> some View {

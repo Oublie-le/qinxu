@@ -8,7 +8,7 @@ import AppKit
 
 @MainActor
 struct ImportedDocumentReaderView: View {
-    @ObservedObject var library: ImportedDocumentLibrary
+    @ObservedObject var model: PracticeViewModel
     let document: ImportedReadingDocument
     let compact: Bool
     @Environment(\.dismiss) private var dismiss
@@ -18,6 +18,7 @@ struct ImportedDocumentReaderView: View {
     @State private var fitsWidth = true
     @State private var fitRevision = 0
     @State private var loadError: String?
+    @State private var showingMetronomeSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +28,7 @@ struct ImportedDocumentReaderView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(document.title).font(.system(size: compact ? 16 : 20, weight: .semibold)).lineLimit(1)
                         .accessibilityIdentifier("document.reader.title")
-                    Text("\(document.formatTitle) · 阅读资料，不自动判音")
+                    Text("\(document.formatTitle) · 可跟节拍练习，不自动判音")
                         .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                 }
                 Spacer(minLength: 4)
@@ -42,6 +43,8 @@ struct ImportedDocumentReaderView: View {
                     description: Text(loadError ?? "正在读取本地文件…"))
                     .accessibilityIdentifier("document.reader.unavailable")
             }
+            Divider()
+            metronomeControls
             Divider()
             HStack(spacing: compact ? 8 : 14) {
                 Button { pageIndex = max(0, pageIndex - 1) } label: { Image(systemName: "chevron.left").frame(width: 36, height: 36) }
@@ -61,14 +64,80 @@ struct ImportedDocumentReaderView: View {
             }.buttonStyle(.plain).padding(.horizontal, compact ? 12 : 20).padding(.vertical, 6)
         }
         .background(QinXuTheme.background).foregroundStyle(QinXuTheme.ink)
-        .onAppear(perform: loadPage)
+        .onAppear {
+            // Reading has no score engine. Preserve an independently started global click.
+            model.pausePractice()
+            loadPage()
+        }
+        .sheet(isPresented: $showingMetronomeSettings) {
+            GlobalMetronomeSettingsView(model: model, onClose: { showingMetronomeSettings = false })
+        }
         .onChange(of: pageIndex) { _, value in
             pageInput = String(value + 1)
             if document.kind == .images { loadPage() }
         }
         #if os(macOS)
-        .frame(minWidth: 560, minHeight: 380)
+        .frame(minWidth: 560, minHeight: compact ? 320 : 380)
         #endif
+    }
+
+    private var metronomeControls: some View {
+        HStack(spacing: compact ? 12 : 20) {
+            Button { model.toggleMetronome() } label: {
+                Label(model.metronomeRunning ? "停止节拍" : "跟拍练习",
+                      systemImage: model.metronomeRunning ? "stop.fill" : "play.fill")
+                    .font(.system(size: compact ? 12 : 14, weight: .medium))
+                    .frame(minHeight: 36)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(QinXuTheme.accent)
+            .accessibilityLabel(model.metronomeRunning ? "停止节拍器" : "启动节拍器")
+            .accessibilityIdentifier("document.metronome.toggle")
+
+            Button {
+                model.pausePractice()
+                showingMetronomeSettings = true
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "metronome")
+                    Text("\(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit) · \(model.metronomeSettings.tempoNote.symbol) \(Int(model.metronomeSettings.tempoBPM))")
+                        .monospacedDigit()
+                    Image(systemName: "chevron.down").font(.system(size: 9))
+                }.font(.system(size: compact ? 12 : 14)).frame(minHeight: 36)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("全局节拍器设置")
+            .accessibilityValue("\(model.metronomeSettings.beatsPerMeasure)/\(model.metronomeSettings.beatUnit)，\(model.metronomeSettings.tempoNote.title)每分钟 \(Int(model.metronomeSettings.tempoBPM)) 次，每响\(model.metronomeSettings.clickNote.title)")
+            .accessibilityIdentifier("document.metronome.settings")
+
+            Spacer(minLength: 0)
+            HStack(spacing: 6) {
+                Circle().fill(model.metronomeRunning ? QinXuTheme.accent : QinXuTheme.line)
+                    .frame(width: model.metronomeBeat == 1 ? 9 : 6, height: model.metronomeBeat == 1 ? 9 : 6)
+                    .frame(width: 10, height: 10)
+                Text(model.metronomeBeat.map { "第 \($0) 拍" } ?? "未运行")
+                    .frame(width: compact ? 52 : 62, alignment: .leading)
+                if model.metronomeSettings.pulsesPerBeat > 1 {
+                    Text("\(model.metronomeSubdivision ?? 0)/\(model.metronomeSettings.pulsesPerBeat)")
+                        .foregroundStyle(QinXuTheme.muted)
+                }
+            }
+            .font(.system(size: compact ? 11 : 13)).monospacedDigit()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("节拍指示")
+            .accessibilityValue(model.metronomeBeat.map { "第 \($0) 拍，第 \(model.metronomeSubdivision ?? 1) 分拍" } ?? "未运行")
+            .accessibilityIdentifier("document.metronome.beat")
+
+            Button { model.metronomeEnabled.toggle() } label: {
+                Image(systemName: model.metronomeEnabled && model.metronomeSoundAvailable ? "speaker.wave.2" : "speaker.slash")
+                    .font(.system(size: compact ? 14 : 17)).frame(width: 36, height: 36)
+            }
+            .buttonStyle(.plain).disabled(!model.metronomeSoundAvailable)
+            .accessibilityLabel(!model.metronomeSoundAvailable ? "麦克风录音期间仅视觉节拍" : model.metronomeEnabled ? "关闭节拍器声音" : "打开节拍器声音")
+            .accessibilityIdentifier("document.metronome.sound")
+        }
+        .padding(.horizontal, compact ? 12 : 20).padding(.vertical, 4)
+        .background(QinXuTheme.paper)
     }
 
     private func jump() {
@@ -80,7 +149,7 @@ struct ImportedDocumentReaderView: View {
 
     private func loadPage() {
         do {
-            let url = try library.fileURL(for: document, pageIndex: pageIndex)
+            let url = try model.documentLibrary.fileURL(for: document, pageIndex: pageIndex)
             let pdf: PDFDocument
             if document.kind == .pdf {
                 guard let loaded = PDFDocument(url: url), !loaded.isLocked,

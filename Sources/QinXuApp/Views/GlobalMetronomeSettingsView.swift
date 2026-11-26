@@ -6,9 +6,11 @@ struct GlobalMetronomeSettingsView: View {
     @ObservedObject var model: PracticeViewModel
     @State private var draft: GlobalMetronomeSettings
     @State private var saveFailure: String?
+    private let onClose: () -> Void
 
-    init(model: PracticeViewModel) {
+    init(model: PracticeViewModel, onClose: (() -> Void)? = nil) {
         self.model = model
+        self.onClose = onClose ?? { model.showingMetronomeSettings = false }
         _draft = State(initialValue: model.metronomeSettings)
     }
 
@@ -19,7 +21,7 @@ struct GlobalMetronomeSettingsView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .accessibilityIdentifier("globalMetronome.title")
                 Spacer(minLength: 4)
-                Button("取消") { model.showingMetronomeSettings = false }
+                Button("取消", action: onClose)
                     .buttonStyle(.plain).font(.system(size: 13))
                     .accessibilityIdentifier("globalMetronome.cancel")
                 Button("保存", action: save)
@@ -188,7 +190,7 @@ struct GlobalMetronomeSettingsView: View {
         var updated = draft
         updated.soundEnabled = model.metronomeSettings.soundEnabled
         if model.updateMetronomeSettings(updated) {
-            model.showingMetronomeSettings = false
+            onClose()
         } else {
             saveFailure = model.errorMessage ?? "设置尚未保存，请重试。"
         }

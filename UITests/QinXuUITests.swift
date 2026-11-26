@@ -194,6 +194,37 @@ final class QinXuUITests: XCTestCase {
     }
 
     @MainActor
+    func testImportedPDFCanKeepTimeWhileTurningPages() {
+        let app = launchFreshApp(additionalArguments: ["--ui-test-reading-pdf"])
+        defer { app.terminate() }
+        element("library.filter.books", in: app).tap()
+        let pdf = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "library.document.")).firstMatch
+        XCTAssertTrue(pdf.waitForExistence(timeout: 10), "应从测试曲库打开实际导入的 PDF")
+        pdf.tap()
+
+        expect(element("document.reader.title", in: app), "label == %@", "读谱练习测试谱")
+        let toggle = element("document.metronome.toggle", in: app)
+        let beat = element("document.metronome.beat", in: app)
+        toggle.tap()
+        expect(toggle, "label == %@", "停止节拍器")
+        expectAdvancingMetronomeBeat(beat)
+
+        let page = element("document.reader.pageInput", in: app)
+        expect(page, "value == %@", "1")
+        element("document.reader.next", in: app).tap()
+        expect(page, "value == %@", "2")
+        expectAdvancingMetronomeBeat(beat)
+        element("document.metronome.settings", in: app).tap()
+        XCTAssertTrue(element("globalMetronome.title", in: app).waitForExistence(timeout: 8))
+        element("globalMetronome.cancel", in: app).tap()
+        expect(page, "value == %@", "2")
+        expect(toggle, "label == %@", "停止节拍器")
+        capture(app, name: "imported-pdf-with-metronome")
+        toggle.tap()
+        expect(beat, "value == %@", "未运行")
+    }
+
+    @MainActor
     func testImmersionHidesNavigationAndKeepsKeyboardPlayable() {
         let app = launchFreshApp()
         defer { app.terminate() }
@@ -482,13 +513,14 @@ final class QinXuUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchFreshApp(storeID: UUID? = nil) -> XCUIApplication {
+    private func launchFreshApp(storeID: UUID? = nil, additionalArguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         // A manually opened app may still be running before the first test.
         // Rotate after closing it, then wait for the newly launched layout.
         if app.state != .notRunning { app.terminate() }
         XCUIDevice.shared.orientation = .landscapeLeft
         app.launchArguments += ["--ui-testing", "-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launchArguments += additionalArguments
         if let storeID { app.launchArguments.append("--ui-test-store-id=" + storeID.uuidString) }
         app.launch()
         let search = element("library.search", in: app)

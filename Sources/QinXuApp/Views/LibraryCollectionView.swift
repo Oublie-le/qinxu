@@ -54,7 +54,7 @@ struct LibraryCollectionView: View {
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() }.accessibilityIdentifier("collection.close") } }
                 .sheet(isPresented: $editing) { CollectionContentsEditor(model: model, collection: current, onDeleted: { dismiss() }) }
                 .sheet(item: $reading) { document in
-                    ImportedDocumentReaderView(library: model.documentLibrary, document: document, compact: compact)
+                    ImportedDocumentReaderView(model: model, document: document, compact: compact)
                 }
         }.tint(QinXuTheme.accent).foregroundStyle(QinXuTheme.ink).frame(minWidth: 320, minHeight: 280)
     }

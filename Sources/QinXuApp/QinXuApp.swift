@@ -18,6 +18,13 @@ struct QinXuApp: App {
             let file = FileManager.default.temporaryDirectory
                 .appendingPathComponent("QinXu-UI-\(storeID.uuidString)", isDirectory: true)
                 .appendingPathComponent("library.json")
+            if ProcessInfo.processInfo.arguments.contains("--ui-test-reading-pdf"),
+               let resource = BundledBook.beyer.resourceURL {
+                let store = ImportedDocumentStore(libraryURL: file)
+                if store.load().documents.isEmpty {
+                    _ = try? store.importPDF(from: resource, title: "读谱练习测试谱")
+                }
+            }
             _model = StateObject(wrappedValue: PracticeViewModel(
                 storage: LocalLibraryStore(url: file), deviceAccessEnabled: false))
             return
