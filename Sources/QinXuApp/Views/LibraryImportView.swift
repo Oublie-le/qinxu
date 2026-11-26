@@ -35,7 +35,7 @@ struct LibraryImportView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     importChoice("可判音曲谱", detail: "MusicXML / XML / MXL · 导入后检查音高与时值", symbol: "music.note.list", kind: .score)
-                    importChoice("PDF 乐谱", detail: "翻页、跟节拍弹奏。音符识别需先转成 MusicXML。", symbol: "doc.richtext", kind: .pdf)
+                    importChoice("PDF 乐谱", detail: "阅读、跟拍，也可在阅读页尝试转 MXL", symbol: "doc.richtext", kind: .pdf)
                     importChoice("图片教材", detail: "从“文件”多选单页图片，确认顺序后保存成册", symbol: "photo.on.rectangle.angled", kind: .images)
                     if !sources.isEmpty {
                         Divider()
@@ -92,9 +92,8 @@ struct LibraryImportView: View {
                     .foregroundStyle(QinXuTheme.muted)
                 Link("下载示例：欢乐颂（MXL）", destination: URL(string: "https://musetrainer.github.io/library/scores/Ode_to_Joy_Easy_variation.mxl")!)
                 Link("MusicXML 曲谱目录", destination: URL(string: "https://www.musicxml.com/music-in-musicxml/")!)
-                Text("手头只有 PDF 时，可在电脑用 Audiveris 识谱并导出 MXL。对照原谱核对音高和节奏后，再导入琴序判音。")
+                Text("手头只有 PDF 时，在阅读页点「PDF 转 MXL」，选页并核对识别谱，再导出或导入练习。")
                     .foregroundStyle(QinXuTheme.muted)
-                Link("Audiveris 识谱说明", destination: URL(string: "https://audiveris.github.io/audiveris/_pages/handbook/")!)
             }
             .font(.system(size: 12))
             .padding(.top, 8)

@@ -17,6 +17,7 @@ python3 scripts/generate_project.py --check
 python3 scripts/fetch-basic-pitch.py --check
 python3 scripts/fetch-beyer.py --check
 python3 scripts/fetch-notation-font.py --check
+python3 scripts/fetch-sheet-music.py --check
 plutil -lint Config/Info.plist Config/macOS.entitlements QinXu.xcodeproj/project.pbxproj
 swift test --enable-code-coverage
 

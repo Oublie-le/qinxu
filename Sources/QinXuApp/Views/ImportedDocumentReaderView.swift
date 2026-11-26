@@ -19,6 +19,7 @@ struct ImportedDocumentReaderView: View {
     @State private var fitRevision = 0
     @State private var loadError: String?
     @State private var showingMetronomeSettings = false
+    @State private var showingConversion = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -32,6 +33,14 @@ struct ImportedDocumentReaderView: View {
                         .font(.system(size: 11)).foregroundStyle(QinXuTheme.muted)
                 }
                 Spacer(minLength: 4)
+                if document.kind == .pdf {
+                    Button { showingConversion = true } label: {
+                        Label("转 MXL", systemImage: "doc.text.viewfinder")
+                    }
+                    .buttonStyle(QuietButtonStyle()).disabled(displayedPDF == nil)
+                    .accessibilityLabel("PDF 转 MXL，实验功能")
+                    .accessibilityIdentifier("document.reader.convert")
+                }
             }.padding(.horizontal, compact ? 12 : 20).padding(.vertical, 8)
             Divider()
             if let displayedPDF {
@@ -72,6 +81,15 @@ struct ImportedDocumentReaderView: View {
         .sheet(isPresented: $showingMetronomeSettings) {
             GlobalMetronomeSettingsView(model: model, onClose: { showingMetronomeSettings = false })
         }
+        #if os(iOS)
+        .fullScreenCover(isPresented: $showingConversion) {
+            PDFScoreConversionView(model: model, document: document, initialPage: pageIndex + 1, compact: compact)
+        }
+        #else
+        .sheet(isPresented: $showingConversion) {
+            PDFScoreConversionView(model: model, document: document, initialPage: pageIndex + 1, compact: compact)
+        }
+        #endif
         .onChange(of: pageIndex) { _, value in
             pageInput = String(value + 1)
             if document.kind == .images { loadPage() }

@@ -5,3 +5,4 @@ cd "$(dirname "$0")/.."
 python3 scripts/fetch-basic-pitch.py
 python3 scripts/fetch-beyer.py
 python3 scripts/fetch-notation-font.py
+python3 scripts/fetch-sheet-music.py

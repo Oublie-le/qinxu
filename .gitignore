@@ -15,6 +15,7 @@ Sources/QinXuApp/Resources/Fonts/*.otf
 
 # Downloaded model, reconstructed and verified by scripts/fetch-basic-pitch.py.
 Sources/QinXuApp/Resources/BasicPitch.mlpackage/
+Dependencies/SwiftSheetMusic/Sources/
 
 # Local visual verification outputs
 output/ui-concept/*.png

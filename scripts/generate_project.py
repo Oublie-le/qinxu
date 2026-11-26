@@ -53,7 +53,8 @@ ui_framework_phase = obj("ui-frameworks", 'isa = PBXFrameworksBuildPhase; buildA
 resource_builds = []
 for name, file_type in [("Assets.xcassets", "folder.assetcatalog"),
                         ("BasicPitch.mlpackage", "folder"), ("Books", "folder"), ("Fonts", "folder"),
-                        ("BasicPitch-LICENSE.txt", "text"), ("BasicPitch-NOTICE.txt", "text")]:
+                        ("BasicPitch-LICENSE.txt", "text"), ("BasicPitch-NOTICE.txt", "text"),
+                        ("SheetMusic-LICENSE.txt", "text")]:
     relative = "Sources/QinXuApp/Resources/" + name
     resource_ref = obj("resource:" + name, f'isa = PBXFileReference; lastKnownFileType = {file_type}; path = {q(relative)}; sourceTree = SOURCE_ROOT;')
     refs.append(resource_ref)
@@ -67,8 +68,14 @@ root_group = obj("root-group", f'isa = PBXGroup; children = ({source_group},{ui_
 local_package = obj("local-package", 'isa = XCLocalSwiftPackageReference; relativePath = .;')
 core_product = obj("core-product", f'isa = XCSwiftPackageProductDependency; package = {local_package}; productName = QinXuCore;')
 core_build = obj("core-build", f'isa = PBXBuildFile; productRef = {core_product};')
+omr_package = obj("omr-package", 'isa = XCLocalSwiftPackageReference; relativePath = Dependencies/SwiftSheetMusic;')
+package_products, package_builds = [core_product], [core_build]
+for name in ("SheetMusicCore", "SheetMusicPDF", "SheetMusicOMRModel"):
+    dependency = obj("product:" + name, f'isa = XCSwiftPackageProductDependency; package = {omr_package}; productName = {name};')
+    package_products.append(dependency)
+    package_builds.append(obj("product-build:" + name, f'isa = PBXBuildFile; productRef = {dependency};'))
 source_phase = obj("source-phase", f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(builds)},); runOnlyForDeploymentPostprocessing = 0;')
-framework_phase = obj("framework-phase", f'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ({core_build},); runOnlyForDeploymentPostprocessing = 0;')
+framework_phase = obj("framework-phase", f'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = ({",".join(package_builds)},); runOnlyForDeploymentPostprocessing = 0;')
 resource_phase = obj("resource-phase", f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({",".join(resource_builds)},); runOnlyForDeploymentPostprocessing = 0;')
 
 project_configs, target_configs, ui_configs = [], [], []
@@ -105,12 +112,12 @@ for name in ("Debug", "Release"):
 
 project_list = obj("project-configs", f'isa = XCConfigurationList; buildConfigurations = ({",".join(project_configs)},); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')
 target_list = obj("target-configs", f'isa = XCConfigurationList; buildConfigurations = ({",".join(target_configs)},); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')
-target = obj("target", f'isa = PBXNativeTarget; buildConfigurationList = {target_list}; buildPhases = ({source_phase},{framework_phase},{resource_phase},); buildRules = (); dependencies = (); name = QinXu; packageProductDependencies = ({core_product},); productName = QinXu; productReference = {product}; productType = "com.apple.product-type.application";')
+target = obj("target", f'isa = PBXNativeTarget; buildConfigurationList = {target_list}; buildPhases = ({source_phase},{framework_phase},{resource_phase},); buildRules = (); dependencies = (); name = QinXu; packageProductDependencies = ({",".join(package_products)},); productName = QinXu; productReference = {product}; productType = "com.apple.product-type.application";')
 ui_config_list = obj("ui-configs", f'isa = XCConfigurationList; buildConfigurations = ({",".join(ui_configs)},); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;')
 ui_proxy = obj("ui-proxy", f'isa = PBXContainerItemProxy; containerPortal = {uid("project")}; proxyType = 1; remoteGlobalIDString = {target}; remoteInfo = QinXu;')
 ui_dependency = obj("ui-dependency", f'isa = PBXTargetDependency; target = {target}; targetProxy = {ui_proxy};')
 ui_target = obj("ui-target", f'isa = PBXNativeTarget; buildConfigurationList = {ui_config_list}; buildPhases = ({ui_source_phase},{ui_framework_phase},); buildRules = (); dependencies = ({ui_dependency},); name = QinXuUITests; productName = QinXuUITests; productReference = {ui_product}; productType = "com.apple.product-type.bundle.ui-testing";')
-root = obj("project", f'isa = PBXProject; attributes = {{ BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 1600; TargetAttributes = {{ {target} = {{ CreatedOnToolsVersion = 16.0; }}; {ui_target} = {{ CreatedOnToolsVersion = 16.0; TestTargetID = {target}; }}; }}; }}; buildConfigurationList = {project_list}; compatibilityVersion = "Xcode 14.0"; developmentRegion = zh_CN; hasScannedForEncodings = 0; knownRegions = (en,zh_CN,Base,); mainGroup = {root_group}; packageReferences = ({local_package},); productRefGroup = {products_group}; projectDirPath = ""; projectRoot = ""; targets = ({target},{ui_target},);')
+root = obj("project", f'isa = PBXProject; attributes = {{ BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 1600; TargetAttributes = {{ {target} = {{ CreatedOnToolsVersion = 16.0; }}; {ui_target} = {{ CreatedOnToolsVersion = 16.0; TestTargetID = {target}; }}; }}; }}; buildConfigurationList = {project_list}; compatibilityVersion = "Xcode 14.0"; developmentRegion = zh_CN; hasScannedForEncodings = 0; knownRegions = (en,zh_CN,Base,); mainGroup = {root_group}; packageReferences = ({local_package},{omr_package},); productRefGroup = {products_group}; projectDirPath = ""; projectRoot = ""; targets = ({target},{ui_target},);')
 
 write_generated(PROJECT / "project.pbxproj", '// !$*UTF8*$!\n{\n\tarchiveVersion = 1;\n\tclasses = {};\n\tobjectVersion = 56;\n\tobjects = {\n' + '\n'.join(objects) + f'\n\t}};\n\trootObject = {root};\n}}\n')
 schemes = PROJECT / "xcshareddata/xcschemes"

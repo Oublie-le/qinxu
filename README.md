@@ -11,6 +11,7 @@
 - 拜厄 Op.101 中文重排练习谱：59 项练习覆盖 39 首原曲，可从教材目录进入分手练习和判音；第 1、2 首的主题与变奏分别列出。它不是出版社中文版，也不是完整 106 首，准确范围与来源见[教材资源说明](Sources/QinXuApp/Resources/Books/Beyer/README.txt)。
 - 保留公版拜厄完整 88 页外文 PDF（Peters/Ruthardt 1895 年版），供阅读和对照；PDF 本身不作为自动判音数据。用户没有小汤纸书，上海版小汤 1/2/3 的完整电子谱仍未取得、未内置，查询记录见[教材资源核验](docs/TEXTBOOK_SOURCES.md)。
 - 曲谱页「导入」支持 MusicXML（`.musicxml`、`.xml`、`.mxl`）、PDF 和图片。导入 PDF 或图片后，可在谱页用全局节拍器跟拍和翻页。多张图片可排序成册。
+- 在导入的 PDF 阅读页点「PDF 转 MXL」，选取 1–4 页，在 iPad 本机生成识别草稿。对照原谱核对音高、时值、谱号与小节后，可保存 MXL 到「文件」，也可导入曲库判音。识谱为实验功能，优先使用清晰、连续的单钢琴五线谱。
 - 曲库分为教材、曲集和单曲。可自建曲集，把导入的曲谱和阅读谱归在一起，并按作者、难度和风格筛选。「流行钢琴」内置 5 首原创短曲，「熟悉的旋律」内置 3 首公版主题改编。
 - 使用 Bravura 音乐字体 glyph 的简化双谱表、当前音符和屏幕琴键高亮；不宣称出版级刻谱。
 - 原生 Core MIDI 输入，设备选择、刷新，Note On/Off、延音踏板。
@@ -34,13 +35,13 @@
 bash scripts/prepare-resources.sh
 ```
 
-脚本下载固定版本的 Basic Pitch 模型、Bravura 字体和公版拜厄 PDF，校验 SHA-256 并保留许可。资源齐全后可离线构建；缺失资源不能当作完整安装包交付，验证脚本会拒绝通过。
+脚本下载固定版本的 Basic Pitch 模型、Bravura 字体、公版拜厄 PDF 及 Swift Sheet Music 识谱源码和模型，校验 SHA-256 并保留许可。资源齐全后可离线构建和转换。
 
 拜厄中文练习用的 MusicXML、目录及来源锁定文件随源码保存，不需要从 PDF 识谱。可另用 `python3 scripts/import-beyer-ranote.py --fetch --check` 下载锁定的公开源数据并重建核验；这不是首次运行应用的必需步骤。
 
 ## 在 iPad / iPhone 运行
 
-1. 在 Mac 安装完整 **Xcode 16 或更新版本**，打开一次完成平台组件安装。
+1. 在 Mac 安装完整 **Xcode 26 或更新版本**，打开一次完成平台组件安装。
 2. 打开 `QinXu.xcodeproj`，选择 `QinXu` scheme。
 3. 模拟器无需个人签名。真机先在 Xcode 登录开发账号并创建开发证书；可用下面的本地配置脚本保存 Team ID 和可选 Bundle ID，避免重新生成工程时丢失。
 4. 连接 iPad / iPhone，选择该设备，点击 Run。真机需要允许开发者模式及信任本机。
@@ -54,11 +55,11 @@ python3 scripts/configure-ios-signing.py TEAM_ID --bundle-id com.example.QinXu
 
 脚本只写 Git 忽略的 `Config/LocalSigning.xcconfig`，不保存账号凭证；共享默认标识为 `com.ifeng.QinXu`。目标 iPad 已完成签名、安装和启动；用户此前确认能打开。本次 59 项教材版本已通过真机 UI 测试，严格签名复核及恢复正常数据模式后的启动成功。MIDI 与多音麦克风的实琴质量分别验收。系统已连接的其他 MIDI 来源也会显示，但蓝牙 MIDI 未专门验证。
 
-工程无需第三方 Swift 包或后端服务。`QinXuCore` 通过本地 Swift Package 链接进 iOS 应用；增加应用源文件后可执行 `python3 scripts/generate_project.py` 重新生成工程。
+`QinXuCore` 通过本地 Swift Package 链接进 iOS 应用。PDF 转谱使用 [Swift Sheet Music](https://github.com/jiyimeta/swift-sheet-music/tree/c11ab5e97f9242c159f1dc5d8e5ffb852a887a58) 和随包分发的 Core ML 模型，PDF 和转换结果留在本机。增加应用源文件后可执行 `python3 scripts/generate_project.py` 重新生成工程。
 
 ## 在 Mac 运行开发预览
 
-需要 macOS 14+ 和 Swift 6 工具链；完整 Xcode 或合适的 Command Line Tools 均可。
+需要 macOS 14+ 和 Swift 6.2 或更新工具链；完整 Xcode 或合适的 Command Line Tools 均可。
 
 ```sh
 bash scripts/build-macos.sh
@@ -101,7 +102,7 @@ bash scripts/test-ios.sh iPad
 - 内置拜厄覆盖第 1–14、16–18、20–22、24–28、30–37、39–43、61 首；第 1、2 首按主题与变奏拆分，共 59 项。仅提取学生声部，部分反复按已核验的演奏顺序展开；未收入的课程及原因见[资源说明](Sources/QinXuApp/Resources/Books/Beyer/README.txt)。
 - 音高由 MusicXML 的 `step / alter / octave` 决定，不会把调号再次叠加。
 - 谱面是练习用简化排版，不是原谱的出版级复刻；调号、连线、力度、连梁和部分文字会简化。复杂节奏显示以拍数标注辅助理解。
-- PDF 和图片可归档及跟拍练习。需要判音时，导入对应的 MusicXML 版本。目前不支持自动从扫描谱提取音符、曲中反复跳转、装饰音、变速或变拍、移调或八度线、小节中途换谱号和多乐器合奏。MusicXML 解析不加载外部 DTD。
+- PDF 和图片可归档及跟拍练习。PDF 转 MXL 尝试读取矢量谱或清晰扫描谱。草稿须经对照，并通过练习谱解析后才能保存。判音目前不支持曲中反复跳转、装饰音、变速或变拍、移调或八度线、小节中途换谱号和多乐器合奏。MusicXML 解析不加载外部 DTD。
 - 结构化曲谱上限为 5 MB 的 MusicXML、1000 小节、20000 个起音音符。`.mxl` 压缩包上限为 20 MB。本地最多保存 100 首导入练习谱和最近 200 次完成记录。
 
 要试一次判音导入，可以下载已经通过琴序解析的 [欢乐颂简易版 MXL](https://musetrainer.github.io/library/scores/Ode_to_Joy_Easy_variation.mxl) 或 [生日快乐 C 大调 MXL](https://musetrainer.github.io/library/scores/Happy_Birthday_To_You_C_Major.mxl)，存到「文件」，再选「曲谱 → 导入 → 可判音曲谱」。找其他曲子时可搜索「曲名 + 钢琴 + MusicXML」或浏览 [MusicXML 曲谱目录](https://www.musicxml.com/music-in-musicxml/)。平台和曲目可提供的下载格式不同。

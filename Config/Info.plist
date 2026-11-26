@@ -26,5 +26,13 @@
         <key>UTTypeDescription</key><string>MusicXML 乐谱</string>
         <key>UTTypeConformsTo</key><array><string>public.xml</string></array>
         <key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>musicxml</string></array></dict>
+    </dict><dict>
+        <key>UTTypeIdentifier</key><string>org.musicxml.mxl</string>
+        <key>UTTypeDescription</key><string>压缩 MusicXML 乐谱</string>
+        <key>UTTypeConformsTo</key><array><string>public.zip</string></array>
+        <key>UTTypeTagSpecification</key><dict>
+            <key>public.filename-extension</key><array><string>mxl</string></array>
+            <key>public.mime-type</key><array><string>application/vnd.recordare.musicxml</string></array>
+        </dict>
     </dict></array>
 </dict></plist>

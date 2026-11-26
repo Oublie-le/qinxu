@@ -188,6 +188,13 @@ final class QinXuUITests: XCTestCase {
         XCTAssertTrue(element("import.score", in: app).exists)
         XCTAssertTrue(element("import.pdf", in: app).exists)
         XCTAssertTrue(element("import.images", in: app).exists)
+        let help = element("import.musicXMLHelp", in: app)
+        reveal(help, in: app, towardBottom: true, scrollIdentifier: "import.scroll")
+        help.tap()
+        let localConversionHelp = app.staticTexts.matching(NSPredicate(
+            format: "label CONTAINS %@ AND label CONTAINS %@", "阅读页", "PDF 转 MXL")).firstMatch
+        XCTAssertTrue(localConversionHelp.waitForExistence(timeout: 8), "PDF 帮助应指向本机阅读页转换入口")
+        XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Audiveris")).firstMatch.exists)
         capture(app, name: "score-and-reading-import-choices")
         element("import.close", in: app).tap()
         expect(element("library.search", in: app), "hittable == true")
@@ -222,6 +229,86 @@ final class QinXuUITests: XCTestCase {
         capture(app, name: "imported-pdf-with-metronome")
         toggle.tap()
         expect(beat, "value == %@", "未运行")
+    }
+
+    @MainActor
+    func testImportedPDFConversionSelectsPagesAndCanExitWithoutSaving() {
+        let app = launchFreshApp(additionalArguments: ["--ui-test-reading-pdf"])
+        defer { app.terminate() }
+        element("library.filter.books", in: app).tap()
+        let pdf = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "library.document.")).firstMatch
+        XCTAssertTrue(pdf.waitForExistence(timeout: 10))
+        pdf.tap()
+        XCTAssertTrue(element("document.reader.title", in: app).waitForExistence(timeout: 10))
+        element("document.reader.next", in: app).tap()
+        let readerPage = element("document.reader.pageInput", in: app)
+        expect(readerPage, "value == %@", "2")
+        element("document.reader.convert", in: app).tap()
+        XCTAssertTrue(element("pdfConversion.title", in: app).waitForExistence(timeout: 8))
+        // SwiftUI exposes each Stepper as one adjustable element; its visible
+        // Text label is not a separate StaticText in the iPad accessibility tree.
+        let firstPage = app.steppers.matching(identifier: "pdfConversion.firstPage").firstMatch
+        let lastPage = app.steppers.matching(identifier: "pdfConversion.lastPage").firstMatch
+        let hierarchy = XCTAttachment(string: app.debugDescription)
+        hierarchy.name = "pdf-conversion-accessibility"
+        hierarchy.lifetime = .keepAlways
+        add(hierarchy)
+        expect(firstPage, "value == %@", "2")
+        expect(lastPage, "value == %@", "2")
+        XCTAssertFalse(element("pdfConversion.export", in: app).exists)
+        XCTAssertFalse(element("pdfConversion.import", in: app).exists)
+
+        let endIncrement = element("pdfConversion.lastPage-Increment", in: app)
+        let endDecrement = element("pdfConversion.lastPage-Decrement", in: app)
+        let start = element("pdfConversion.start", in: app)
+        reveal(endIncrement, in: app, towardBottom: false, scrollIdentifier: "pdfConversion.scroll")
+        for endPage in 3...6 {
+            endIncrement.tap()
+            expect(lastPage, "value == %@", String(endPage))
+        }
+        expect(element("pdfConversion.pageRange", in: app), "label CONTAINS %@", "每次最多转换 4 页")
+        expect(start, "enabled == false")
+        endDecrement.tap()
+        expect(lastPage, "value == %@", "5")
+        expect(start, "enabled == true")
+        let firstIncrement = element("pdfConversion.firstPage-Increment", in: app)
+        firstIncrement.tap()
+        expect(firstPage, "value == %@", "3")
+        capture(app, name: "pdf-conversion-page-range-landscape")
+        start.tap()
+
+        let cancel = element("pdfConversion.cancel", in: app)
+        let review = element("pdfConversion.review", in: app)
+        let failure = element("pdfConversion.message", in: app)
+        let started = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            (cancel.exists && cancel.isHittable) || review.exists || failure.exists
+        }, object: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [started], timeout: 30), .completed,
+                       "启动后应可取消，或已得到真实转换结果/明确失败说明")
+        if cancel.exists && cancel.isHittable {
+            cancel.tap()
+            expect(element("pdfConversion.progress", in: app), "exists == false")
+            expect(start, "enabled == true")
+            XCTAssertFalse(element("pdfConversion.export", in: app).exists)
+            capture(app, name: "pdf-conversion-cancelled")
+        } else if review.exists {
+            XCTAssertTrue(element("pdfConversion.export", in: app).exists)
+            XCTAssertTrue(element("pdfConversion.import", in: app).exists)
+            XCTAssertFalse(element("pdfConversion.saved", in: app).exists, "识别后不可自动保存或导入")
+            capture(app, name: "pdf-conversion-review-without-saving")
+        } else {
+            XCTAssertTrue(failure.exists)
+            XCTAssertFalse(failure.label.isEmpty)
+            XCTAssertFalse(element("pdfConversion.import", in: app).exists)
+            capture(app, name: "pdf-conversion-readable-failure")
+        }
+        // This is an entry/range/cancellation test. Complex scan recognition
+        // accuracy is covered separately; a clear unsupported result is not a score-success claim.
+        element("pdfConversion.close", in: app).tap()
+        expect(element("pdfConversion.title", in: app), "exists == false")
+        expect(readerPage, "value == %@", "2")
+        element("document.reader.close", in: app).tap()
+        expect(element("library.search", in: app), "hittable == true")
     }
 
     @MainActor

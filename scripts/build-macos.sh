@@ -17,7 +17,9 @@ bash scripts/create-macos-icon.sh "$app_dir/Contents/Resources/AppIcon.icns"
 if [[ -d "$app_dir/QinXu_QinXuApp.bundle" ]]; then
   rm -rf "$app_dir/QinXu_QinXuApp.bundle"
 fi
-for resource_bundle in "$binary_dir"/QinXu_QinXuApp.bundle; do
+for resource_bundle in "$binary_dir"/QinXu_QinXuApp.bundle \
+                       "$binary_dir"/swift-sheet-music_SheetMusicLayoutApple.bundle \
+                       "$binary_dir"/swift-sheet-music_SheetMusicOMRModel.bundle; do
   [[ -d "$resource_bundle" ]] || continue
   cp -R "$resource_bundle" "$app_dir/Contents/Resources/"
 done
@@ -37,6 +39,15 @@ cat > "$app_dir/Contents/Info.plist" <<'PLIST'
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSMicrophoneUsageDescription</key><string>识别弹奏的钢琴音，音频仅在本机处理。</string>
+<key>UTImportedTypeDeclarations</key><array><dict>
+    <key>UTTypeIdentifier</key><string>org.musicxml.mxl</string>
+    <key>UTTypeDescription</key><string>压缩 MusicXML 乐谱</string>
+    <key>UTTypeConformsTo</key><array><string>public.zip</string></array>
+    <key>UTTypeTagSpecification</key><dict>
+        <key>public.filename-extension</key><array><string>mxl</string></array>
+        <key>public.mime-type</key><array><string>application/vnd.recordare.musicxml</string></array>
+    </dict>
+</dict></array>
 </dict></plist>
 PLIST
 codesign --force --sign - --entitlements Config/macOS.entitlements "$app_dir"

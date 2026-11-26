@@ -69,6 +69,11 @@ extension PracticeRenderingTests {
         model.toggleMetronome()
         #expect(!model.metronomeRunning)
         #expect(model.engine.correctCount == 0 && model.engine.wrongCount == 0)
+        if !images {
+            try render(PDFScoreConversionView(model: model, document: document, initialPage: 1, compact: width == 667)
+                .frame(width: CGFloat(width), height: CGFloat(height)),
+                name: "pdf-conversion-select-\(width)", width: width, height: height)
+        }
     }
 
     private func findImportedPDF(in view: NSView) -> PDFView? {
